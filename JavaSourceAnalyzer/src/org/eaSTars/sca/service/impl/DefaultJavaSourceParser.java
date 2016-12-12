@@ -13,13 +13,13 @@ import org.eaSTars.sca.dao.JavaModuleDAO;
 import org.eaSTars.sca.gui.ProgressListener;
 import org.eaSTars.sca.model.JavaAssemblyModel;
 import org.eaSTars.sca.model.JavaModuleModel;
+import org.eaSTars.sca.service.AssemblyParserContext;
 import org.eaSTars.sca.service.JavaParserException;
 import org.eaSTars.sca.service.JavaSourceParser;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
 
@@ -103,16 +103,17 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 	
 	private void processFile(JavaModuleModel module, File file) {
 		try {
+			AssemblyParserContext ctx = new AssemblyParserContext();
 			CompilationUnit cu = JavaParser.parse(file);
 			
-			JavaAssemblyModel javapackage = Optional.ofNullable(cu.getPackage()).map(pd -> createJavaPackageStructure(pd.getName(), true)).orElse(null);
-			List<ImportDeclaration> imports = cu.getImports();
+			ctx.setParentJavaAssembly(Optional.ofNullable(cu.getPackage()).map(pd -> createJavaPackageStructure(pd.getName(), true)).orElse(null));
+			ctx.setImports(cu.getImports());
 			
 			cu.getTypes().forEach(type -> {
 				if (type instanceof ClassOrInterfaceDeclaration) {
-					getJavaDeclarationParser().parse(javapackage, imports, (ClassOrInterfaceDeclaration)type, module);
+					getJavaDeclarationParser().parse(ctx, (ClassOrInterfaceDeclaration)type);
 				} else if (type instanceof EnumDeclaration) {
-					getJavaDeclarationParser().parse(javapackage, imports, (EnumDeclaration)type, module);
+					getJavaDeclarationParser().parse(ctx, (EnumDeclaration)type);
 				}
 			});
 		} catch (ParseException | IOException e) {

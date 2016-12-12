@@ -77,7 +77,6 @@ public class DefaultBinaryScanner implements BinaryScanner, InitializingBean {
 			.filter(zentry -> !zentry.isDirectory() && zentry.getName().indexOf('$') == -1 && zentry.getName().endsWith(".class"))
 			.forEach(zentry -> {
 				String classname = zentry.getName().substring(0, zentry.getName().length() - 6).replaceAll("\\/", ".");
-				System.out.println(!zentry.isDirectory()+" && "+(zentry.getName().indexOf('$') == -1)+" && "+zentry.getName().endsWith(".class")+" "+zentry.getName());
 				progressListener.setStatusText("("+averagetime[0]+"ms - "+((grandtotal[0] - grandtotal[1]) * averagetime[0] / 1000)+"s) "+classname);
 
 				try {

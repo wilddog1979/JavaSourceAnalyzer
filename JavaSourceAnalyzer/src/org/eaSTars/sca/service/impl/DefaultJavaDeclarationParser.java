@@ -12,6 +12,7 @@ import org.eaSTars.sca.model.JavaModuleModel;
 import org.eaSTars.sca.model.JavaObjectTypeModel;
 import org.eaSTars.sca.model.JavaTypeModel;
 import org.eaSTars.sca.model.JavaTypeParameterModel;
+import org.eaSTars.sca.service.AssemblyParserContext;
 import org.eaSTars.sca.service.JavaBinaryParser;
 import org.eaSTars.sca.service.JavaDeclarationParser;
 import org.eaSTars.sca.service.JavaSourceParser;
@@ -68,8 +69,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		}
 	}
 	
-	private JavaAssemblyModel resolveName(JavaAssemblyModel parent, JavaAssemblyModel javaassembly, ClassOrInterfaceType coit, List<JavaTypeParameterModel> javamethodtypeparameters, List<ImportDeclaration> imports,
-			JavaObjectTypeModel objecttype, JavaModuleModel module) {
+	private JavaAssemblyModel resolveName(AssemblyParserContext ctx, ClassOrInterfaceType coit, List<JavaTypeParameterModel> javamethodtypeparameters, JavaObjectTypeModel objecttype) {
 		boolean confirmed = true;
 		if (objecttype == null) {
 			confirmed = false;
@@ -86,16 +86,16 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 				result = javamethodtypeparameters.stream()
 				.filter(jmtp -> jmtp.getName().equals(coit.getName()))
 				.findFirst()
-				.map(jmtp -> createOtherStructure(null, coit.getName(), true, module, getJavaClassType(), null))
+				.map(jmtp -> createOtherStructure(null, coit.getName(), true, ctx.getJavaModule(), getJavaClassType(), null))
 				.orElseGet(() -> null);
 			}
 			
 			// check if this is an assembly type parameter
 			if (result == null) {
 				//TODO replace parent with the actual assembly
-				JavaTypeParameterModel jtpm = getJavaTypeDAO().getJavaTypeParameterByAssembly(javaassembly, coit.getName());
+				JavaTypeParameterModel jtpm = getJavaTypeDAO().getJavaTypeParameterByAssembly(ctx.getJavaAssembly(), coit.getName());
 				if (jtpm != null) {
-					result = createOtherStructure(null, coit.getName(), true, module, getJavaClassType(), null);
+					result = createOtherStructure(null, coit.getName(), true, ctx.getJavaModule(), getJavaClassType(), null);
 				}
 			}
 		
@@ -106,14 +106,14 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 			
 			// check import entries
 			if (result == null) {
-				for (ImportDeclaration importentry : imports) {
+				for (ImportDeclaration importentry : ctx.getImports()) {
 					if (importentry.isAsterisk()) {
 						result = resolveBinaryReference(new QualifiedNameExpr(importentry.getName(),coit.getName()), getJavaRuntimeModule());
 						if (result != null) {
 							break;
 						}
 					} else if (importentry.getName().getName().equals(coit.getName())) {
-						result = createOtherStructure(importentry.getName(), confirmed, module, objecttype, null);
+						result = createOtherStructure(importentry.getName(), confirmed, ctx.getJavaModule(), objecttype, null);
 						break;
 					}
 				}
@@ -121,47 +121,47 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 			
 			// check if it was already processed and it was in this package
 			if (result == null) {
-				result = getJavaAssemblyDAO().getAssemblyByAggregate(parent.getAggregate()+"."+coit.getName());
+				result = getJavaAssemblyDAO().getAssemblyByAggregate(ctx.getParentJavaAssembly().getAggregate()+"."+coit.getName());
 			}
 		}
 		
 		if (result == null) {
-			result = javaSourceParser.processForwardReference(parent.getAggregate()+"."+coit.getName(), module);
+			result = javaSourceParser.processForwardReference(ctx.getParentJavaAssembly().getAggregate()+"."+coit.getName(), ctx.getJavaModule());
 			if (result == null) {
-				System.out.println("early reference to "+parent.getAggregate()+"."+coit.getName()+", not found");
+				System.out.println("early reference to "+ctx.getParentJavaAssembly().getAggregate()+"."+coit.getName()+", not found");
 				// it must be here but probably the file is not on class path or in any of the source folders
-				result = createOtherStructure(parent, coit.getName(), confirmed, module, objecttype, null);
+				result = createOtherStructure(ctx.getParentJavaAssembly(), coit.getName(), confirmed, ctx.getJavaModule(), objecttype, null);
 			}
 		}
 		
 		return result;
 	}
 	
-	private JavaTypeModel processType(JavaAssemblyModel parent, JavaAssemblyModel jassembly, List<JavaTypeParameterModel> javamethodtypeparameters, List<ImportDeclaration> imports, Type type, JavaObjectTypeModel objtype, JavaModuleModel module) {
+	private JavaTypeModel processType(AssemblyParserContext ctx, List<JavaTypeParameterModel> javamethodtypeparameters, Type type, JavaObjectTypeModel objtype) {
 		JavaTypeModel result = null;
 		if (type instanceof ReferenceType) {
 			ReferenceType rt = (ReferenceType) type;
-			result = processType(parent, jassembly, javamethodtypeparameters, imports, rt.getType(), null, module);
+			result = processType(ctx, javamethodtypeparameters, rt.getType(), null);
 		} else if (type instanceof ClassOrInterfaceType) {
 			ClassOrInterfaceType coit = (ClassOrInterfaceType) type;
 			
 			//JavaAssemblyModel javaassembly = resolveName(parent, coit.getName(), javamethodtypeparameters, imports, objtype, module);
-			JavaAssemblyModel javaassembly = resolveName(parent, jassembly, coit, javamethodtypeparameters, imports, objtype, module);
+			JavaAssemblyModel javaassembly = resolveName(ctx, coit, javamethodtypeparameters, objtype);
 			List<JavaTypeModel> typeargs = coit.getTypeArgs().stream()
-			.map(typearg -> processType(parent, jassembly, javamethodtypeparameters, imports, typearg, null, module))
+			.map(typearg -> processType(ctx, javamethodtypeparameters, typearg, null))
 			.collect(Collectors.toList());
 			
 			result = getJavaTypeDAO().createJavaType(javaassembly, typeargs);
 		} else if (type instanceof PrimitiveType) {
-			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(new QualifiedNameExpr(JAVALANGEXPR, ((PrimitiveType)type).getType().name()), true, module, getJavaClassType(), null), Collections.emptyList());
+			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(new QualifiedNameExpr(JAVALANGEXPR, ((PrimitiveType)type).getType().name()), true, ctx.getJavaModule(), getJavaClassType(), null), Collections.emptyList());
 		} else if (type instanceof VoidType) {
-			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(null, "void", true, module, getJavaClassType(), null), Collections.emptyList());
+			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(null, "void", true, ctx.getJavaModule(), getJavaClassType(), null), Collections.emptyList());
 		} else if (type instanceof WildcardType) {
 			WildcardType wt = (WildcardType) type;
 			
-			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(null, "*", true, module, getJavaClassType(), null), Collections.emptyList());
-			Optional.ofNullable(wt.getSuper()).ifPresent(sp -> processType(parent, jassembly, javamethodtypeparameters, imports, sp, null, module));
-			Optional.ofNullable(wt.getExtends()).ifPresent(ex -> processType(parent, jassembly, javamethodtypeparameters, imports, ex, null, module));
+			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(null, "*", true, ctx.getJavaModule(), getJavaClassType(), null), Collections.emptyList());
+			Optional.ofNullable(wt.getSuper()).ifPresent(sp -> processType(ctx, javamethodtypeparameters, sp, null));
+			Optional.ofNullable(wt.getExtends()).ifPresent(ex -> processType(ctx, javamethodtypeparameters, ex, null));
 		} else {
 			System.out.println(type.getClass().getName());
 		}
@@ -169,19 +169,19 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		return result;
 	}
 	
-	private JavaMethodModel processMethod(JavaAssemblyModel parent, List<ImportDeclaration> imports, JavaAssemblyModel javaassembly, int modifiers, Type type, List<TypeParameter> typeparameters, String methodname, List<Parameter> parameters, List<ReferenceType> throwstypes, JavaModuleModel module) {
+	private JavaMethodModel processMethod(AssemblyParserContext ctx, int modifiers, Type type, List<TypeParameter> typeparameters, String methodname, List<Parameter> parameters, List<ReferenceType> throwstypes) {
 		List<JavaTypeParameterModel> javatypeparameters = typeparameters.stream()
 		.map(typeparam -> this.getJavaTypeDAO().createJavaTypeParameter(
 				typeparam.getName(),
 				typeparam.getTypeBound().stream()
-				.map(tp -> this.processType(parent, javaassembly, null, imports, tp, null, module))
+				.map(tp -> this.processType(ctx, null, tp, null))
 				.collect(Collectors.toList())))
 		.collect(Collectors.toList());
 		
-		JavaTypeModel javatype = Optional.ofNullable(type).map(t -> processType(parent, javaassembly, javatypeparameters, imports, t, null, module)).orElseGet(() -> null);
+		JavaTypeModel javatype = Optional.ofNullable(type).map(t -> processType(ctx, javatypeparameters, t, null)).orElseGet(() -> null);
 		
-		List<JavaTypeModel> signature = parameters.stream().map(parameter -> processType(parent, javaassembly, javatypeparameters, imports, parameter.getType(), null, module)).collect(Collectors.toList());
-		JavaMethodModel jmm = getJavaBodyDeclarationDAO().getJavaMethods(javaassembly, methodname, signature.size()).stream()
+		List<JavaTypeModel> signature = parameters.stream().map(parameter -> processType(ctx, javatypeparameters, parameter.getType(), null)).collect(Collectors.toList());
+		JavaMethodModel jmm = getJavaBodyDeclarationDAO().getJavaMethods(ctx.getJavaAssembly(), methodname, signature.size()).stream()
 		.filter(method -> getJavaBodyDeclarationDAO().getJavaMethodParameters(method).stream()
 				.filter(methodparam -> methodparam.getOrderNumber() >= 0 &&
 				methodparam.getOrderNumber() < signature.size() &&
@@ -189,7 +189,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 				.count() == signature.size())
 		.findFirst()
 		.orElseGet(() -> {
-			return getJavaBodyDeclarationDAO().createMethod(javaassembly, modifiers, javatype, methodname, parameters.size());
+			return getJavaBodyDeclarationDAO().createMethod(ctx.getJavaAssembly(), modifiers, javatype, methodname, parameters.size());
 		});
 		int count[] = {0};
 		parameters.forEach(parameter -> {
@@ -199,36 +199,42 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		
 		javatypeparameters.forEach(jtp -> this.getJavaTypeDAO().createJavaMethodTypeParameter(jmm, jtp));
 
-		throwstypes.forEach(methodthrow -> getJavaBodyDeclarationDAO().createJavathrows(jmm, processType(parent, javaassembly, javatypeparameters, imports, methodthrow, null, module)));
+		throwstypes.forEach(methodthrow -> getJavaBodyDeclarationDAO().createJavathrows(jmm, processType(ctx, javatypeparameters, methodthrow, null)));
 		
 		return jmm;
 	}
 	
-	private void processBodyDeclarations(JavaAssemblyModel parent, List<ImportDeclaration> imports, JavaAssemblyModel javaassembly, List<BodyDeclaration> bodydeclarations, JavaModuleModel module) {
+	private void processBodyDeclarations(AssemblyParserContext ctx, List<BodyDeclaration> bodydeclarations) {
 		for (BodyDeclaration bodydeclaration : bodydeclarations) {
 			if (bodydeclaration instanceof FieldDeclaration) {
 				FieldDeclaration fd = (FieldDeclaration) bodydeclaration;
 				
-				JavaTypeModel javatype = processType(parent, javaassembly, null, imports, fd.getType(), null, module);
+				JavaTypeModel javatype = processType(ctx, null, fd.getType(), null);
 				fd.getVariables().stream()
 				.forEach(variable -> {
-					getJavaBodyDeclarationDAO().createJavaField(javaassembly, fd.getModifiers(), javatype, variable.getId().getName());
+					getJavaBodyDeclarationDAO().createJavaField(ctx.getJavaAssembly(), fd.getModifiers(), javatype, variable.getId().getName());
 				});
 			} else if (bodydeclaration instanceof MethodDeclaration) {
 				MethodDeclaration md = (MethodDeclaration) bodydeclaration;
 				
-				processMethod(parent, imports, javaassembly, md.getModifiers(), md.getType(), md.getTypeParameters(), md.getName(), md.getParameters(), md.getThrows(), module);
+				processMethod(ctx, md.getModifiers(), md.getType(), md.getTypeParameters(), md.getName(), md.getParameters(), md.getThrows());
 			} else if (bodydeclaration instanceof ConstructorDeclaration) {
 				ConstructorDeclaration cd = (ConstructorDeclaration) bodydeclaration;
 				
-				processMethod(parent, imports, javaassembly, cd.getModifiers(), null, cd.getTypeParameters(), cd.getName(), cd.getParameters(), cd.getThrows(), module);
+				processMethod(ctx, cd.getModifiers(), null, cd.getTypeParameters(), cd.getName(), cd.getParameters(), cd.getThrows());
 			} else if (bodydeclaration instanceof InitializerDeclaration) {
 				
-				getJavaBodyDeclarationDAO().createMethod(javaassembly, 0, null, "<clinit>", 0);
+				getJavaBodyDeclarationDAO().createMethod(ctx.getJavaAssembly(), 0, null, "<clinit>", 0);
 			} else if (bodydeclaration instanceof ClassOrInterfaceDeclaration) {
-				parse(javaassembly, imports, (ClassOrInterfaceDeclaration) bodydeclaration, module);
+				AssemblyParserContext innerctx = new AssemblyParserContext();
+				innerctx.setParentJavaAssembly(ctx.getJavaAssembly());
+				innerctx.setImports(ctx.getImports());
+				parse(innerctx, (ClassOrInterfaceDeclaration) bodydeclaration);
 			} else if (bodydeclaration instanceof EnumDeclaration) {
-				parse(javaassembly, imports, (EnumDeclaration)bodydeclaration, module);
+				AssemblyParserContext innerctx = new AssemblyParserContext();
+				innerctx.setParentJavaAssembly(ctx.getJavaAssembly());
+				innerctx.setImports(ctx.getImports());
+				parse(innerctx, (EnumDeclaration)bodydeclaration);
 			} else if (bodydeclaration instanceof EmptyMemberDeclaration) {
 				// nothing to do
 			} else {
@@ -238,14 +244,15 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 	}
 	
 	@Override
-	public JavaAssemblyModel parse(JavaAssemblyModel parent, List<ImportDeclaration> imports, ClassOrInterfaceDeclaration coid, JavaModuleModel module) {
+	public JavaAssemblyModel parse(AssemblyParserContext ctx, ClassOrInterfaceDeclaration coid) {
 		JavaObjectTypeModel objecttype = coid.isInterface() ? getJavaInterfaceType() : getJavaClassType();
-		JavaAssemblyModel javaclassorinterface = createOtherStructure(parent, coid.getName(), true, module, objecttype, coid.getModifiers());
+		ctx.setJavaAssembly(createOtherStructure(ctx.getParentJavaAssembly(), coid.getName(), true, ctx.getJavaModule(), objecttype, coid.getModifiers()));
+		JavaAssemblyModel javaclassorinterface = createOtherStructure(ctx.getParentJavaAssembly(), coid.getName(), true, ctx.getJavaModule(), objecttype, coid.getModifiers());
 
 		coid.getTypeParameters().stream()
 		.forEach(typeparam -> {
 			List<JavaTypeModel> typeBounds = typeparam.getTypeBound().stream()
-			.map(tb -> this.processType(parent, javaclassorinterface, null, imports, tb, null, module))
+			.map(tb -> this.processType(ctx, null, tb, null))
 			.collect(Collectors.toList());
 			
 			JavaTypeParameterModel typeparameter = this.getJavaTypeDAO().createJavaTypeParameter(typeparam.getName(), typeBounds);
@@ -254,32 +261,33 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		
 		coid.getExtends().stream()
 		.forEach(coidextends ->{
-			JavaTypeModel javatype = processType(parent, javaclassorinterface, null, imports, coidextends, objecttype, module);
+			JavaTypeModel javatype = processType(ctx, null, coidextends, objecttype);
 			getJavaAssemblyDAO().createExtends(javaclassorinterface, javatype);
 		});
 		
 		coid.getImplements().stream()
 		.forEach(coidimplements -> {
-			JavaTypeModel javatype = processType(parent, javaclassorinterface, null, imports, coidimplements, getJavaInterfaceType(), module);
+			JavaTypeModel javatype = processType(ctx, null, coidimplements, getJavaInterfaceType());
 			getJavaAssemblyDAO().createImplements(javaclassorinterface, javatype);
 		});
 		
-		processBodyDeclarations(parent, imports, javaclassorinterface, coid.getMembers(), module);
+		processBodyDeclarations(ctx, coid.getMembers());
 		
 		return javaclassorinterface;
 	}
 
 	@Override
-	public JavaAssemblyModel parse(JavaAssemblyModel parent, List<ImportDeclaration> imports, EnumDeclaration ed, JavaModuleModel module) {
-		JavaAssemblyModel javaenum = createOtherStructure(parent, ed.getName(), true, module, getJavaEnumType(), ed.getModifiers());
+	public JavaAssemblyModel parse(AssemblyParserContext ctx, EnumDeclaration ed) {
+		ctx.setJavaAssembly(createOtherStructure(ctx.getParentJavaAssembly(), ed.getName(), true, ctx.getJavaModule(), getJavaEnumType(), ed.getModifiers()));
+		JavaAssemblyModel javaenum = createOtherStructure(ctx.getParentJavaAssembly(), ed.getName(), true, ctx.getJavaModule(), getJavaEnumType(), ed.getModifiers());
 
 		ed.getImplements().stream()
 		.forEach(edimplements -> {
-			JavaTypeModel javatype = processType(parent, javaenum, null, imports, edimplements, getJavaInterfaceType(), module);
+			JavaTypeModel javatype = processType(ctx, null, edimplements, getJavaInterfaceType());
 			getJavaAssemblyDAO().createImplements(javaenum, javatype);
 		});
 		
-		processBodyDeclarations(parent, imports, javaenum, ed.getMembers(), module);
+		processBodyDeclarations(ctx, ed.getMembers());
 		
 		return javaenum;
 	}
