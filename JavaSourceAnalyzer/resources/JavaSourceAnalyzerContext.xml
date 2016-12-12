@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+		xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:aop="http://www.springframework.org/schema/aop"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans 
+							http://www.springframework.org/schema/beans/spring-beans.xsd
+							http://www.springframework.org/schema/aop
+							http://www.springframework.org/schema/aop/spring-aop.xsd">
+	
+	<!-- <aop:aspectj-autoproxy/>
+	
+	<bean id="performanceMonitor" class="org.eaSTars.sca.aspect.impl.PerformanceMonitor">
+	</bean> -->
+	
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location" value="conf.properties"/>
+	</bean>
+	
+	<bean id="configService" class="org.eaSTars.util.impl.DefaultConfigService"/>
+	
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="${database.driver}" />
+		<property name="url" value="${database.url}" />
+		<property name="username" value="${database.username}" />
+		<property name="password" value="${database.password}" />
+	</bean>
+	
+	<bean id="scaDatabaseMaintenanceService" class="org.eaSTars.sca.service.impl.DefaultSCADatabaseMaintenanceService">
+		<property name="datasource" ref="dataSource"/>
+	</bean>
+	
+	<bean id="javaModuleDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaModuleDAO">
+		<property name="datasource" ref="dataSource"/>
+	</bean>
+	
+	<bean id="javaAssemblyDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaAssemblyDAO">
+		<property name="datasource" ref="dataSource"/>
+	</bean>
+	
+	<bean id="javaTypeDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaTypeDAO">
+		<property name="datasource" ref="dataSource"/>
+	</bean>
+	
+	<bean id="javaBodyDeclarationDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaBodyDeclarationDAO">
+		<property name="datasource" ref="dataSource"/>
+	</bean>
+	
+	<bean id="javaDeclarationParser" class="org.eaSTars.sca.service.impl.DefaultJavaDeclarationParser">
+		<property name="javaAssemblyDAO" ref="javaAssemblyDAO"/>
+		<property name="javaTypeDAO" ref="javaTypeDAO"/>
+		<property name="javaBodyDeclarationDAO" ref="javaBodyDeclarationDAO"/>
+		<property name="javaModuleDAO" ref="javaModuleDAO"/>
+		<property name="javaSourceParser" ref="javaSourceParser"/>
+		<property name="javaBinaryParser" ref="javaBinaryParser"/>
+	</bean>
+	
+	<bean id="javaSourceParser" class="org.eaSTars.sca.service.impl.DefaultJavaSourceParser">
+		<property name="progressListener" ref="sourceCodeanalizerGUI"/>
+		<property name="javaModuleDAO" ref="javaModuleDAO"/>
+		<property name="javaAssemblyDAO" ref="javaAssemblyDAO"/>
+		<property name="javaDeclarationParser" ref="javaDeclarationParser"/>
+		<property name="javaTypeDAO" ref="javaTypeDAO"/>
+	</bean>
+	
+	<bean id="javaBinaryParser" class="org.eaSTars.sca.service.impl.DefaultJavaBinaryParser">
+		<property name="javaAssemblyDAO" ref="javaAssemblyDAO"/>
+		<property name="javaDeclarationParser" ref="javaDeclarationParser"/>
+		<property name="javaBodyDeclarationDAO" ref="javaBodyDeclarationDAO"/>
+		<property name="javaTypeDAO" ref="javaTypeDAO"/>
+	</bean>
+	
+	<bean id="sourceCodeanalizerGUI" class="org.eaSTars.sca.gui.impl.DefaultSourceCodeAnalizerGUI" init-method="buildGUI">
+	</bean>
+</beans>

@@ -1,0 +1,22 @@
+package org.eaSTars.sca.dao.impl;
+
+import java.util.Optional;
+
+import org.eaSTars.dblayer.dao.FilterEntry;
+import org.eaSTars.dblayer.dao.impl.DefaultAbstractDBLayerDAO;
+import org.eaSTars.sca.dao.JavaModuleDAO;
+import org.eaSTars.sca.model.JavaModuleModel;
+
+public class DefaultJavaModuleDAO extends DefaultAbstractDBLayerDAO implements JavaModuleDAO {
+
+	@Override
+	public JavaModuleModel createJavaModule(String name) {
+		return Optional.ofNullable(queryModel(JavaModuleModel.class, new FilterEntry("name", name)))
+		.orElseGet(() -> {
+			JavaModuleModel result = new JavaModuleModel();
+			result.setName(name);
+			saveModel(result);
+			return result;
+		});
+	}
+}
