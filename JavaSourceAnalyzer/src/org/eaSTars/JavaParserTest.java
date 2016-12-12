@@ -153,7 +153,7 @@ public class JavaParserTest {
 				.orElseThrow(() -> new IllegalArgumentException(APP_MODULS_KEY+" configuration is missing")).split("\\|")).stream()
 		.collect(Collectors.toMap(module -> module, module -> {
 			File basedir = new File(Optional.ofNullable(configService.getProperty(APP_BASEDIR_KEY.replaceAll(MODULE_SELECTOR, module)))
-			.orElseThrow(() -> new IllegalArgumentException(APP_BASEDIR_KEY+" configuration is missing")));
+			.orElseThrow(() -> new IllegalArgumentException(APP_BASEDIR_KEY.replaceAll(MODULE_SELECTOR, module)+" configuration is missing")));
 			if (!basedir.exists()) {
 				throw new IllegalArgumentException(basedir.getAbsolutePath()+" is not existing");
 			} else if (!basedir.isDirectory()) {

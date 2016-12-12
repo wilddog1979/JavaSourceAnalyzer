@@ -68,7 +68,7 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 	
 	@Override
 	public JavaAssemblyModel processForwardReference(String name, JavaModuleModel module) {
-		String filename = name.replaceAll("\\.", File.separator)+".java";
+		String filename = name.replaceAll("\\.", /*File.separator*/"/")+".java";
 		File file = processMap.values().stream()
 		.map(l -> l.stream().map(f -> new File(f, filename))
 				.filter(f -> f.exists() && f.isFile()).findFirst())
