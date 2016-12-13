@@ -106,6 +106,7 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 			AssemblyParserContext ctx = new AssemblyParserContext();
 			CompilationUnit cu = JavaParser.parse(file);
 			
+			ctx.setJavaModule(module);
 			ctx.setParentJavaAssembly(Optional.ofNullable(cu.getPackage()).map(pd -> createJavaPackageStructure(pd.getName(), true)).orElse(null));
 			ctx.setImports(cu.getImports());
 			

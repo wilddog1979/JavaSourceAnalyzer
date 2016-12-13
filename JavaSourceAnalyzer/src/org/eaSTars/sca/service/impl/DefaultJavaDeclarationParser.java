@@ -227,11 +227,13 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 				getJavaBodyDeclarationDAO().createMethod(ctx.getJavaAssembly(), 0, null, "<clinit>", 0);
 			} else if (bodydeclaration instanceof ClassOrInterfaceDeclaration) {
 				AssemblyParserContext innerctx = new AssemblyParserContext();
+				innerctx.setJavaModule(ctx.getJavaModule());
 				innerctx.setParentJavaAssembly(ctx.getJavaAssembly());
 				innerctx.setImports(ctx.getImports());
 				parse(innerctx, (ClassOrInterfaceDeclaration) bodydeclaration);
 			} else if (bodydeclaration instanceof EnumDeclaration) {
 				AssemblyParserContext innerctx = new AssemblyParserContext();
+				innerctx.setJavaModule(ctx.getJavaModule());
 				innerctx.setParentJavaAssembly(ctx.getJavaAssembly());
 				innerctx.setImports(ctx.getImports());
 				parse(innerctx, (EnumDeclaration)bodydeclaration);
