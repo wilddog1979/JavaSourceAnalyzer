@@ -19,6 +19,8 @@ import org.eaSTars.sca.service.JavaSourceParser;
 
 import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.TypeParameter;
+import com.github.javaparser.ast.body.AnnotationDeclaration;
+import com.github.javaparser.ast.body.AnnotationMemberDeclaration;
 import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
@@ -92,11 +94,11 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 			
 			// check if this is an assembly type parameter
 			if (result == null) {
-				//TODO replace parent with the actual assembly
-				JavaTypeParameterModel jtpm = getJavaTypeDAO().getJavaTypeParameterByAssembly(ctx.getJavaAssembly(), coit.getName());
-				if (jtpm != null) {
-					result = createOtherStructure(null, coit.getName(), true, ctx.getJavaModule(), getJavaClassType(), null);
-				}
+				result = ctx.getJavaAssemblyTypeParameters().stream()
+				.filter(tp -> tp.getName().equals(coit.getName()))
+				.findFirst()
+				.map(tp -> createOtherStructure(null, tp.getName(), true, ctx.getJavaModule(), getJavaClassType(), null))
+				.orElseGet(() -> null);
 			}
 		
 			// check java.lang first
@@ -128,7 +130,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		if (result == null) {
 			result = javaSourceParser.processForwardReference(ctx.getParentJavaAssembly().getAggregate()+"."+coit.getName(), ctx.getJavaModule());
 			if (result == null) {
-				System.out.println("early reference to "+ctx.getParentJavaAssembly().getAggregate()+"."+coit.getName()+", not found");
+				System.out.println("early reference not found to "+coit.toStringWithoutComments()+" in "+ctx.getJavaAssembly().getAggregate());
 				// it must be here but probably the file is not on class path or in any of the source folders
 				result = createOtherStructure(ctx.getParentJavaAssembly(), coit.getName(), confirmed, ctx.getJavaModule(), objecttype, null);
 			}
@@ -204,7 +206,31 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		return jmm;
 	}
 	
-	private void processBodyDeclarations(AssemblyParserContext ctx, List<BodyDeclaration> bodydeclarations) {
+	@Override
+	public void processBodyDeclarations(AssemblyParserContext ctx, List<? extends BodyDeclaration> bodydeclarations) {
+		// process class or interface and enum declarations first
+		for (BodyDeclaration bodydeclaration : bodydeclarations) {
+			if (bodydeclaration instanceof ClassOrInterfaceDeclaration) {
+				AssemblyParserContext innerctx = new AssemblyParserContext();
+				innerctx.setJavaModule(ctx.getJavaModule());
+				innerctx.setParentJavaAssembly(ctx.getJavaAssembly());
+				innerctx.setImports(ctx.getImports());
+				parse(innerctx, (ClassOrInterfaceDeclaration) bodydeclaration);
+			} else if (bodydeclaration instanceof EnumDeclaration) {
+				AssemblyParserContext innerctx = new AssemblyParserContext();
+				innerctx.setJavaModule(ctx.getJavaModule());
+				innerctx.setParentJavaAssembly(ctx.getJavaAssembly());
+				innerctx.setImports(ctx.getImports());
+				parse(innerctx, (EnumDeclaration)bodydeclaration);
+			} else if (bodydeclaration instanceof AnnotationDeclaration) {
+				AssemblyParserContext innerctx = new AssemblyParserContext();
+				innerctx.setJavaModule(ctx.getJavaModule());
+				innerctx.setParentJavaAssembly(ctx.getJavaAssembly());
+				innerctx.setImports(ctx.getImports());
+				parse(innerctx, (AnnotationDeclaration)bodydeclaration);
+			}
+		}
+		
 		for (BodyDeclaration bodydeclaration : bodydeclarations) {
 			if (bodydeclaration instanceof FieldDeclaration) {
 				FieldDeclaration fd = (FieldDeclaration) bodydeclaration;
@@ -225,19 +251,12 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 			} else if (bodydeclaration instanceof InitializerDeclaration) {
 				
 				getJavaBodyDeclarationDAO().createMethod(ctx.getJavaAssembly(), 0, null, "<clinit>", 0);
-			} else if (bodydeclaration instanceof ClassOrInterfaceDeclaration) {
-				AssemblyParserContext innerctx = new AssemblyParserContext();
-				innerctx.setJavaModule(ctx.getJavaModule());
-				innerctx.setParentJavaAssembly(ctx.getJavaAssembly());
-				innerctx.setImports(ctx.getImports());
-				parse(innerctx, (ClassOrInterfaceDeclaration) bodydeclaration);
-			} else if (bodydeclaration instanceof EnumDeclaration) {
-				AssemblyParserContext innerctx = new AssemblyParserContext();
-				innerctx.setJavaModule(ctx.getJavaModule());
-				innerctx.setParentJavaAssembly(ctx.getJavaAssembly());
-				innerctx.setImports(ctx.getImports());
-				parse(innerctx, (EnumDeclaration)bodydeclaration);
-			} else if (bodydeclaration instanceof EmptyMemberDeclaration) {
+			} else if (bodydeclaration instanceof AnnotationMemberDeclaration) {
+				//TODO implement processing steps
+			} else if (bodydeclaration instanceof EmptyMemberDeclaration ||
+					bodydeclaration instanceof ClassOrInterfaceDeclaration ||
+					bodydeclaration instanceof EnumDeclaration ||
+					bodydeclaration instanceof AnnotationDeclaration) {
 				// nothing to do
 			} else {
 				System.out.println(bodydeclaration.getClass().getName());
@@ -249,49 +268,58 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 	public JavaAssemblyModel parse(AssemblyParserContext ctx, ClassOrInterfaceDeclaration coid) {
 		JavaObjectTypeModel objecttype = coid.isInterface() ? getJavaInterfaceType() : getJavaClassType();
 		ctx.setJavaAssembly(createOtherStructure(ctx.getParentJavaAssembly(), coid.getName(), true, ctx.getJavaModule(), objecttype, coid.getModifiers()));
-		JavaAssemblyModel javaclassorinterface = createOtherStructure(ctx.getParentJavaAssembly(), coid.getName(), true, ctx.getJavaModule(), objecttype, coid.getModifiers());
+		
+		ctx.getJavaAssemblyTypeParameters().addAll(
+				coid.getTypeParameters().stream()
+				.map(typeparam -> {
+					List<JavaTypeModel> typeBounds = typeparam.getTypeBound().stream()
+							.map(tb -> this.processType(ctx, null, tb, null))
+							.collect(Collectors.toList());
 
-		coid.getTypeParameters().stream()
-		.forEach(typeparam -> {
-			List<JavaTypeModel> typeBounds = typeparam.getTypeBound().stream()
-			.map(tb -> this.processType(ctx, null, tb, null))
-			.collect(Collectors.toList());
-			
-			JavaTypeParameterModel typeparameter = this.getJavaTypeDAO().createJavaTypeParameter(typeparam.getName(), typeBounds);
-			this.getJavaTypeDAO().createJavaAssemblyTypeParameter(javaclassorinterface, typeparameter);
-		});
+					JavaTypeParameterModel typeparameter = this.getJavaTypeDAO().createJavaTypeParameter(typeparam.getName(), typeBounds);
+					this.getJavaTypeDAO().createJavaAssemblyTypeParameter(ctx.getJavaAssembly(), typeparameter);
+					return typeparameter;
+				}).collect(Collectors.toList()));
 		
 		coid.getExtends().stream()
 		.forEach(coidextends ->{
 			JavaTypeModel javatype = processType(ctx, null, coidextends, objecttype);
-			getJavaAssemblyDAO().createExtends(javaclassorinterface, javatype);
+			getJavaAssemblyDAO().createExtends(ctx.getJavaAssembly(), javatype);
 		});
 		
 		coid.getImplements().stream()
 		.forEach(coidimplements -> {
 			JavaTypeModel javatype = processType(ctx, null, coidimplements, getJavaInterfaceType());
-			getJavaAssemblyDAO().createImplements(javaclassorinterface, javatype);
+			getJavaAssemblyDAO().createImplements(ctx.getJavaAssembly(), javatype);
 		});
 		
 		processBodyDeclarations(ctx, coid.getMembers());
 		
-		return javaclassorinterface;
+		return ctx.getJavaAssembly();
 	}
 
 	@Override
 	public JavaAssemblyModel parse(AssemblyParserContext ctx, EnumDeclaration ed) {
 		ctx.setJavaAssembly(createOtherStructure(ctx.getParentJavaAssembly(), ed.getName(), true, ctx.getJavaModule(), getJavaEnumType(), ed.getModifiers()));
-		JavaAssemblyModel javaenum = createOtherStructure(ctx.getParentJavaAssembly(), ed.getName(), true, ctx.getJavaModule(), getJavaEnumType(), ed.getModifiers());
-
+		
 		ed.getImplements().stream()
 		.forEach(edimplements -> {
 			JavaTypeModel javatype = processType(ctx, null, edimplements, getJavaInterfaceType());
-			getJavaAssemblyDAO().createImplements(javaenum, javatype);
+			getJavaAssemblyDAO().createImplements(ctx.getJavaAssembly(), javatype);
 		});
 		
 		processBodyDeclarations(ctx, ed.getMembers());
 		
-		return javaenum;
+		return ctx.getJavaAssembly();
+	}
+	
+	@Override
+	public JavaAssemblyModel parse(AssemblyParserContext ctx, AnnotationDeclaration ad) {
+		ctx.setJavaAssembly(createOtherStructure(ctx.getParentJavaAssembly(), ad.getName(), true, ctx.getJavaModule(), getJavaAnnotationType(), ad.getModifiers()));
+		
+		processBodyDeclarations(ctx, ad.getMembers());
+		
+		return ctx.getJavaAssembly();
 	}
 
 	public JavaModuleModel getJavaRuntimeModule() {
