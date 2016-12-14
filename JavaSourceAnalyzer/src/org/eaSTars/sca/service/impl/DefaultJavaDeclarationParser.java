@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eaSTars.sca.dao.JavaModuleDAO;
 import org.eaSTars.sca.model.JavaAssemblyModel;
 import org.eaSTars.sca.model.JavaMethodModel;
@@ -41,6 +43,8 @@ import com.github.javaparser.ast.type.WildcardType;
 
 public class DefaultJavaDeclarationParser extends AbstractJavaParser implements JavaDeclarationParser {
 
+	private static final Logger LOGGER = LogManager.getLogger(DefaultJavaDeclarationParser.class);
+	
 	private static final QualifiedNameExpr JAVALANGEXPR = new QualifiedNameExpr(new NameExpr("java"), "lang");
 
 	private JavaModuleDAO javaModuleDAO;
@@ -56,7 +60,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		if (result == null) {
 			try {
 				Class<?> clazz = this.getClass().getClassLoader().loadClass(nameexpr.toStringWithoutComments());
-				result = javaBinaryParser.parse(nameexpr, clazz, module);
+				result = javaBinaryParser.parse(clazz, module);
 			} catch (ClassNotFoundException e1) {
 			}
 		}
@@ -165,7 +169,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 			Optional.ofNullable(wt.getSuper()).ifPresent(sp -> processType(ctx, javamethodtypeparameters, sp, null));
 			Optional.ofNullable(wt.getExtends()).ifPresent(ex -> processType(ctx, javamethodtypeparameters, ex, null));
 		} else {
-			System.out.println(type.getClass().getName());
+			LOGGER.warn("Unimplemented java type: "+type.getClass().getName());
 		}
 		
 		return result;
@@ -259,7 +263,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 					bodydeclaration instanceof AnnotationDeclaration) {
 				// nothing to do
 			} else {
-				System.out.println(bodydeclaration.getClass().getName());
+				LOGGER.warn("Unimplemented body declaration: "+bodydeclaration.getClass().getName());
 			}
 		}
 	}
