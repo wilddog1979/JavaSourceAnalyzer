@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.eaSTars.sca.model.JavaAssemblyModel;
 import org.eaSTars.sca.model.JavaModuleModel;
 import org.eaSTars.sca.model.JavaTypeModel;
+import org.eaSTars.sca.model.JavaTypeParameterModel;
 import org.eaSTars.sca.service.JavaBinaryParser;
 import org.eaSTars.sca.service.ParserContext;
 
@@ -66,9 +67,17 @@ public class DefaultJavaBinaryParser extends AbstractJavaParser implements JavaB
 		Arrays.asList(clazz.getGenericInterfaces())
 		.forEach(i -> getJavaAssemblyDAO().createImplements(ctx.getJavaAssembly(), createJavaType(i, ctx.getJavaModule())));
 		
-		Arrays.asList(clazz.getTypeParameters()).stream()
-		.map(tv -> createJavaType(tv, ctx.getJavaModule()))
-		.collect(Collectors.toList());
+		ctx.getJavaAssemblyTypeParameters().addAll(Arrays.asList(clazz.getTypeParameters()).stream()
+		.map(tv -> {
+			JavaTypeParameterModel jtpm = getJavaTypeDAO().createJavaTypeParameter(tv.getName(), Arrays.asList(tv.getBounds()).stream()
+					.map(t -> createJavaType(t, ctx.getJavaModule()))
+					.collect(Collectors.toList()));
+			
+			getJavaTypeDAO().createJavaAssemblyTypeParameter(ctx.getJavaAssembly(), jtpm);
+			
+			return jtpm;
+		})
+		.collect(Collectors.toList()));
 	}
 	
 	private JavaAssemblyModel parseClass(ParserContext ctx, Class<?> clazz) {
