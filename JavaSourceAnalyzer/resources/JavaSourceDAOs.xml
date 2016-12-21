@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+		xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:aop="http://www.springframework.org/schema/aop"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans 
+							http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="javaModuleDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaModuleDAO">
+		<property name="datasource" ref="dataSource"/>
+	</bean>
+	
+	<bean id="javaAssemblyDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaAssemblyDAO">
+		<property name="datasource" ref="dataSource"/>
+	</bean>
+	
+	<bean id="javaTypeDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaTypeDAO">
+		<property name="datasource" ref="dataSource"/>
+	</bean>
+	
+	<bean id="javaBodyDeclarationDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaBodyDeclarationDAO">
+		<property name="datasource" ref="dataSource"/>
+	</bean>
+
+</beans>

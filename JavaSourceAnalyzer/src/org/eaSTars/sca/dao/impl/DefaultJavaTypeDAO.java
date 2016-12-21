@@ -3,6 +3,7 @@ package org.eaSTars.sca.dao.impl;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,6 +11,7 @@ import org.eaSTars.dblayer.dao.DatabaseConnectionException;
 import org.eaSTars.dblayer.dao.FilterEntry;
 import org.eaSTars.dblayer.dao.impl.DefaultAbstractDBLayerDAO;
 import org.eaSTars.sca.dao.JavaTypeDAO;
+import org.eaSTars.sca.dao.TypeParameterEntry;
 import org.eaSTars.sca.model.JavaAssemblyModel;
 import org.eaSTars.sca.model.JavaAssemblyTypeParameterModel;
 import org.eaSTars.sca.model.JavaMethodModel;
@@ -159,6 +161,57 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 				return extractEntry(JavaTypeParameterModel.class, rs);
 			}
 			return null;
+		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+			throw new DatabaseConnectionException(e);
+		}
+	}
+	
+	@Override
+	public List<TypeParameterEntry> getJavaAssemblyTypeParameters(JavaAssemblyModel javaAssembly) {
+		try {
+			List<TypeParameterEntry> result = new ArrayList<TypeParameterEntry>();
+			PreparedStatement pstatement = getDatasource().getConnection().prepareStatement("SELECT jtp.* FROM JavaTypeParameter AS jtp JOIN JavaAssemblyTypeParameter AS jatp ON jtp.PK = jatp.JavaTypeParameterID WHERE jatp.JavaAssemblyID = ?;");
+			pstatement.setInt(1, javaAssembly.getPK());
+			ResultSet rs = pstatement.executeQuery();
+			while (rs.next()) {
+				TypeParameterEntry tpe = new TypeParameterEntry();
+				tpe.setTypeParameter(extractEntry(JavaTypeParameterModel.class, rs));
+				tpe.getBounds().addAll(getTypeBoundsOfTypeParameter(tpe.getTypeParameter()));
+				result.add(tpe);
+			}
+			return result;
+		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+			throw new DatabaseConnectionException(e);
+		}
+	}
+	
+	@Override
+	public List<JavaAssemblyModel> getTypeBoundsOfTypeParameter(JavaTypeParameterModel javaTypeParameter) {
+		try {
+			List<JavaAssemblyModel> result = new ArrayList<JavaAssemblyModel>();
+			PreparedStatement pstatement = getDatasource().getConnection().prepareStatement("SELECT ja.* FROM JavaAssembly AS ja JOIN JavaType AS jt ON ja.PK = jt.JavaAssemblyID JOIN JavaTypeBound AS jtb ON jt.PK = jtb.JavaTypeID WHERE jtb.JavaTypeParameterID = ? ORDER BY jtb.OrderNumber ASC");
+			pstatement.setInt(1, javaTypeParameter.getPK());
+			ResultSet rs = pstatement.executeQuery();
+			while (rs.next()) {
+				result.add(extractEntry(JavaAssemblyModel.class, rs));
+			}
+			return result;
+		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+			throw new DatabaseConnectionException(e);
+		}
+	}
+	
+	@Override
+	public List<JavaTypeModel> getTypeArguments(JavaTypeModel javaType) {
+		try {
+			List<JavaTypeModel> result = new ArrayList<JavaTypeModel>();
+			PreparedStatement pstatement = getDatasource().getConnection().prepareStatement("SELECT jt.* FROM JavaType AS jt JOIN JavaTypeArgument AS jta ON jt.PK = jta.JavaTypeID WHERE jta.ParentJavaTypeID = ? ORDER BY jta.OrderNumber ASC;");
+			pstatement.setInt(1, javaType.getPK());
+			ResultSet rs = pstatement.executeQuery();
+			while (rs.next()) {
+				result.add(extractEntry(JavaTypeModel.class, rs));
+			}
+			return result;
 		} catch (SQLException | InstantiationException | IllegalAccessException e) {
 			throw new DatabaseConnectionException(e);
 		}

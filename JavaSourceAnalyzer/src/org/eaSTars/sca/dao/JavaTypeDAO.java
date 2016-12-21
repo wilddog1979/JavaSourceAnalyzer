@@ -28,6 +28,10 @@ public interface JavaTypeDAO {
 	
 	public Optional<JavaAssemblyTypeParameterModel> getJavaAssemblyTypeParameter(JavaAssemblyModel javaAssembly, JavaTypeParameterModel javaTypeParameter);
 	
+	public List<TypeParameterEntry> getJavaAssemblyTypeParameters(JavaAssemblyModel javaAssembly);
+	
+	public List<JavaAssemblyModel> getTypeBoundsOfTypeParameter(JavaTypeParameterModel javaTypeParameter);
+	
 	public JavaAssemblyTypeParameterModel createJavaAssemblyTypeParameter(JavaAssemblyModel javaAssembly, JavaTypeParameterModel javaTypeParameter);
 	
 	public Optional<JavaMethodTypeParameterModel> getJavaMethodTypeParameter(JavaMethodModel javaMethod, JavaTypeParameterModel javaTypeParameter);
@@ -35,4 +39,6 @@ public interface JavaTypeDAO {
 	public JavaMethodTypeParameterModel createJavaMethodTypeParameter(JavaMethodModel javaMethod, JavaTypeParameterModel javaTypeParameter);
 	
 	public JavaTypeParameterModel getJavaTypeParameterByAssembly(JavaAssemblyModel javaAssembly, String name);
+	
+	public List<JavaTypeModel> getTypeArguments(JavaTypeModel javaType);
 }

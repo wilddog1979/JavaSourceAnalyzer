@@ -1,7 +1,13 @@
 package org.eaSTars.sca.dao.impl;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
+import org.eaSTars.dblayer.dao.DatabaseConnectionException;
 import org.eaSTars.dblayer.dao.FilterEntry;
 import org.eaSTars.dblayer.dao.impl.DefaultAbstractDBLayerDAO;
 import org.eaSTars.sca.dao.JavaAssemblyDAO;
@@ -88,5 +94,49 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 				new FilterEntry("parentJavaAssemblyID", parentAssembly.getPK()),
 				new FilterEntry("javaTypeID", javaType.getPK()),
 				new FilterEntry("isExtends", false));
+	}
+	
+	@Override
+	public List<JavaAssemblyModel> getAssembliesByParent(Integer parentid) {
+		return queryModelList(JavaAssemblyModel.class,
+				new FilterEntry("parentAssemblyID", parentid));
+	}
+	
+	private ResultSet getJavaAssemblyExtendsInsert(JavaAssemblyModel javaAssembly, int isExtends) {
+		try {
+			PreparedStatement pstatement = getDatasource().getConnection().prepareStatement("SELECT jt.* FROM JavaType AS jt JOIN JavaExtendsImplements AS jei ON jt.PK = jei.JavaTypeID AND jei.isExtends = ? JOIN JavaAssembly AS ja ON jei.ParentJavaAssemblyID = ja.PK WHERE ja.PK = ?;");
+			pstatement.setInt(1, isExtends);
+			pstatement.setInt(2, javaAssembly.getPK());
+			return pstatement.executeQuery();
+		} catch (SQLException e) {
+			throw new DatabaseConnectionException(e);
+		}
+	}
+	
+	@Override
+	public JavaTypeModel getJavaAssemblyExtends(JavaAssemblyModel javaAssembly) {
+		try {
+			ResultSet rs = getJavaAssemblyExtendsInsert(javaAssembly, 1);
+			if (rs.next()) {
+				return extractEntry(JavaTypeModel.class, rs);
+			}
+		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+			throw new DatabaseConnectionException(e);
+		}
+		return null;
+	}
+	
+	@Override
+	public List<JavaTypeModel> getJavaAssemblyImplements(JavaAssemblyModel javaAssembly) {
+		List<JavaTypeModel> result = new ArrayList<JavaTypeModel>();
+		try {
+			ResultSet rs = getJavaAssemblyExtendsInsert(javaAssembly, 0);
+			while (rs.next()) {
+				result.add(extractEntry(JavaTypeModel.class, rs));
+			}
+		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+			throw new DatabaseConnectionException(e);
+		}
+		return result;
 	}
 }

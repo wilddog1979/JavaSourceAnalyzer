@@ -2,9 +2,12 @@
 <beans
 		xmlns="http://www.springframework.org/schema/beans"
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:context="http://www.springframework.org/schema/context"
 		xmlns:aop="http://www.springframework.org/schema/aop"
 		xsi:schemaLocation="http://www.springframework.org/schema/beans 
 							http://www.springframework.org/schema/beans/spring-beans.xsd
+							http://www.springframework.org/schema/context 
+      						http://www.springframework.org/schema/context/spring-context.xsd
 							http://www.springframework.org/schema/aop
 							http://www.springframework.org/schema/aop/spring-aop.xsd">
 	
@@ -13,9 +16,7 @@
 	<bean id="performanceMonitor" class="org.eaSTars.sca.aspect.impl.PerformanceMonitor">
 	</bean> -->
 	
-	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-		<property name="location" value="conf.properties"/>
-	</bean>
+	<context:property-placeholder location="conf.properties" />
 	
 	<bean id="configService" class="org.eaSTars.util.impl.DefaultConfigService"/>
 	
@@ -30,21 +31,7 @@
 		<property name="datasource" ref="dataSource"/>
 	</bean>
 	
-	<bean id="javaModuleDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaModuleDAO">
-		<property name="datasource" ref="dataSource"/>
-	</bean>
-	
-	<bean id="javaAssemblyDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaAssemblyDAO">
-		<property name="datasource" ref="dataSource"/>
-	</bean>
-	
-	<bean id="javaTypeDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaTypeDAO">
-		<property name="datasource" ref="dataSource"/>
-	</bean>
-	
-	<bean id="javaBodyDeclarationDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaBodyDeclarationDAO">
-		<property name="datasource" ref="dataSource"/>
-	</bean>
+	<import resource="JavaSourceDAOs.xml"/>
 	
 	<bean id="javaDeclarationParser" class="org.eaSTars.sca.service.impl.DefaultJavaDeclarationParser">
 		<property name="javaAssemblyDAO" ref="javaAssemblyDAO"/>
