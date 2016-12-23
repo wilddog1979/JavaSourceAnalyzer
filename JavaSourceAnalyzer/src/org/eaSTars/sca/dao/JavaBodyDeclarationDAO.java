@@ -16,9 +16,13 @@ public interface JavaBodyDeclarationDAO {
 	
 	public JavaFieldModel createJavaField(JavaAssemblyModel parentAssembly, int modifiers, JavaTypeModel javatpye, String name);
 	
+	public List<JavaFieldModel> getJavaFields(JavaAssemblyModel parentAssembly);
+	
 	public JavaMethodModel getJavaMethod(JavaAssemblyModel parentAssembly, JavaTypeModel javatpye, String name, int parametercount);
 	
 	public List<JavaMethodModel> getJavaMethods(JavaAssemblyModel parentAssembly, String name, int parametercount);
+	
+	public List<JavaMethodModel> getJavaMethods(JavaAssemblyModel parentAssembly);
 	
 	public List<JavaMethodParameterModel> getJavaMethodParameters(JavaMethodModel javaMethod);
 	

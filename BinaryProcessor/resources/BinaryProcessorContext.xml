@@ -20,6 +20,8 @@
 		<property name="password" value="${database.password}" />
 	</bean>
 	
+	<import resource="../../JavaSourceAnalyzer/resources/JavaSourceDAOs.xml"/>
+	
 	<bean id="scaDatabaseMaintenanceService" class="org.eaSTars.sca.service.impl.DefaultSCADatabaseMaintenanceService">
 		<property name="datasource" ref="dataSource"/>
 	</bean>
@@ -36,13 +38,5 @@
 	
 	<bean id="binaryDeclarationParser" class="org.eaSTars.binprocessor.service.impl.DefaultBinaryDeclarationParser">
 		<property name="javaAssemblyDAO" ref="javaAssemblyDAO"/>
-	</bean>
-	
-	<bean id="javaModuleDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaModuleDAO">
-		<property name="datasource" ref="dataSource"/>
-	</bean>
-	
-	<bean id="javaAssemblyDAO" class="org.eaSTars.sca.dao.impl.DefaultJavaAssemblyDAO">
-		<property name="datasource" ref="dataSource"/>
 	</bean>
 </beans>

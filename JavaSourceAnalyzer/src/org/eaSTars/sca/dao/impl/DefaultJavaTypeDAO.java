@@ -22,7 +22,12 @@ import org.eaSTars.sca.model.JavaTypeModel;
 import org.eaSTars.sca.model.JavaTypeParameterModel;
 
 public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements JavaTypeDAO {
-
+	
+	@Override
+	public JavaTypeModel getJavaType(Integer id) {
+		return queryModel(JavaTypeModel.class, new FilterEntry("PK", id));
+	}
+	
 	@Override
 	public Optional<JavaTypeModel> getJavaType(JavaAssemblyModel javaAssembly, List<JavaTypeModel> arguments) {
 		List<JavaTypeModel> javatypes = queryModelList(JavaTypeModel.class,
@@ -153,7 +158,8 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 	@Override
 	public JavaTypeParameterModel getJavaTypeParameterByAssembly(JavaAssemblyModel javaAssembly, String name) {
 		try {
-			PreparedStatement pstatement = getDatasource().getConnection().prepareStatement("SELECT jtp.PK, jtp.Name, jtp.BoundCount FROM JavaTypeParameter AS jtp JOIN JavaAssemblyTypeParameter AS jatp ON jtp.PK = jatp.JavaTypeParameterID WHERE jatp.JavaAssemblyID = ? AND jtp.Name = ?");
+			PreparedStatement pstatement = customStatementCacheManager("DefaultJavaTypeDAO.getJavaTypeParameterByAssembly",
+					"SELECT jtp.PK, jtp.Name, jtp.BoundCount FROM JavaTypeParameter AS jtp JOIN JavaAssemblyTypeParameter AS jatp ON jtp.PK = jatp.JavaTypeParameterID WHERE jatp.JavaAssemblyID = ? AND jtp.Name = ?");
 			pstatement.setInt(1, javaAssembly.getPK());
 			pstatement.setString(2, name);
 			ResultSet rs = pstatement.executeQuery();
@@ -170,8 +176,29 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 	public List<TypeParameterEntry> getJavaAssemblyTypeParameters(JavaAssemblyModel javaAssembly) {
 		try {
 			List<TypeParameterEntry> result = new ArrayList<TypeParameterEntry>();
-			PreparedStatement pstatement = getDatasource().getConnection().prepareStatement("SELECT jtp.* FROM JavaTypeParameter AS jtp JOIN JavaAssemblyTypeParameter AS jatp ON jtp.PK = jatp.JavaTypeParameterID WHERE jatp.JavaAssemblyID = ?;");
+			PreparedStatement pstatement = customStatementCacheManager("DefaultJavaTypeDAO.getJavaAssemblyTypeParameters",
+					"SELECT jtp.* FROM JavaTypeParameter AS jtp JOIN JavaAssemblyTypeParameter AS jatp ON jtp.PK = jatp.JavaTypeParameterID WHERE jatp.JavaAssemblyID = ?;");
 			pstatement.setInt(1, javaAssembly.getPK());
+			ResultSet rs = pstatement.executeQuery();
+			while (rs.next()) {
+				TypeParameterEntry tpe = new TypeParameterEntry();
+				tpe.setTypeParameter(extractEntry(JavaTypeParameterModel.class, rs));
+				tpe.getBounds().addAll(getTypeBoundsOfTypeParameter(tpe.getTypeParameter()));
+				result.add(tpe);
+			}
+			return result;
+		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+			throw new DatabaseConnectionException(e);
+		}
+	}
+	
+	@Override
+	public List<TypeParameterEntry> getJavaMethodTypeParameters(JavaMethodModel javaMethod) {
+		try {
+			List<TypeParameterEntry> result = new ArrayList<TypeParameterEntry>();
+			PreparedStatement pstatement = customStatementCacheManager("DefaultJavaTypeDAO.getJavaMethodTypeParameters",
+					"SELECT jtp.* FROM JavaTypeParameter AS jtp JOIN JavaMethodTypeParameter AS jmtp ON jtp.PK = jmtp.JavaTypeParameterID WHERE jmtp.JavaMethodID = ?;");
+			pstatement.setInt(1, javaMethod.getPK());
 			ResultSet rs = pstatement.executeQuery();
 			while (rs.next()) {
 				TypeParameterEntry tpe = new TypeParameterEntry();
@@ -189,7 +216,8 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 	public List<JavaAssemblyModel> getTypeBoundsOfTypeParameter(JavaTypeParameterModel javaTypeParameter) {
 		try {
 			List<JavaAssemblyModel> result = new ArrayList<JavaAssemblyModel>();
-			PreparedStatement pstatement = getDatasource().getConnection().prepareStatement("SELECT ja.* FROM JavaAssembly AS ja JOIN JavaType AS jt ON ja.PK = jt.JavaAssemblyID JOIN JavaTypeBound AS jtb ON jt.PK = jtb.JavaTypeID WHERE jtb.JavaTypeParameterID = ? ORDER BY jtb.OrderNumber ASC");
+			PreparedStatement pstatement = customStatementCacheManager("DefaultJavaTypeDAO.getTypeBoundsOfTypeParameter",
+					"SELECT ja.* FROM JavaAssembly AS ja JOIN JavaType AS jt ON ja.PK = jt.JavaAssemblyID JOIN JavaTypeBound AS jtb ON jt.PK = jtb.JavaTypeID WHERE jtb.JavaTypeParameterID = ? ORDER BY jtb.OrderNumber ASC;");
 			pstatement.setInt(1, javaTypeParameter.getPK());
 			ResultSet rs = pstatement.executeQuery();
 			while (rs.next()) {
@@ -205,7 +233,8 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 	public List<JavaTypeModel> getTypeArguments(JavaTypeModel javaType) {
 		try {
 			List<JavaTypeModel> result = new ArrayList<JavaTypeModel>();
-			PreparedStatement pstatement = getDatasource().getConnection().prepareStatement("SELECT jt.* FROM JavaType AS jt JOIN JavaTypeArgument AS jta ON jt.PK = jta.JavaTypeID WHERE jta.ParentJavaTypeID = ? ORDER BY jta.OrderNumber ASC;");
+			PreparedStatement pstatement = customStatementCacheManager("DefaultJavaTypeDAO.getTypeArguments",
+					"SELECT jt.* FROM JavaType AS jt JOIN JavaTypeArgument AS jta ON jt.PK = jta.JavaTypeID WHERE jta.ParentJavaTypeID = ? ORDER BY jta.OrderNumber ASC;");
 			pstatement.setInt(1, javaType.getPK());
 			ResultSet rs = pstatement.executeQuery();
 			while (rs.next()) {

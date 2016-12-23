@@ -38,6 +38,12 @@ public class DefaultJavaBodyDeclarationDAO extends DefaultAbstractDBLayerDAO imp
 	}
 	
 	@Override
+	public List<JavaFieldModel> getJavaFields(JavaAssemblyModel parentAssembly) {
+		return queryModelList(JavaFieldModel.class,
+				new FilterEntry("parentAssemblyID", parentAssembly.getPK()));
+	}
+	
+	@Override
 	public JavaMethodModel getJavaMethod(JavaAssemblyModel parentAssembly, JavaTypeModel javatpye, String name, int parametercount) {
 		return queryModel(JavaMethodModel.class,
 				new FilterEntry("parentAssemblyID", parentAssembly.getPK()),
@@ -52,6 +58,12 @@ public class DefaultJavaBodyDeclarationDAO extends DefaultAbstractDBLayerDAO imp
 				new FilterEntry("parentAssemblyID", parentAssembly.getPK()),
 				new FilterEntry("name", name),
 				new FilterEntry("parameterCount", parametercount));
+	}
+	
+	@Override
+	public List<JavaMethodModel> getJavaMethods(JavaAssemblyModel parentAssembly) {
+		return queryModelList(JavaMethodModel.class,
+				new FilterEntry("parentAssemblyID", parentAssembly.getPK()));
 	}
 	
 	@Override

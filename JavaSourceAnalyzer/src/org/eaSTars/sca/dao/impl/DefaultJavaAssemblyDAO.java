@@ -104,7 +104,8 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 	
 	private ResultSet getJavaAssemblyExtendsInsert(JavaAssemblyModel javaAssembly, int isExtends) {
 		try {
-			PreparedStatement pstatement = getDatasource().getConnection().prepareStatement("SELECT jt.* FROM JavaType AS jt JOIN JavaExtendsImplements AS jei ON jt.PK = jei.JavaTypeID AND jei.isExtends = ? JOIN JavaAssembly AS ja ON jei.ParentJavaAssemblyID = ja.PK WHERE ja.PK = ?;");
+			PreparedStatement pstatement = customStatementCacheManager("getJavaAssemblyExtendsInsert",
+					"SELECT jt.* FROM JavaType AS jt JOIN JavaExtendsImplements AS jei ON jt.PK = jei.JavaTypeID AND jei.isExtends = ? JOIN JavaAssembly AS ja ON jei.ParentJavaAssemblyID = ja.PK WHERE ja.PK = ?;");
 			pstatement.setInt(1, isExtends);
 			pstatement.setInt(2, javaAssembly.getPK());
 			return pstatement.executeQuery();

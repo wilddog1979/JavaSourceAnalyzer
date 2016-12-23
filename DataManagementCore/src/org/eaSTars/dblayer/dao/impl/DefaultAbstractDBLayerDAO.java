@@ -526,4 +526,19 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 		
 		return result;
 	}
+	
+	private Map<String, PreparedStatement> customStatementCache = new HashMap<String, PreparedStatement>();
+
+	protected PreparedStatement customStatementCacheManager(String key, String query) {
+		return Optional.ofNullable(customStatementCache.get(key))
+				.orElseGet(() -> {
+					try {
+						PreparedStatement pstatement = getDatasource().getConnection().prepareStatement(query);
+						customStatementCache.put(key, pstatement);
+						return pstatement;
+					} catch (SQLException e) {
+						throw new DatabaseConnectionException(e);
+					}
+				});
+	}
 }

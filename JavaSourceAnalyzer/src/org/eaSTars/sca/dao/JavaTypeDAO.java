@@ -14,6 +14,8 @@ import org.eaSTars.sca.model.JavaTypeParameterModel;
 
 public interface JavaTypeDAO {
 
+	public JavaTypeModel getJavaType(Integer id);
+	
 	public Optional<JavaTypeModel> getJavaType(JavaAssemblyModel javaAssembly, List<JavaTypeModel> arguments);
 	
 	public JavaTypeModel createJavaType(JavaAssemblyModel javaAssembly, List<JavaTypeModel> arguments);
@@ -41,4 +43,6 @@ public interface JavaTypeDAO {
 	public JavaTypeParameterModel getJavaTypeParameterByAssembly(JavaAssemblyModel javaAssembly, String name);
 	
 	public List<JavaTypeModel> getTypeArguments(JavaTypeModel javaType);
+	
+	public List<TypeParameterEntry> getJavaMethodTypeParameters(JavaMethodModel javaMethod);
 }
