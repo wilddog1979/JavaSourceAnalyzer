@@ -4,7 +4,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.eaSTars.dblayer.dao.DatabaseConnectionException;
@@ -18,6 +20,8 @@ import org.eaSTars.sca.model.JavaTypeModel;
 
 public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements JavaAssemblyDAO {
 
+	private Map<String, JavaObjectTypeModel> objectTypeCache = new HashMap<String, JavaObjectTypeModel>();
+	
 	@Override
 	public JavaObjectTypeModel getPackageObjectType() {
 		return getObjectType("Package");
@@ -44,9 +48,14 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 	}
 
 	private JavaObjectTypeModel getObjectType(String name) {
-		return queryModel(JavaObjectTypeModel.class, new FilterEntry("name", name));
+		return Optional.ofNullable(objectTypeCache.get(name))
+				.orElseGet(() -> {
+					JavaObjectTypeModel result = queryModel(JavaObjectTypeModel.class, new FilterEntry("name", name));
+					objectTypeCache.put(name, result);
+					return result;
+				});
 	}
-	
+
 	@Override
 	public JavaAssemblyModel getAssembly(Integer pk) {
 		return queryModel(JavaAssemblyModel.class, new FilterEntry("PK", pk));
