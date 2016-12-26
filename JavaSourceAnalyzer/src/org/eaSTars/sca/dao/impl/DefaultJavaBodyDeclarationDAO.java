@@ -61,9 +61,14 @@ public class DefaultJavaBodyDeclarationDAO extends DefaultAbstractDBLayerDAO imp
 	}
 	
 	@Override
-	public List<JavaMethodModel> getJavaMethods(JavaAssemblyModel parentAssembly) {
+	public List<JavaMethodModel> getJavaMethods(Integer id) {
 		return queryModelList(JavaMethodModel.class,
-				new FilterEntry("parentAssemblyID", parentAssembly.getPK()));
+				new FilterEntry("parentAssemblyID", id));
+	}
+	
+	@Override
+	public List<JavaMethodModel> getJavaMethods(JavaAssemblyModel parentAssembly) {
+		return getJavaMethods(parentAssembly.getPK());
 	}
 	
 	@Override

@@ -22,6 +22,8 @@ public interface JavaBodyDeclarationDAO {
 	
 	public List<JavaMethodModel> getJavaMethods(JavaAssemblyModel parentAssembly, String name, int parametercount);
 	
+	public List<JavaMethodModel> getJavaMethods(Integer id);
+	
 	public List<JavaMethodModel> getJavaMethods(JavaAssemblyModel parentAssembly);
 	
 	public List<JavaMethodParameterModel> getJavaMethodParameters(JavaMethodModel javaMethod);
