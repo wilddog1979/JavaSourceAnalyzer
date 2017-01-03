@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+		xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:context="http://www.springframework.org/schema/context"
+		xmlns:aop="http://www.springframework.org/schema/aop"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans 
+							http://www.springframework.org/schema/beans/spring-beans.xsd
+							http://www.springframework.org/schema/context 
+      						http://www.springframework.org/schema/context/spring-context.xsd
+							http://www.springframework.org/schema/aop
+							http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<context:annotation-config/>
+	
+	<!-- <aop:aspectj-autoproxy/>
+
+	<bean id="performanceMonitor" class="org.eaSTars.sca.aspect.impl.PerformanceMonitor">
+	</bean> -->
+
+	<context:property-placeholder location="conf.properties" ignore-resource-not-found="true"/>
+	
+	<!-- <bean id="configService" class="org.eaSTars.util.impl.DefaultConfigService"/> -->
+	
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="${database.driver}" />
+		<property name="url" value="${database.url}" />
+		<property name="username" value="${database.username}" />
+		<property name="password" value="${database.password}" />
+	</bean>
+	
+	<import resource="../../JavaSourceAnalyzer/resources/JavaSourceDAOs.xml"/>
+	
+	<!-- GUI start -->
+	
+	<bean id="mainFrameAdapter" class="org.eaSTars.adashboard.gui.impl.DefaultMainFrameAdapter">
+	</bean>
+
+	<bean id="mainFrame" class="org.eaSTars.adashboard.gui.impl.DefaultMainFrame" init-method="init">
+		<property name="mainFrameListener" ref="mainFrameAdapter"/>
+		<property name="javaAssemblyController" ref="javaAssemblyController"/>
+		<property name="javaSequenceDiagramController" ref="javaSequenceDiagramController"/>
+	</bean>
+	
+	<!-- GUI end -->
+	
+	<!-- controllers start -->
+	
+	<bean id="javaAssemblyController" class="org.eaSTars.adashboard.controller.impl.DefaultJavaAssemblyController">
+		<property name="javaAssemblyService" ref="javaAssemblyService"/>
+		<property name="javaBodyDeclarationService" ref="javaBodyDeclarationService"/>
+		
+		<property name="conversionService" ref="conversionService"/>
+	</bean>
+	
+	<bean id="javaSequenceDiagramController" class="org.eaSTars.adashboard.controller.impl.DefaultJavaSequenceDiagramController">
+	</bean>
+	
+	<!-- controllers end -->
+	
+	<!-- converters start -->
+
+	<bean id="javaAssemblyObjectConverter" class="org.eaSTars.adashboard.converter.impl.DefaultADashboardAssemblyObjectViewConverter">
+		<property name="javaAssemblyService" ref="javaAssemblyService" />
+	</bean>
+	
+	<bean id="javaMethodObjectConverter" class="org.eaSTars.adashboard.converter.impl.DefaultADashboardMethodObjectConverter">
+		<property name="javaAssemblyService" ref="javaAssemblyService" />
+		<property name="javaBodyDeclarationService" ref="javaBodyDeclarationService" />
+		<property name="javaTypeService" ref="javaTypeService" />
+	</bean>
+	
+	<bean id="javaAssemblyFullViewConverter" class="org.eaSTars.adashboard.converter.impl.DefaultJavaAssemblyFullViewConverter">
+		<property name="javaBodyDeclarationService" ref="javaBodyDeclarationService"/>
+	</bean>
+	
+	<bean id="javaAssemblyDefinitionConverter" class="org.eaSTars.adashboard.converter.impl.DefaultAssemblyDefinitionConverter">
+		<property name="javaAssemblyService" ref="javaAssemblyService"/>
+		<property name="javaTypeService" ref="javaTypeService"/>
+	</bean>
+	
+	<bean id="javaFieldConverter" class="org.eaSTars.adashboard.converter.impl.DefaultFieldConverter">
+		<property name="javaAssemblyService" ref="javaAssemblyService" />
+		<property name="javaTypeService" ref="javaTypeService" />
+	</bean>
+	
+	<bean id="javaMethodConverter" class="org.eaSTars.adashboard.converter.impl.DefaultMethodConverter">
+	</bean>
+	
+	<bean id="javaMethodDefinitionConverter" class="org.eaSTars.adashboard.converter.impl.DefaultMethodDefinitionConverter">
+		<property name="javaAssemblyService" ref="javaAssemblyService" />
+		<property name="javaBodyDeclarationService" ref="javaBodyDeclarationService" />
+		<property name="javaTypeService" ref="javaTypeService" />
+	</bean>
+	
+	<bean id="javaTypeArgumentConverter" class="org.eaSTars.adashboard.converter.impl.DefaultJavaTypeArgumentConverter">
+		<property name="javaAssemblyService" ref="javaAssemblyService"/>
+	</bean>
+	
+	<bean id="javaTypeParameterConverter" class="org.eaSTars.adashboard.converter.impl.DefaultJavaTypeParameterConverter">
+	</bean>
+	
+	<bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean">
+		<property name="converters">
+			<list>
+				<ref bean="javaAssemblyObjectConverter"/>
+				<ref bean="javaFieldConverter"/>
+				<ref bean="javaMethodObjectConverter"/>
+				<ref bean="javaAssemblyFullViewConverter"/>
+				<ref bean="javaAssemblyDefinitionConverter"/>
+				<ref bean="javaMethodConverter"/>
+				<ref bean="javaMethodDefinitionConverter"/>
+				<ref bean="javaTypeArgumentConverter"/>
+				<ref bean="javaTypeParameterConverter"/>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- converters end -->
+	
+	<!-- services start -->
+	
+	<bean id="javaAssemblyService" class="org.eaSTars.adashboard.service.impl.DefaultJavaAssemblyService">
+		<property name="javaAssemblyDAO" ref="javaAssemblyDAO"/>
+		<property name="javaTypeDAO" ref="javaTypeDAO"/>
+	</bean>
+	
+	<bean id="javaBodyDeclarationService" class="org.eaSTars.adashboard.service.impl.DefaultJavaBodyDeclarationService">
+		<property name="javaBodyDeclarationDAO" ref="javaBodyDeclarationDAO"/>
+	</bean>
+	
+	<bean id="javaTypeService" class="org.eaSTars.adashboard.service.impl.DefaultJavaTypeService">
+		<property name="javaTypeDAO" ref="javaTypeDAO"/>
+	</bean>
+	
+	<!-- services end -->
+</beans>
