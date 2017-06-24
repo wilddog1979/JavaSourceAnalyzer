@@ -19,8 +19,12 @@ import org.eaSTars.sca.model.JavaObjectTypeModel;
 import org.eaSTars.sca.model.JavaTypeModel;
 
 public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements JavaAssemblyDAO {
-
+	
+	private final static int JAVAASSEMBLY_CACHE_SIZE = 500;
+	
 	private Map<String, JavaObjectTypeModel> objectTypeCache = new HashMap<String, JavaObjectTypeModel>();
+	
+	private EntityCache<String, JavaAssemblyModel> javaAssemblyEntityCache = new EntityCache<>(JAVAASSEMBLY_CACHE_SIZE);
 	
 	@Override
 	public JavaObjectTypeModel getPackageObjectType() {
@@ -65,12 +69,14 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 	public JavaAssemblyModel getAssembly(String name, JavaAssemblyModel parent) {
 		return queryModel(JavaAssemblyModel.class,
 				new FilterEntry("name", name),
-				new FilterEntry("parentAssemblyID", Optional.ofNullable(parent).map(JavaAssemblyModel::getPK).orElse(null)));
+				new FilterEntry("parentAssemblyID", Optional.ofNullable(parent)
+						.map(JavaAssemblyModel::getPK).orElse(null)));
 	}
 	
 	@Override
 	public JavaAssemblyModel getAssemblyByAggregate(String name) {
-		return queryModel(JavaAssemblyModel.class, new FilterEntry("aggregate", name));
+		return javaAssemblyEntityCache.getItemFromCache(name,
+				() -> queryModel(JavaAssemblyModel.class, new FilterEntry("aggregate", name)));
 	}
 
 	@Override
@@ -149,4 +155,11 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 		}
 		return result;
 	}
+	
+	@Override
+	public void saveModel(JavaAssemblyModel model) {
+		super.saveModel(model);
+		javaAssemblyEntityCache.putInModelCache(model.getAggregate(), model);
+	}
+	
 }
