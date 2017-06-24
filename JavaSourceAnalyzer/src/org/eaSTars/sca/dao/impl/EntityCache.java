@@ -3,9 +3,13 @@ package org.eaSTars.sca.dao.impl;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eaSTars.dblayer.model.GenericModel;
 
 public class EntityCache <K extends Object, V extends GenericModel> {
+	
+	private static final Logger LOGGER = LogManager.getLogger(EntityCache.class);
 	
 	@FunctionalInterface
 	public interface EntitityProvider <T extends GenericModel> {
@@ -63,7 +67,7 @@ public class EntityCache <K extends Object, V extends GenericModel> {
 			result = cacheinfo.getCachedObject();
 			cacheHit++;
 		}
-		System.out.printf("[%s] hit ratio: %d / %d (%d%%)\n", this.getClass().getSimpleName(), cacheHit, cacheAttempt, (int)((double)cacheHit / cacheAttempt * 100));
+		LOGGER.debug(String.format("[%s] hit ratio: %d / %d (%d%%)", this.getClass().getSimpleName(), cacheHit, cacheAttempt, (int)((double)cacheHit / cacheAttempt * 100)));
 		
 		return result;
 	}
