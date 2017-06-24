@@ -35,8 +35,7 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 	private List<Field> getFields(Class<?> modelclass) {
 		List<Field> result = Arrays.asList(
 				Optional.ofNullable(modelclass.getDeclaredFields())
-				.orElse(new Field[]{})
-				).stream()
+				.orElse(new Field[]{})).stream()
 		.filter(field -> field.isAnnotationPresent(Attribute.class))
 		.collect(Collectors.toList());
 		
@@ -52,8 +51,7 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 	private Field getField(Class<?> modelclass, String name) {
 		return Arrays.asList(
 				Optional.ofNullable(modelclass.getDeclaredFields())
-				.orElse(new Field[]{})
-				).stream()
+				.orElse(new Field[]{})).stream()
 		.filter(field -> field.isAnnotationPresent(Attribute.class) && field.getName().equals(name))
 		.findFirst().orElseGet(() -> {
 			if (GenericModel.class.isAssignableFrom(modelclass)) {
@@ -143,26 +141,26 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 		if (deployment != null) {
 			ParameterEntry pk[] = {null};
 			List<ParameterEntry> entries = getFields(model.getClass()).stream()
-			.map(field -> Optional.ofNullable(field.getAnnotation(Attribute.class))
-					.map(attribute -> Optional.ofNullable(findMethod(model.getClass(), "get", field.getName())
-							.map(method -> {
-								try {
-									ParameterEntry pe = new ParameterEntry(field, attribute.column(), method.getReturnType(), method.invoke(model, new Object[]{}));
-									if (attribute.primarykey()) {
-										pk[0] = pe;
-										return null;
-									} else {
-										return pe;
-									}
-								} catch (IllegalAccessException | IllegalArgumentException
-										| InvocationTargetException e) {
-									throw new DatabaseConnectionException(e);
-								}})
+					.map(field -> Optional.ofNullable(field.getAnnotation(Attribute.class))
+							.map(attribute -> Optional.ofNullable(findMethod(model.getClass(), "get", field.getName())
+									.map(method -> {
+										try {
+											ParameterEntry pe = new ParameterEntry(field, attribute.column(), method.getReturnType(), method.invoke(model, new Object[]{}));
+											if (attribute.primarykey()) {
+												pk[0] = pe;
+												return null;
+											} else {
+												return pe;
+											}
+										} catch (IllegalAccessException | IllegalArgumentException
+												| InvocationTargetException e) {
+											throw new DatabaseConnectionException(e);
+										}})
+									.orElse(null))
+									.orElse(null))
 							.orElse(null))
-							.orElse(null))
-					.orElse(null))
-			.filter(pe -> pe != null)
-			.collect(Collectors.toList());
+					.filter(pe -> pe != null)
+					.collect(Collectors.toList());
 
 			try {
 				PreparedStatement pstatement = null;
@@ -208,7 +206,7 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 						entries = tempentries;
 
 						LOGGER.trace(query);
-						
+
 						pstatement = datasource.getConnection().prepareStatement(
 								query, PreparedStatement.RETURN_GENERATED_KEYS);
 						updateCache.put(model.getClass(), pstatement);
@@ -263,12 +261,9 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 
 			PreparedStatement pstatement = null;
 			if (modellevel != null) {
-				for (List<QueryCharacteristic> key : modellevel.keySet()) {
-					if (key.equals(currentcharacteristic)) {
-						pstatement = modellevel.get(key);
-						break;
-					}
-				}
+				pstatement = modellevel.entrySet().stream()
+				.filter(e -> e.getKey().equals(currentcharacteristic)).findFirst()
+				.map(e -> e.getValue()).orElseGet(() -> null);
 			} else {
 				modellevel = new HashMap<List<QueryCharacteristic>, PreparedStatement>();
 				querycache.put(modelclass, modellevel);
