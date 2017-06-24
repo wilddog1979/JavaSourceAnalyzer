@@ -51,7 +51,7 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 			progressListener.setSubprogressCount(files.size());
 			JavaModuleModel javamodule = javaModuleDAO.createJavaModule(modulename);
 			files.forEach(file -> {
-				progressListener.setStatusText("("+averagetime[0]+"ms - "+((grandtotal[0] - grandtotal[1]) * averagetime[0] / 1000)+"s) "+modulename+" - "+file.getName());
+				progressListener.setStatusText("("+((System.currentTimeMillis() - starttime) / 1000)+"s - "+averagetime[0]+"ms - "+((grandtotal[0] - grandtotal[1]) * averagetime[0] / 1000)+"s) "+modulename+" - "+file.getName());
 				
 				processFile(javamodule, file);
 				averagetime[0] = (System.currentTimeMillis() - starttime) / (++grandtotal[1]);
