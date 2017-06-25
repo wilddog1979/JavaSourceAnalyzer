@@ -92,7 +92,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 				result = javamethodtypeparameters.stream()
 				.filter(jmtp -> jmtp.getName().equals(coit.getName()))
 				.findFirst()
-				.map(jmtp -> createOtherStructure(null, coit.getName(), true, ctx.getJavaModule(), getJavaClassType(), null))
+				.map(jmtp -> createOtherStructure(null, null, coit.getName(), true, ctx.getJavaModule(), getJavaClassType(), null))
 				.orElseGet(() -> null);
 			}
 			
@@ -101,7 +101,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 				result = ctx.getJavaAssemblyTypeParameters().stream()
 				.filter(tp -> tp.getName().equals(coit.getName()))
 				.findFirst()
-				.map(tp -> createOtherStructure(null, tp.getName(), true, ctx.getJavaModule(), getJavaClassType(), null))
+				.map(tp -> createOtherStructure(null, null, tp.getName(), true, ctx.getJavaModule(), getJavaClassType(), null))
 				.orElseGet(() -> null);
 			}
 		
@@ -136,7 +136,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 			if (result == null) {
 				System.out.println("early reference not found to "+coit.toStringWithoutComments()+" in "+ctx.getJavaAssembly().getAggregate());
 				// it must be here but probably the file is not on class path or in any of the source folders
-				result = createOtherStructure(ctx.getParentJavaAssembly(), coit.getName(), confirmed, ctx.getJavaModule(), objecttype, null);
+				result = createOtherStructure(ctx.getParentJavaAssembly(), null, coit.getName(), confirmed, ctx.getJavaModule(), objecttype, null);
 			}
 		}
 		
@@ -161,11 +161,11 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		} else if (type instanceof PrimitiveType) {
 			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(new QualifiedNameExpr(JAVALANGEXPR, ((PrimitiveType)type).getType().name()), true, ctx.getJavaModule(), getJavaClassType(), null), Collections.emptyList());
 		} else if (type instanceof VoidType) {
-			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(null, "void", true, ctx.getJavaModule(), getJavaClassType(), null), Collections.emptyList());
+			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(null, null, "void", true, ctx.getJavaModule(), getJavaClassType(), null), Collections.emptyList());
 		} else if (type instanceof WildcardType) {
 			WildcardType wt = (WildcardType) type;
 			
-			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(null, "*", true, ctx.getJavaModule(), getJavaClassType(), null), Collections.emptyList());
+			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(null, null, "*", true, ctx.getJavaModule(), getJavaClassType(), null), Collections.emptyList());
 			Optional.ofNullable(wt.getSuper()).ifPresent(sp -> processType(ctx, javamethodtypeparameters, sp, null));
 			Optional.ofNullable(wt.getExtends()).ifPresent(ex -> processType(ctx, javamethodtypeparameters, ex, null));
 		} else {
@@ -211,27 +211,19 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 	}
 	
 	@Override
-	public void processBodyDeclarations(AssemblyParserContext ctx, List<? extends BodyDeclaration> bodydeclarations) {
+	public void processBodyDeclarations(AssemblyParserContext ctx, String subpath, List<? extends BodyDeclaration> bodydeclarations) {
 		// process class or interface and enum declarations first
 		for (BodyDeclaration bodydeclaration : bodydeclarations) {
+			AssemblyParserContext innerctx = new AssemblyParserContext();
+			innerctx.setJavaModule(ctx.getJavaModule());
+			innerctx.setParentJavaAssembly(ctx.getJavaAssembly());
+			innerctx.setImports(ctx.getImports());
 			if (bodydeclaration instanceof ClassOrInterfaceDeclaration) {
-				AssemblyParserContext innerctx = new AssemblyParserContext();
-				innerctx.setJavaModule(ctx.getJavaModule());
-				innerctx.setParentJavaAssembly(ctx.getJavaAssembly());
-				innerctx.setImports(ctx.getImports());
-				parse(innerctx, (ClassOrInterfaceDeclaration) bodydeclaration);
+				parse(innerctx, subpath, (ClassOrInterfaceDeclaration) bodydeclaration);
 			} else if (bodydeclaration instanceof EnumDeclaration) {
-				AssemblyParserContext innerctx = new AssemblyParserContext();
-				innerctx.setJavaModule(ctx.getJavaModule());
-				innerctx.setParentJavaAssembly(ctx.getJavaAssembly());
-				innerctx.setImports(ctx.getImports());
-				parse(innerctx, (EnumDeclaration)bodydeclaration);
+				parse(innerctx, subpath, (EnumDeclaration)bodydeclaration);
 			} else if (bodydeclaration instanceof AnnotationDeclaration) {
-				AssemblyParserContext innerctx = new AssemblyParserContext();
-				innerctx.setJavaModule(ctx.getJavaModule());
-				innerctx.setParentJavaAssembly(ctx.getJavaAssembly());
-				innerctx.setImports(ctx.getImports());
-				parse(innerctx, (AnnotationDeclaration)bodydeclaration);
+				parse(innerctx, subpath, (AnnotationDeclaration)bodydeclaration);
 			}
 		}
 		
@@ -269,9 +261,9 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 	}
 	
 	@Override
-	public JavaAssemblyModel parse(AssemblyParserContext ctx, ClassOrInterfaceDeclaration coid) {
+	public JavaAssemblyModel parse(AssemblyParserContext ctx, String subpath, ClassOrInterfaceDeclaration coid) {
 		JavaObjectTypeModel objecttype = coid.isInterface() ? getJavaInterfaceType() : getJavaClassType();
-		ctx.setJavaAssembly(createOtherStructure(ctx.getParentJavaAssembly(), coid.getName(), true, ctx.getJavaModule(), objecttype, coid.getModifiers()));
+		ctx.setJavaAssembly(createOtherStructure(ctx.getParentJavaAssembly(), subpath, coid.getName(), true, ctx.getJavaModule(), objecttype, coid.getModifiers()));
 		
 		ctx.getJavaAssemblyTypeParameters().addAll(
 				coid.getTypeParameters().stream()
@@ -297,14 +289,14 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 			getJavaAssemblyDAO().createImplements(ctx.getJavaAssembly(), javatype);
 		});
 		
-		processBodyDeclarations(ctx, coid.getMembers());
+		processBodyDeclarations(ctx, null, coid.getMembers());
 		
 		return ctx.getJavaAssembly();
 	}
 
 	@Override
-	public JavaAssemblyModel parse(AssemblyParserContext ctx, EnumDeclaration ed) {
-		ctx.setJavaAssembly(createOtherStructure(ctx.getParentJavaAssembly(), ed.getName(), true, ctx.getJavaModule(), getJavaEnumType(), ed.getModifiers()));
+	public JavaAssemblyModel parse(AssemblyParserContext ctx, String subpath, EnumDeclaration ed) {
+		ctx.setJavaAssembly(createOtherStructure(ctx.getParentJavaAssembly(), subpath, ed.getName(), true, ctx.getJavaModule(), getJavaEnumType(), ed.getModifiers()));
 		
 		ed.getImplements().stream()
 		.forEach(edimplements -> {
@@ -312,23 +304,23 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 			getJavaAssemblyDAO().createImplements(ctx.getJavaAssembly(), javatype);
 		});
 		
-		processBodyDeclarations(ctx, ed.getMembers());
+		processBodyDeclarations(ctx, null, ed.getMembers());
 		
 		return ctx.getJavaAssembly();
 	}
 	
 	@Override
-	public JavaAssemblyModel parse(AssemblyParserContext ctx, AnnotationDeclaration ad) {
-		ctx.setJavaAssembly(createOtherStructure(ctx.getParentJavaAssembly(), ad.getName(), true, ctx.getJavaModule(), getJavaAnnotationType(), ad.getModifiers()));
+	public JavaAssemblyModel parse(AssemblyParserContext ctx, String subpath, AnnotationDeclaration ad) {
+		ctx.setJavaAssembly(createOtherStructure(ctx.getParentJavaAssembly(), subpath, ad.getName(), true, ctx.getJavaModule(), getJavaAnnotationType(), ad.getModifiers()));
 		
-		processBodyDeclarations(ctx, ad.getMembers());
+		processBodyDeclarations(ctx, null, ad.getMembers());
 		
 		return ctx.getJavaAssembly();
 	}
 
 	public JavaModuleModel getJavaRuntimeModule() {
 		if (javaRuntimeModule == null) {
-			javaRuntimeModule = javaModuleDAO.createJavaModule("Java Runtime");
+			javaRuntimeModule = javaModuleDAO.createJavaModule("Java Runtime",null);
 		}
 		return javaRuntimeModule;
 	}

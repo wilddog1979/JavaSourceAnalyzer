@@ -87,11 +87,12 @@ public abstract class AbstractJavaParser {
 		return result;
 	}
 	
-	public JavaAssemblyModel createOtherStructure(JavaAssemblyModel parent, String name, boolean confirmed, JavaModuleModel module, JavaObjectTypeModel objecttype, Integer modifiers) {
+	public JavaAssemblyModel createOtherStructure(JavaAssemblyModel parent, String subpath, String name, boolean confirmed, JavaModuleModel module, JavaObjectTypeModel objecttype, Integer modifiers) {
 		JavaAssemblyModel result = javaAssemblyDAO.getAssembly(name, parent);
 		if (result == null) {
 			result = new JavaAssemblyModel();
 			result.setModifiers(modifiers);
+			result.setSubpath(subpath);
 			result.setName(name);
 			result.setParentAssemblyID(Optional.ofNullable(parent).map(p -> p.getPK()).orElse(null));
 			result.setConfirmed(confirmed);
@@ -102,6 +103,7 @@ public abstract class AbstractJavaParser {
 		} else if (confirmed && !result.getConfirmed()) {
 			result.setJavaObjectTypeID(objecttype.getPK());
 			result.setModifiers(modifiers);
+			result.setSubpath(subpath);
 			result.setConfirmed(confirmed);
 			javaAssemblyDAO.saveModel(result);
 		}

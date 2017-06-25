@@ -4,5 +4,5 @@ import org.eaSTars.sca.model.JavaModuleModel;
 
 public interface JavaModuleDAO {
 
-	public JavaModuleModel createJavaModule(String name);
+	public JavaModuleModel createJavaModule(String name, String path);
 }

@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -15,6 +14,7 @@ import org.eaSTars.sca.gui.SourceCodeAnalizerGUI;
 import org.eaSTars.sca.model.JavaAssemblyModel;
 import org.eaSTars.sca.model.JavaTypeModel;
 import org.eaSTars.sca.service.JavaSourceParser;
+import org.eaSTars.sca.service.ModuleInfo;
 import org.eaSTars.sca.service.SCADatabaseMaintenanceService;
 import org.eaSTars.util.ConfigService;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -150,27 +150,37 @@ public class JavaParserTest {
 		JavaSourceParser parser = context.getBean(JavaSourceParser.class);
 		
 		parser.process(Arrays.asList(Optional.ofNullable(configService.getProperty(APP_MODULS_KEY))
-				.orElseThrow(() -> new IllegalArgumentException(APP_MODULS_KEY+" configuration is missing")).split("\\|")).stream()
-		.collect(Collectors.toMap(module -> module, module -> {
-			File basedir = new File(Optional.ofNullable(configService.getProperty(APP_BASEDIR_KEY.replaceAll(MODULE_SELECTOR, module)))
-			.orElseThrow(() -> new IllegalArgumentException(APP_BASEDIR_KEY.replaceAll(MODULE_SELECTOR, module)+" configuration is missing")));
-			if (!basedir.exists()) {
-				throw new IllegalArgumentException(basedir.getAbsolutePath()+" is not existing");
-			} else if (!basedir.isDirectory()) {
-				throw new IllegalArgumentException(basedir.getAbsolutePath()+" is not a folder");
-			}
-			List<File> subdirs = Arrays.asList(Optional.ofNullable(configService.getProperty(APP_SUBDIRS_KEY.replaceAll(MODULE_SELECTOR, module)))
-					.orElseThrow(() -> new IllegalArgumentException(APP_SUBDIRS_KEY+" configuration is missing")).split("\\|")).stream()
-			.map(subdirconfig -> {
-				File subdir = new File(basedir, subdirconfig);
-				if (!subdir.exists()) {
-					throw new IllegalArgumentException(subdir.getAbsolutePath()+" is not existing");
-				} else if (!subdir.isDirectory()) {
-					throw new IllegalArgumentException(subdir.getAbsolutePath()+" is not a folder");
-				}
-				return subdir;
-			}).collect(Collectors.toList());
-			return subdirs;
-		})));
+				.orElseThrow(() -> new IllegalArgumentException(APP_MODULS_KEY+" configuration is missing"))
+				.split("\\|")).stream()
+				.map(m -> {
+					ModuleInfo moduleinfo = new ModuleInfo();
+					moduleinfo.setName(m);
+					System.out.printf("Module: %s\n", m);
+					String basedirkey = APP_BASEDIR_KEY.replaceAll(MODULE_SELECTOR, m);
+					File basedir = new File(Optional.ofNullable(configService.getProperty(basedirkey))
+							.orElseThrow(() -> new IllegalArgumentException(basedirkey + " configuration is missing")));
+					if (!basedir.exists()) {
+						throw new IllegalArgumentException(basedir.getAbsolutePath() + " is not existing");
+					} else if (!basedir.isDirectory()) {
+						throw new IllegalArgumentException(basedir.getAbsolutePath() + " is not a folder");
+					}
+					moduleinfo.setBasedir(basedir);
+					System.out.printf("\tBasedir: %s\n", basedir.getAbsolutePath());
+					String subdirkey = APP_SUBDIRS_KEY.replaceAll(MODULE_SELECTOR, m);
+					moduleinfo.getSubdirs().addAll(
+							Arrays.asList(Optional.ofNullable(configService.getProperty(subdirkey))
+									.orElseThrow(() -> new IllegalArgumentException(subdirkey + " configuration is missing"))
+									.split("\\|")).stream()
+							.peek(s -> {
+								File subdir = new File(moduleinfo.getBasedir(), s);
+								if (!subdir.exists()) {
+									throw new IllegalArgumentException(subdir.getAbsolutePath()+" is not existing");
+								} else if (!subdir.isDirectory()) {
+									throw new IllegalArgumentException(subdir.getAbsolutePath()+" is not a folder");
+								}
+								System.out.printf("\t\t%s\n", s);
+							}).collect(Collectors.toList()));
+					return moduleinfo;
+				}).collect(Collectors.toList()));
 	}
 }

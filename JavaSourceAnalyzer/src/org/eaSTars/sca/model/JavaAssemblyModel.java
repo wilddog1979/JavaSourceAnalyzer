@@ -19,6 +19,9 @@ public class JavaAssemblyModel extends GenericModel {
 	@Attribute(column="Modifiers", nullable=true)
 	private Integer modifiers;
 	
+	@Attribute(column="Subpath", nullable=true)
+	private String subpath;
+	
 	@Attribute(column="Name")
 	private String name;
 
@@ -54,6 +57,14 @@ public class JavaAssemblyModel extends GenericModel {
 
 	public void setModifiers(Integer modifiers) {
 		this.modifiers = modifiers;
+	}
+
+	public String getSubpath() {
+		return subpath;
+	}
+
+	public void setSubpath(String subpath) {
+		this.subpath = subpath;
 	}
 
 	public String getName() {

@@ -52,7 +52,7 @@ public class DefaultJavaBinaryParser extends AbstractJavaParser implements JavaB
 			} else if (type instanceof TypeVariable) {
 				TypeVariable<?> tv = (TypeVariable<?>) type;
 				
-				return getJavaTypeDAO().createJavaType(createOtherStructure(null, tv.getName(), true, module, getJavaClassType(), null), Collections.emptyList());
+				return getJavaTypeDAO().createJavaType(createOtherStructure(null, null, tv.getName(), true, module, getJavaClassType(), null), Collections.emptyList());
 			} else {
 				LOGGER.warn("Unimplemented java type: "+type.getClass().getName());
 			}

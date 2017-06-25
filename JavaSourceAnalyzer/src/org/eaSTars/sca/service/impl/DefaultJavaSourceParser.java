@@ -3,11 +3,10 @@ package org.eaSTars.sca.service.impl;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.eaSTars.sca.dao.JavaModuleDAO;
 import org.eaSTars.sca.gui.ProgressListener;
@@ -16,6 +15,7 @@ import org.eaSTars.sca.model.JavaModuleModel;
 import org.eaSTars.sca.service.AssemblyParserContext;
 import org.eaSTars.sca.service.JavaParserException;
 import org.eaSTars.sca.service.JavaSourceParser;
+import org.eaSTars.sca.service.ModuleInfo;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
@@ -27,51 +27,61 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 	
 	private JavaModuleDAO javaModuleDAO;
 	
-	private Map<String, List<File>> processMap;
+	private Map<ModuleInfo, List<File>> modulecontent = new HashMap<ModuleInfo, List<File>>();
 	
 	@Override
-	public void process(Map<String, List<File>> modules) {
-		this.processMap = modules;
-		int grandtotal[] = {0, 0};
-		Map<String, List<File>> modulecontent = modules.keySet().stream()
-		.collect(Collectors.toMap(modulename -> modulename, modulename -> {
-			List<File> files = new ArrayList<File>();
-			modules.get(modulename).forEach(dir -> fileCollector(dir, files));
-			grandtotal[0] += files.size();
-			return files;
-		}));
+	public void process(List<ModuleInfo> modules) {
+		int filecount = 0;
+		int processedcount = 0;
 		
-		progressListener.setOverallCount(grandtotal[0]);
+		for (ModuleInfo moduleinfo : modules) {
+			List<File> files = new ArrayList<File>();
+			for (String subdirs : moduleinfo.getSubdirs()) {
+				files.addAll(fileCollector(new File(moduleinfo.getBasedir(), subdirs)));
+			}
+			filecount += files.size();
+			modulecontent.put(moduleinfo, files);
+		}
+		
+		progressListener.setOverallCount(filecount);
 		
 		long starttime = System.currentTimeMillis();
-		long averagetime[] = {0};
-		modulecontent.keySet().forEach(modulename -> {
-			int subtotal[] = {0};
-			List<File> files = modulecontent.get(modulename); 
+		long averagetime = 0;
+
+		for (ModuleInfo module : modules) {
+			List<File> files = modulecontent.get(module);
+
+			int subtotal = 0;
 			progressListener.setSubprogressCount(files.size());
-			JavaModuleModel javamodule = javaModuleDAO.createJavaModule(modulename);
-			files.forEach(file -> {
-				progressListener.setStatusText("("+((System.currentTimeMillis() - starttime) / 1000)+"s - "+averagetime[0]+"ms - "+((grandtotal[0] - grandtotal[1]) * averagetime[0] / 1000)+"s) "+modulename+" - "+file.getName());
-				
+			JavaModuleModel javamodule = javaModuleDAO.createJavaModule(module.getName(), module.getBasedir().getAbsolutePath());
+			for (File file : files) {
+				progressListener.setStatusText("("+((System.currentTimeMillis() - starttime) / 1000)+"s - "+averagetime+"ms - "+((filecount - processedcount) * averagetime / 1000)+"s) "+module.getName()+" - "+file.getName());
+
 				processFile(javamodule, file);
-				averagetime[0] = (System.currentTimeMillis() - starttime) / (++grandtotal[1]);
-				
-				progressListener.setOverallStep(grandtotal[1]);
-				progressListener.setSubprogressStep(++subtotal[0]);
-			});
+				averagetime = (System.currentTimeMillis() - starttime) / (++processedcount);
+
+				progressListener.setOverallStep(processedcount);
+				progressListener.setSubprogressStep(++subtotal);
+			}
+		}
+
+		modulecontent.entrySet().forEach(module -> {
+
 		});
-		
+
 		progressListener.setStatusText("");
 	}
 	
 	@Override
 	public JavaAssemblyModel processForwardReference(String name, JavaModuleModel module) {
 		String filename = name.replaceAll("\\.", /*File.separator*/"/")+".java";
-		File file = processMap.values().stream()
-		.map(l -> l.stream().map(f -> new File(f, filename))
-				.filter(f -> f.exists() && f.isFile()).findFirst())
-		.filter(f -> f.isPresent())
-		.findFirst().map(f -> f.get()).orElse(null);
+
+		File file = modulecontent.entrySet().stream()
+				.map(m -> m.getValue().stream()
+						.filter(f -> f.getAbsolutePath().endsWith(filename))
+						.findFirst().orElseGet(() -> null))
+				.filter(f -> f != null)
+				.findFirst().orElseGet(() -> null);
 		
 		if (file != null) {
 			// check if it was already processed - to avoid StackOverflow
@@ -87,16 +97,16 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 		}
 	}
 	
-	private List<File> fileCollector(File dir, List<File> files) {
-		Arrays.asList(dir.listFiles())
-		.forEach(subentry -> {
+	private List<File> fileCollector(File dir) {
+		List<File> result = new ArrayList<File>();
+		for(File subentry : dir.listFiles()) {
 			if (subentry.isDirectory()) {
-				fileCollector(subentry, files);
+				result.addAll(fileCollector(subentry));
 			} else if (subentry.isFile() && subentry.getName().endsWith(".java")) {
-				files.add(subentry);
+				result.add(subentry);
 			}
-		});
-		return files;
+		}
+		return result;
 	}
 	
 	private void processFile(JavaModuleModel module, File file) {
@@ -108,7 +118,7 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 			ctx.setJavaAssembly(Optional.ofNullable(cu.getPackage()).map(pd -> createJavaPackageStructure(pd.getName(), true)).orElse(null));
 			ctx.setImports(cu.getImports());
 			
-			getJavaDeclarationParser().processBodyDeclarations(ctx, cu.getTypes());
+			getJavaDeclarationParser().processBodyDeclarations(ctx, file.getAbsolutePath().substring(module.getPath().length()), cu.getTypes());
 		} catch (ParseException | IOException e) {
 			throw new JavaParserException(e);
 		}

@@ -11,11 +11,11 @@ import com.github.javaparser.ast.body.EnumDeclaration;
 
 public interface JavaDeclarationParser {
 
-	public void processBodyDeclarations(AssemblyParserContext ctx, List<? extends BodyDeclaration> bodydeclarations);
+	public void processBodyDeclarations(AssemblyParserContext ctx, String subpath, List<? extends BodyDeclaration> bodydeclarations);
 	
-	public JavaAssemblyModel parse(AssemblyParserContext ctx, ClassOrInterfaceDeclaration coid);
+	public JavaAssemblyModel parse(AssemblyParserContext ctx, String subpath, ClassOrInterfaceDeclaration coid);
 	
-	public JavaAssemblyModel parse(AssemblyParserContext ctx, EnumDeclaration ed);
+	public JavaAssemblyModel parse(AssemblyParserContext ctx, String subpath, EnumDeclaration ed);
 	
-	public JavaAssemblyModel parse(AssemblyParserContext ctx, AnnotationDeclaration ad);
+	public JavaAssemblyModel parse(AssemblyParserContext ctx, String subpath, AnnotationDeclaration ad);
 }
