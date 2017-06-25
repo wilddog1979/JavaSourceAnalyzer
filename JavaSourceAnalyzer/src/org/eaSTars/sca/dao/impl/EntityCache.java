@@ -11,6 +11,8 @@ public class EntityCache <K extends Object, V extends GenericModel> {
 	
 	private static final Logger LOGGER = LogManager.getLogger(EntityCache.class);
 	
+	private String name;
+	
 	@FunctionalInterface
 	public interface EntitityProvider <T extends GenericModel> {
 		public T getEntry();
@@ -52,6 +54,11 @@ public class EntityCache <K extends Object, V extends GenericModel> {
 		this.cacheSize = cacheSize;
 	}
 	
+	public EntityCache(String name, int cacheSize) {
+		this(cacheSize);
+		this.name = name;
+	}
+	
 	public V getItemFromCache (K key, EntitityProvider<V> entryprovider) {
 		cacheAttempt++;
 		
@@ -67,7 +74,7 @@ public class EntityCache <K extends Object, V extends GenericModel> {
 			result = cacheinfo.getCachedObject();
 			cacheHit++;
 		}
-		LOGGER.debug(String.format("[%s] hit ratio: %d / %d (%d%%)", this.getClass().getSimpleName(), cacheHit, cacheAttempt, (int)((double)cacheHit / cacheAttempt * 100)));
+		LOGGER.debug(() -> String.format("[%s-%s] hit ratio: %d / %d (%d%%)", this.getClass().getSimpleName(), name, cacheHit, cacheAttempt, (int)((double)cacheHit / cacheAttempt * 100)));
 		
 		return result;
 	}

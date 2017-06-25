@@ -24,7 +24,7 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 	
 	private Map<String, JavaObjectTypeModel> objectTypeCache = new HashMap<String, JavaObjectTypeModel>();
 	
-	private EntityCache<String, JavaAssemblyModel> javaAssemblyEntityCache = new EntityCache<>(JAVAASSEMBLY_CACHE_SIZE);
+	private EntityCache<String, JavaAssemblyModel> javaAssemblyEntityCache = new EntityCache<>(JavaAssemblyModel.class.getSimpleName(), JAVAASSEMBLY_CACHE_SIZE);
 	
 	@Override
 	public JavaObjectTypeModel getPackageObjectType() {

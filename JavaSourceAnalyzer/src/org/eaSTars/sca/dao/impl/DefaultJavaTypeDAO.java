@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.eaSTars.dblayer.dao.DatabaseConnectionException;
 import org.eaSTars.dblayer.dao.FilterEntry;
@@ -22,6 +23,10 @@ import org.eaSTars.sca.model.JavaTypeModel;
 import org.eaSTars.sca.model.JavaTypeParameterModel;
 
 public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements JavaTypeDAO {
+	
+	private final static int JAVATYPE_CACHE_SIZE = 500;
+	
+	private EntityCache<String, JavaTypeModel> javaTypeModelCache = new EntityCache<String, JavaTypeModel>(JavaTypeModel.class.getSimpleName(), JAVATYPE_CACHE_SIZE);
 	
 	@Override
 	public JavaTypeModel getJavaType(Integer id) {
@@ -45,23 +50,25 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 	
 	@Override
 	public JavaTypeModel createJavaType(JavaAssemblyModel javaAssembly, List<JavaTypeModel> arguments) {
-		return getJavaType(javaAssembly, arguments)
-		.orElseGet(() -> {
-			JavaTypeModel result = new JavaTypeModel();
-			result.setJavaAssemblyID(javaAssembly.getPK());
-			result.setArgumentCount(arguments.size());
-			saveModel(result);
-			
-			int count[] = {0};
-			arguments.forEach(argument -> {
-				JavaTypeArgumentModel arg = new JavaTypeArgumentModel();
-				arg.setParentJavaTypeID(result.getPK());
-				arg.setJavaTypeID(argument.getPK());
-				arg.setOrderNumber(count[0]++);
-				saveModel(arg);
-			});
-			return result;
-		});
+		return javaTypeModelCache.getItemFromCache(
+				String.format("ja: %d, args: %s\n", javaAssembly.getPK(),
+						arguments.stream().map(a -> a.getPK().toString()).collect(Collectors.joining(",", "[" , "]"))), 
+				() -> getJavaType(javaAssembly, arguments)
+				.orElseGet(() -> {
+					JavaTypeModel result = new JavaTypeModel();
+					result.setJavaAssemblyID(javaAssembly.getPK());
+					result.setArgumentCount(arguments.size());
+					saveModel(result);
+
+					for (int i = 0; i < arguments.size(); ++i) {
+						JavaTypeArgumentModel arg = new JavaTypeArgumentModel();
+						arg.setParentJavaTypeID(result.getPK());
+						arg.setJavaTypeID(arguments.get(i).getPK());
+						arg.setOrderNumber(i);
+						saveModel(arg);
+					}
+					return result;
+				}));
 	}
 	
 	@Override
@@ -95,14 +102,13 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 					result.setBoundCount(typeBounds.size());
 					saveModel(result);
 					
-					int count[] = {0};
-					typeBounds.forEach(typeBound -> {
+					for (int i = 0; i < typeBounds.size(); ++i) {
 						JavaTypeBoundModel bound = new JavaTypeBoundModel();
 						bound.setJavaTypeParameterID(result.getPK());
-						bound.setJavaTypeID(typeBound.getPK());
-						bound.setOrderNumber(count[0]++);
+						bound.setJavaTypeID(typeBounds.get(i).getPK());
+						bound.setOrderNumber(i);
 						saveModel(bound);
-					});
+					}
 					return result;
 				});
 	}
