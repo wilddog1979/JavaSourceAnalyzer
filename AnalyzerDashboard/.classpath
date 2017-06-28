@@ -3,5 +3,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaSourceAnalyzer"/>
+	<classpathentry kind="lib" path="lib/plantuml.1.2017.14.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
