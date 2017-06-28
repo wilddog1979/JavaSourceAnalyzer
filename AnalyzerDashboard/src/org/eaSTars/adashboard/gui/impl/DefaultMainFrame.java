@@ -151,6 +151,8 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 
 	@Override
 	public void openMethod(Integer id) {
+		javaSequenceDiagramController.getSequenceView(id);
+		
 		ViewHistoryEntry historyentry = new ViewHistoryEntry();
 		historyentry.setViewType(ViewType.Method);
 		historyentry.setPK(id);
@@ -165,7 +167,8 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 		ADashboardTreeNode node;
 		if (obj instanceof ADashboardTreeNode &&
 				(node = (ADashboardTreeNode)obj).getUserObject() instanceof ADashboardObjectView) {
-			if (node.getUserObject() instanceof ADashboardObjectView) {
+			ADashboardObjectView objectview =  (ADashboardObjectView) node.getUserObject();
+			if (objectview.getType() != ADashboardObjectType.METHOD) {
 				ADashboardObjectView jav = (ADashboardObjectView) node.getUserObject();
 				javaAssemblyController.getChildAssemblies(jav.getId())
 				.forEach(a -> node.add(new ADashboardTreeNode(a)));

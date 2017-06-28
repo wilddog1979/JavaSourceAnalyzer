@@ -54,6 +54,8 @@
 	</bean>
 	
 	<bean id="javaSequenceDiagramController" class="org.eaSTars.adashboard.controller.impl.DefaultJavaSequenceDiagramController">
+		<property name="javaBobyDeclarationService" ref="javaBodyDeclarationService"/>
+		<property name="javaAssemblyService" ref="javaAssemblyService"/>
 	</bean>
 	
 	<!-- controllers end -->
