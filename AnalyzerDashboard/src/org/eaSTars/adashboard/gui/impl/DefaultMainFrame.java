@@ -30,11 +30,10 @@ import org.eaSTars.adashboard.controller.JavaAssemblyController;
 import org.eaSTars.adashboard.controller.JavaSequenceDiagramController;
 import org.eaSTars.adashboard.gui.MainFrame;
 import org.eaSTars.adashboard.gui.MainFrameDelegate;
-import org.eaSTars.adashboard.gui.dto.JavaAssemblyFullView;
-import org.eaSTars.adashboard.gui.dto.ViewHistoryEntry;
-import org.eaSTars.adashboard.gui.dto.ViewType;
 import org.eaSTars.adashboard.gui.dto.ADashboardObjectType;
 import org.eaSTars.adashboard.gui.dto.ADashboardObjectView;
+import org.eaSTars.adashboard.gui.dto.ViewHistoryEntry;
+import org.eaSTars.adashboard.gui.dto.ViewType;
 
 public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDelegate, TreeWillExpandListener {
 
@@ -137,30 +136,26 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 
 	@Override
 	public void openAssembly(Integer id) {
-		JavaAssemblyFullView jafv = javaAssemblyController.getAssemblyFullView(id);
-		if (jafv != null) {
-			ViewHistoryEntry historyentry = new ViewHistoryEntry();
-			historyentry.setViewType(ViewType.Assembly);
-			historyentry.setPK(id);
-			assemblyHistory.push(historyentry);
-			splitpane.setRightComponent(new JScrollPane(jafv));
-		} else {
-			splitpane.setRightComponent(new JScrollPane(new JPanel()));
-		}
+		openDetailView(id, ViewType.Assembly, javaAssemblyController.getAssemblyFullView(id));
 	}
 
 	@Override
 	public void openMethod(Integer id) {
-		javaSequenceDiagramController.getSequenceView(id);
-		
-		ViewHistoryEntry historyentry = new ViewHistoryEntry();
-		historyentry.setViewType(ViewType.Method);
-		historyentry.setPK(id);
-		assemblyHistory.push(historyentry);
-
-		splitpane.setRightComponent(new JScrollPane(new JPanel()));
+		openDetailView(id, ViewType.Method, javaSequenceDiagramController.getSequenceView(id));
 	}
 
+	private void openDetailView(Integer id, ViewType viewtype, JPanel panel) {
+		if (panel != null) {
+			ViewHistoryEntry historyentry = new ViewHistoryEntry();
+			historyentry.setViewType(viewtype);
+			historyentry.setPK(id);
+			assemblyHistory.push(historyentry);
+			splitpane.setRightComponent(new JScrollPane(panel));
+		} else {
+			splitpane.setRightComponent(new JScrollPane(new JPanel()));
+		}
+	}
+	
 	@Override
 	public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
 		Object obj = event.getPath().getLastPathComponent();

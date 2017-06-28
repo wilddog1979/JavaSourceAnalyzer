@@ -1,6 +1,8 @@
 package org.eaSTars.adashboard.controller;
 
+import org.eaSTars.adashboard.gui.dto.JavaSequenceDiagramView;
+
 public interface JavaSequenceDiagramController {
 
-	public void getSequenceView(Integer methodid);
+	public JavaSequenceDiagramView getSequenceView(Integer methodid);
 }

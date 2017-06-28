@@ -7,12 +7,14 @@ import java.util.List;
 import java.util.Stack;
 
 import org.eaSTars.adashboard.controller.JavaSequenceDiagramController;
+import org.eaSTars.adashboard.gui.dto.JavaSequenceDiagramView;
 import org.eaSTars.adashboard.service.JavaAssemblyService;
 import org.eaSTars.adashboard.service.JavaBodyDeclarationService;
 import org.eaSTars.sca.model.JavaAssemblyModel;
 import org.eaSTars.sca.model.JavaMethodModel;
 import org.eaSTars.sca.model.JavaModuleModel;
 import org.eaSTars.sca.service.AssemblyParserContext;
+import org.springframework.core.convert.ConversionService;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
@@ -27,8 +29,12 @@ public class DefaultJavaSequenceDiagramController implements JavaSequenceDiagram
 	
 	private JavaAssemblyService javaAssemblyService;
 	
+	private ConversionService conversionService;
+	
 	@Override
-	public void getSequenceView(Integer methodid) {
+	public JavaSequenceDiagramView getSequenceView(Integer methodid) {
+		StringBuffer sequencebuffer = new StringBuffer("@startuml\n");
+		
 		JavaMethodModel javaMethod = javaBobyDeclarationService.getMethod(methodid);
 		
 		Stack<JavaAssemblyModel> javaAssemblies = new Stack<JavaAssemblyModel>();
@@ -71,8 +77,10 @@ public class DefaultJavaSequenceDiagramController implements JavaSequenceDiagram
 							.map(bd -> ((TypeDeclaration)bd).getMembers())
 							.orElseGet(() -> new ArrayList<>());
 				}
+				sequencebuffer.append(String.format("[-> %s: %s\n", javaAssembly[0].getName(), javaMethod.getName()));
 				System.out.printf("\t%s\n", javaMethod.getName());
-
+				sequencebuffer.append(String.format("activate %s\n", javaAssembly[0].getName()));
+				
 				MethodDeclaration methodDeclaration = bodydeclarations.stream()
 						.filter(bd -> bd instanceof MethodDeclaration && ((MethodDeclaration)bd).getName().equals(javaMethod.getName()))
 						.findFirst()
@@ -80,11 +88,18 @@ public class DefaultJavaSequenceDiagramController implements JavaSequenceDiagram
 						.orElseGet(() -> null);
 				
 				System.out.println(methodDeclaration);
+				
+				sequencebuffer.append(String.format("[<-- %s\n", javaAssembly[0].getName()));
+				sequencebuffer.append(String.format("deactivate %s\n", javaAssembly[0].getName()));
 			} catch (ParseException | IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
+		
+		sequencebuffer.append("@enduml\n");
+		
+		return conversionService.convert(sequencebuffer.toString(), JavaSequenceDiagramView.class);
 	}
 
 	public JavaBodyDeclarationService getJavaBobyDeclarationService() {
@@ -101,5 +116,13 @@ public class DefaultJavaSequenceDiagramController implements JavaSequenceDiagram
 
 	public void setJavaAssemblyService(JavaAssemblyService javaAssemblyService) {
 		this.javaAssemblyService = javaAssemblyService;
+	}
+
+	public ConversionService getConversionService() {
+		return conversionService;
+	}
+
+	public void setConversionService(ConversionService conversionService) {
+		this.conversionService = conversionService;
 	}
 }
