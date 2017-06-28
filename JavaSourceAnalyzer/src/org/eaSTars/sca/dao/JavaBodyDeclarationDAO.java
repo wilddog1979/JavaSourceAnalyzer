@@ -3,6 +3,7 @@ package org.eaSTars.sca.dao;
 import java.util.List;
 import java.util.Optional;
 
+import org.eaSTars.dblayer.dao.AbstractDBLayerDAO;
 import org.eaSTars.sca.model.JavaAssemblyModel;
 import org.eaSTars.sca.model.JavaFieldModel;
 import org.eaSTars.sca.model.JavaMethodModel;
@@ -10,7 +11,7 @@ import org.eaSTars.sca.model.JavaMethodParameterModel;
 import org.eaSTars.sca.model.JavaThrowsModel;
 import org.eaSTars.sca.model.JavaTypeModel;
 
-public interface JavaBodyDeclarationDAO {
+public interface JavaBodyDeclarationDAO extends AbstractDBLayerDAO {
 
 	public JavaFieldModel getJavaField(JavaAssemblyModel parentAssembly, JavaTypeModel javatpye, String name);
 	

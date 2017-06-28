@@ -11,6 +11,8 @@ public interface JavaBodyDeclarationService {
 
 	public List<JavaFieldModel> getFields(JavaAssemblyModel javaAssembly);
 	
+	public JavaMethodModel getMethod(Integer id);
+	
 	public List<JavaMethodModel> getMethods(Integer javaAssemblyID);
 	
 	public List<JavaMethodModel> getMethods(JavaAssemblyModel javaAssembly);

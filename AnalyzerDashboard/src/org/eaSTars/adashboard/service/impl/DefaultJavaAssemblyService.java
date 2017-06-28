@@ -8,6 +8,7 @@ import org.eaSTars.sca.dao.JavaAssemblyDAO;
 import org.eaSTars.sca.dao.JavaTypeDAO;
 import org.eaSTars.sca.dao.TypeArgumentEntry;
 import org.eaSTars.sca.model.JavaAssemblyModel;
+import org.eaSTars.sca.model.JavaModuleModel;
 import org.eaSTars.sca.model.JavaObjectTypeModel;
 import org.eaSTars.sca.model.JavaTypeModel;
 
@@ -26,6 +27,11 @@ public class DefaultJavaAssemblyService implements JavaAssemblyService {
 	private JavaObjectTypeModel enumtype;
 	
 	private JavaObjectTypeModel annotationtype;
+	
+	@Override
+	public JavaModuleModel getJavaModul(Integer id) {
+		return javaAssemblyDAO.getModelByPK(JavaModuleModel.class, id);
+	}
 	
 	@Override
 	public List<JavaAssemblyModel> getChildAssemblies(Integer parentId) {

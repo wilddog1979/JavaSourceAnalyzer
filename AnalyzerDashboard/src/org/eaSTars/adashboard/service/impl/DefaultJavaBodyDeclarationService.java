@@ -19,6 +19,11 @@ public class DefaultJavaBodyDeclarationService implements JavaBodyDeclarationSer
 	}
 	
 	@Override
+	public JavaMethodModel getMethod(Integer id) {
+		return javaBodyDeclarationDAO.getModelByPK(JavaMethodModel.class, id);
+	}
+	
+	@Override
 	public List<JavaMethodModel> getMethods(Integer javaAssemblyID) {
 		return javaBodyDeclarationDAO.getJavaMethods(javaAssemblyID);
 	}

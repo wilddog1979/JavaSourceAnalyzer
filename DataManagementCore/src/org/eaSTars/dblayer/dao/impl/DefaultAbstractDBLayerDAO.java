@@ -32,6 +32,10 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 	
 	private DataSource datasource;
 	
+	public <T extends GenericModel> T getModelByPK(Class<T> modelclass, Integer id) {
+		return queryModel(modelclass, new FilterEntry("PK", id));
+	}
+	
 	private List<Field> getFields(Class<?> modelclass) {
 		List<Field> result = Arrays.asList(
 				Optional.ofNullable(modelclass.getDeclaredFields())
