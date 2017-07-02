@@ -190,7 +190,8 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			TryStmt trystatement = (TryStmt) statement;
 			result |= processStatement(ctx, source, target, trystatement.getTryBlock(), sequencebuffer);
 
-			result |= trystatement.getCatchs().stream().map(c -> processStatement(ctx, source, target, c.getCatchBlock(), sequencebuffer))
+			result |= trystatement.getCatchs().stream()
+					.map(c -> processStatement(ctx, source, target, c.getCatchBlock(), sequencebuffer))
 					.reduce(false, (a, b) -> a | b);
 
 			result |= Optional.ofNullable(trystatement.getFinallyBlock())
