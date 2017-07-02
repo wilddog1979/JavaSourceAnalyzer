@@ -26,11 +26,13 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.UnaryExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.DoStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.stmt.TryStmt;
+import com.github.javaparser.ast.stmt.WhileStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.ReferenceType;
 import com.github.javaparser.ast.type.Type;
@@ -165,6 +167,10 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 					.map(s -> processStatement(ctx, source, target, s, sequencebuffer))
 					.reduce(false, (a, b) -> a | b);
 			ctx.popDeclarationFrame();
+		} else if (statement instanceof DoStmt) {
+			DoStmt dostatement = ((DoStmt)statement);
+			result |= processStatement(ctx, source, target, dostatement.getBody(), sequencebuffer);
+			processExpression(ctx, source, target, dostatement.getCondition(), sequencebuffer);
 		} else if (statement instanceof ExpressionStmt) {
 			processExpression(ctx, source, target, ((ExpressionStmt) statement).getExpression(), sequencebuffer);
 			result = false;
@@ -172,7 +178,6 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			IfStmt ifstatement = (IfStmt) statement;
 			processExpression(ctx, source, target, ifstatement.getCondition(), sequencebuffer);
 			result |= processStatement(ctx, source, target, ifstatement.getThenStmt(), sequencebuffer);
-
 			result |= Optional.ofNullable(ifstatement.getElseStmt()).map(e -> processStatement(ctx, source, target, e, sequencebuffer)).orElseGet(() -> false);
 		} else if (statement instanceof ReturnStmt) {
 			sequencebuffer.append(String.format(
@@ -204,6 +209,10 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 						return r;
 					})
 					.orElseGet(() -> false);
+		} else if (statement instanceof WhileStmt) {
+			WhileStmt whilestatement = (WhileStmt) statement;
+			processExpression(ctx, source, target, whilestatement.getCondition(), sequencebuffer);
+			result |= processStatement(ctx, source, target, whilestatement.getBody(), sequencebuffer);
 		}
 
 		return result;
