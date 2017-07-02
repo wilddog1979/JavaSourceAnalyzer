@@ -40,6 +40,7 @@
 		<property name="mainFrameListener" ref="mainFrameAdapter"/>
 		<property name="javaAssemblyController" ref="javaAssemblyController"/>
 		<property name="javaSequenceDiagramController" ref="javaSequenceDiagramController"/>
+		<property name="adashboardGUIController" ref="adashboardGUIController"/>
 	</bean>
 	
 	<!-- GUI end -->
@@ -118,15 +119,22 @@
 	</bean>
 	
 	<bean id="javaSequenceDiagramController" class="org.eaSTars.adashboard.controller.impl.DefaultJavaSequenceDiagramController">
-		<property name="javaBobyDeclarationService" ref="javaBodyDeclarationService"/>
-		<property name="javaAssemblyService" ref="javaAssemblyService"/>
+		<property name="javaSequenceService" ref="javaSequenceService"/>
 		
 		<property name="conversionService" ref="conversionService"/>
+	</bean>
+	
+	<bean name="adashboardGUIController" class="org.eaSTars.adashboard.controller.impl.DefaultADashboardGUIController">
+		<property name="guiConfigService" ref="guiConfigService"/>
 	</bean>
 	
 	<!-- controllers end -->
 	
 	<!-- services start -->
+	
+	<bean id="guiConfigService" class="org.eaSTars.util.impl.DefaultConfigService">
+		<property name="propertiesfile" value="gui.properties"/>
+	</bean>
 	
 	<bean id="javaAssemblyService" class="org.eaSTars.adashboard.service.impl.DefaultJavaAssemblyService">
 		<property name="javaAssemblyDAO" ref="javaAssemblyDAO"/>
@@ -139,6 +147,11 @@
 	
 	<bean id="javaTypeService" class="org.eaSTars.adashboard.service.impl.DefaultJavaTypeService">
 		<property name="javaTypeDAO" ref="javaTypeDAO"/>
+	</bean>
+	
+	<bean id="javaSequenceService" class="org.eaSTars.adashboard.service.impl.DefaultJavaSequenceService">
+		<property name="javaBobyDeclarationService" ref="javaBodyDeclarationService"/>
+		<property name="javaAssemblyService" ref="javaAssemblyService"/>
 	</bean>
 	
 	<!-- services end -->
