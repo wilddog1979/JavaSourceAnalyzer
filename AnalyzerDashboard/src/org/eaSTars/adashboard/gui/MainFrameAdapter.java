@@ -1,6 +1,10 @@
 package org.eaSTars.adashboard.gui;
 
-public interface MainFrameAdapter {
+import java.awt.event.WindowListener;
 
+public interface MainFrameAdapter extends WindowListener {
+
+	public void addFrameClosingListener(FrameClosingListener frameClosingListener);
+	
 	public void addFrameClosedListener(FrameClosedListener frameClosedListener);
 }

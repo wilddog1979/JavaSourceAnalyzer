@@ -7,6 +7,7 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowListener;
+import java.util.Optional;
 import java.util.Stack;
 
 import javax.swing.AbstractAction;
@@ -26,9 +27,11 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.eaSTars.adashboard.controller.ADashboardGUIConfigController;
 import org.eaSTars.adashboard.controller.JavaAssemblyController;
 import org.eaSTars.adashboard.controller.JavaSequenceDiagramController;
 import org.eaSTars.adashboard.gui.MainFrame;
+import org.eaSTars.adashboard.gui.MainFrameAdapter;
 import org.eaSTars.adashboard.gui.MainFrameDelegate;
 import org.eaSTars.adashboard.gui.dto.ADashboardObjectType;
 import org.eaSTars.adashboard.gui.dto.ADashboardObjectView;
@@ -41,12 +44,14 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 
 	private JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
-	private WindowListener mainFrameListener;
+	private MainFrameAdapter mainFrameListener;
 
 	private JavaAssemblyController javaAssemblyController;
 
 	private JavaSequenceDiagramController javaSequenceDiagramController;
 
+	private ADashboardGUIConfigController adashboardGUIController;
+	
 	private Stack<ViewHistoryEntry> assemblyHistory = new Stack<ViewHistoryEntry>();
 
 	public void init() {
@@ -55,11 +60,23 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 
 		buildGUI();
 
-		setSize(640, 480);
-
-		Dimension windowsize = getSize();
-		Dimension screensize = Toolkit.getDefaultToolkit().getScreenSize();
-		setLocation((screensize.width - windowsize.width) / 2, (screensize.height - windowsize.height) / 2);
+		Optional.ofNullable(adashboardGUIController.getWindowLocation()).ifPresent(l -> setLocation(l));
+		
+		Dimension dimension = adashboardGUIController.getWindowSize();
+		if (dimension != null) {
+			setSize(dimension);
+		} else {
+			dimension = new Dimension(640, 480);
+			setSize(dimension);
+			Dimension screensize = Toolkit.getDefaultToolkit().getScreenSize();
+			setLocation((screensize.width - dimension.width) / 2, (screensize.height - dimension.height) / 2);
+		}
+		
+		mainFrameListener.addFrameClosingListener(w -> {
+			adashboardGUIController.setWindowLocation(w.getLocation());
+			adashboardGUIController.setWindowSize(w.getSize());
+			adashboardGUIController.saveSettings();
+		});
 	}
 
 	private void buildGUI() {
@@ -188,7 +205,7 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 		return mainFrameListener;
 	}
 
-	public void setMainFrameListener(WindowListener mainFrameListener) {
+	public void setMainFrameListener(MainFrameAdapter mainFrameListener) {
 		this.mainFrameListener = mainFrameListener;
 	}
 
@@ -206,5 +223,13 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 
 	public void setJavaSequenceDiagramController(JavaSequenceDiagramController javaSequenceDiagramController) {
 		this.javaSequenceDiagramController = javaSequenceDiagramController;
+	}
+
+	public ADashboardGUIConfigController getAdashboardGUIController() {
+		return adashboardGUIController;
+	}
+
+	public void setAdashboardGUIController(ADashboardGUIConfigController adashboardGUIController) {
+		this.adashboardGUIController = adashboardGUIController;
 	}
 }
