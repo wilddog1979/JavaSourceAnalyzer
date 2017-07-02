@@ -16,6 +16,8 @@ public interface JavaAssemblyService {
 	
 	public JavaAssemblyModel getJavaAssembly(Integer id);
 	
+	public JavaAssemblyModel getJavaAssemblyByAggregate(String name);
+	
 	public JavaObjectTypeModel getPackageType();
 	
 	public JavaObjectTypeModel getClassType();

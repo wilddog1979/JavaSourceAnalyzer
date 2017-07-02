@@ -42,6 +42,11 @@ public class DefaultJavaAssemblyService implements JavaAssemblyService {
 	public JavaAssemblyModel getJavaAssembly(Integer id) {
 		return javaAssemblyDAO.getAssembly(id);
 	}
+	
+	@Override
+	public JavaAssemblyModel getJavaAssemblyByAggregate(String name) {
+		return javaAssemblyDAO.getAssemblyByAggregate(name);
+	}
 
 	@Override
 	public JavaObjectTypeModel getPackageType() {

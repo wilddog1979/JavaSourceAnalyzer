@@ -10,7 +10,9 @@ import org.eaSTars.sca.model.JavaTypeParameterModel;
 public abstract class ParserContext {
 
 	private JavaModuleModel javaModule;
+	
 	private JavaAssemblyModel javaAssembly;
+	
 	private List<JavaTypeParameterModel> javaAssemblyTypeParameters = new ArrayList<JavaTypeParameterModel>();
 
 	public JavaModuleModel getJavaModule() {
