@@ -42,8 +42,6 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 
 	private static final long serialVersionUID = -8684346050770527232L;
 
-	private JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-
 	private MainFrameAdapter mainFrameListener;
 
 	private JavaAssemblyController javaAssemblyController;
@@ -54,6 +52,12 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 	
 	private Stack<ViewHistoryEntry> assemblyHistory = new Stack<ViewHistoryEntry>();
 
+	private JScrollPane leftPanel = new JScrollPane();
+	
+	private JScrollPane rightPanel = new JScrollPane();
+	
+	private JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
+	
 	public void init() {
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		addWindowListener(mainFrameListener);
@@ -72,9 +76,12 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 			setLocation((screensize.width - dimension.width) / 2, (screensize.height - dimension.height) / 2);
 		}
 		
+		Optional.ofNullable(adashboardGUIController.getDividerLocation()).ifPresent(d -> splitpane.setDividerLocation(d));
+		
 		mainFrameListener.addFrameClosingListener(w -> {
 			adashboardGUIController.setWindowLocation(w.getLocation());
 			adashboardGUIController.setWindowSize(w.getSize());
+			adashboardGUIController.setDividerLocation(splitpane.getDividerLocation());
 			adashboardGUIController.saveSettings();
 		});
 	}
@@ -110,8 +117,12 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 			}
 		});
 
-		splitpane.setLeftComponent(buildTreeView());
-		splitpane.setRightComponent(new JScrollPane(new JPanel()));
+		leftPanel.setViewportView(buildTreeView());
+		Dimension minsize = leftPanel.getMinimumSize();
+		minsize.width = 150;
+		leftPanel.setMinimumSize(minsize);
+		
+		rightPanel.setViewportView(new JPanel());
 
 		cnt.add(splitpane, BorderLayout.CENTER);
 	}
@@ -143,12 +154,7 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 			}
 		});
 
-		JScrollPane scrollpane = new JScrollPane(tree);
-		Dimension minsize = scrollpane.getMinimumSize();
-		minsize.width = 150;
-		scrollpane.setMinimumSize(minsize);
-
-		return scrollpane;
+		return tree;
 	}
 
 	@Override
@@ -167,9 +173,9 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 			historyentry.setViewType(viewtype);
 			historyentry.setPK(id);
 			assemblyHistory.push(historyentry);
-			splitpane.setRightComponent(new JScrollPane(panel));
+			rightPanel.setViewportView(panel);
 		} else {
-			splitpane.setRightComponent(new JScrollPane(new JPanel()));
+			rightPanel.setViewportView(new JPanel());
 		}
 	}
 	

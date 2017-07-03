@@ -13,5 +13,9 @@ public interface ADashboardGUIConfigController {
 	
 	public void setWindowSize(Dimension dimension);
 	
+	public Integer getDividerLocation();
+	
+	public void setDividerLocation(Integer dividerlocation);
+	
 	public void saveSettings();
 }

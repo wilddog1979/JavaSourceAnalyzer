@@ -16,6 +16,8 @@ public class DefaultADashboardGUIController implements ADashboardGUIConfigContro
 	
 	private static final String GUI_HEIGHT = "adashboard.gui.height";
 	
+	private static final String GUI_DIVIDER = "adashboard.gui.divider";
+	
 	private ConfigService guiConfigService;
 
 	@Override
@@ -51,6 +53,16 @@ public class DefaultADashboardGUIController implements ADashboardGUIConfigContro
 	public void setWindowSize(Dimension dimension) {
 		guiConfigService.setProperty(GUI_WIDTH, Integer.toString(dimension.width));
 		guiConfigService.setProperty(GUI_HEIGHT, Integer.toString(dimension.height));
+	}
+	
+	@Override
+	public Integer getDividerLocation() {
+		return getIntegerValueFromConfig(GUI_DIVIDER);
+	}
+	
+	@Override
+	public void setDividerLocation(Integer dividerlocation) {
+		guiConfigService.setProperty(GUI_DIVIDER, Integer.toString(dividerlocation));
 	}
 	
 	@Override
