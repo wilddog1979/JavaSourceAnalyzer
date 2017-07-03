@@ -222,6 +222,9 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		System.out.printf("Expression %s\n", expression.toStringWithoutComments());
 		if (expression instanceof MethodCallExpr) {
 			MethodCallExpr methodcall = (MethodCallExpr) expression;
+			
+			methodcall.getArgs().forEach(a -> processExpression(ctx, source, target, a, sequencebuffer));
+			
 			if (methodcall.getScope() == null) {
 				sequencebuffer.append(String.format("%s -> %s : %s\n", target, target, methodcall.getNameExpr().toStringWithoutComments()));
 				sequencebuffer.append(String.format("activate %s\n", target));
@@ -244,7 +247,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		} else if (expression instanceof VariableDeclarationExpr) {
 			VariableDeclarationExpr vdecl = (VariableDeclarationExpr) expression;
 			vdecl.getVars().stream().forEach(vd -> {
-				processExpression(ctx, source, target, vd.getInit(), sequencebuffer);
+				Optional.ofNullable(vd.getInit()).ifPresent(i -> processExpression(ctx, source, target, i, sequencebuffer));
 				ctx.registerDeclaration(vd.getId().getName(), vdecl.getType());
 			});
 		}
