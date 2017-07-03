@@ -23,6 +23,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.UnaryExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -232,15 +233,22 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			} else if (!methodcall.getScope().toStringWithoutComments().contains("\"")) {
 				Type t = ctx.findDeclaration(methodcall.getScope().toStringWithoutComments());
 				String ta = null;
-				if (t != null && t instanceof ReferenceType && ((ReferenceType)t).getType() instanceof ClassOrInterfaceType) {
-					ta = ((ClassOrInterfaceType)((ReferenceType)t).getType()).getName();
-					sequencebuffer.append(String.format("%s -> %s : %s\n", target, ta, methodcall.getNameExpr().toStringWithoutComments()));
-				} else {
-					ta = methodcall.getScope().toStringWithoutComments();
-					sequencebuffer.append(String.format("%s -> %s : %s\n", target, ta, methodcall.getNameExpr().toStringWithoutComments()));
+				if (t != null) {
+					if (t instanceof ReferenceType && ((ReferenceType)t).getType() instanceof ClassOrInterfaceType) {
+						JavaAssemblyModel ja = resolveReference(ctx, (ReferenceType)t);
+						if (ja != null) {
+							ta = ja.getName();
+							sequencebuffer.append(String.format("%s -> %s : %s\n", target, ta, methodcall.getNameExpr().toStringWithoutComments()));
+							sequencebuffer.append(String.format("activate %s\n", ta));
+							sequencebuffer.append(String.format("deactivate %s\n", ta));
+						}
+					} else {
+						ta = methodcall.getScope().toStringWithoutComments();
+						sequencebuffer.append(String.format("%s -> %s : %s\n", target, ta, methodcall.getNameExpr().toStringWithoutComments()));
+						sequencebuffer.append(String.format("activate %s\n", ta));
+						sequencebuffer.append(String.format("deactivate %s\n", ta));
+					}
 				}
-				sequencebuffer.append(String.format("activate %s\n", ta));
-				sequencebuffer.append(String.format("deactivate %s\n", ta));
 			}
 		} else if (expression instanceof UnaryExpr) {
 			processExpression(ctx, source, target, ((UnaryExpr)expression).getExpr(), sequencebuffer);
@@ -251,6 +259,41 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 				ctx.registerDeclaration(vd.getId().getName(), vdecl.getType());
 			});
 		}
+	}
+	
+	private JavaAssemblyModel resolveReference(SequenceParserContext ctx, ReferenceType reference) {
+		Type type = reference.getType();
+		if (type instanceof ClassOrInterfaceType) {
+			ClassOrInterfaceType classorinterfacetype = (ClassOrInterfaceType) type;
+			System.out.printf("\tClassOrInterface: %s\n", classorinterfacetype.getName());
+			
+			JavaAssemblyModel result = ctx.getImports().stream()
+			.map(i -> mapJavaAssemblyModel(i.isAsterisk(), i.getName(), classorinterfacetype.getName()))
+			.filter(a -> a != null)
+			.findFirst().orElseGet(() -> null);
+			
+			System.out.printf("\tImport: %s\n", Optional.ofNullable(result).map(a -> a.getAggregate()).orElseGet(() -> "not found"));
+			
+			return result;
+		}
+		return null;
+	}
+	
+	private JavaAssemblyModel mapJavaAssemblyModel(boolean isAsterisk, NameExpr importname, String name) {
+		JavaAssemblyModel result = null;
+		
+		if (isAsterisk) {
+			result = javaAssemblyService.getJavaAssemblyByAggregate(String.format("%s.%s", importname.toStringWithoutComments(), name));
+		} else if (importname.getName().equals(name)){
+			result = javaAssemblyService.getJavaAssemblyByAggregate(importname.toStringWithoutComments());
+		}
+		if (result != null && result.getJavaObjectTypeID().equals(javaAssemblyService.getInterfaceType().getPK())) {
+			
+		} else {
+			result = null;
+		}
+		
+		return result;
 	}
 
 	public JavaBodyDeclarationService getJavaBobyDeclarationService() {
