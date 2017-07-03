@@ -117,7 +117,7 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 				new FilterEntry("parentAssemblyID", parentid));
 	}
 	
-	private ResultSet getJavaAssemblyExtendsInsert(JavaAssemblyModel javaAssembly, int isExtends) {
+	private ResultSet getJavaAssemblyExtendsImplements(JavaAssemblyModel javaAssembly, int isExtends) {
 		try {
 			PreparedStatement pstatement = customStatementCacheManager("getJavaAssemblyExtendsInsert",
 					"SELECT jt.* FROM JavaType AS jt JOIN JavaExtendsImplements AS jei ON jt.PK = jei.JavaTypeID AND jei.isExtends = ? JOIN JavaAssembly AS ja ON jei.ParentJavaAssemblyID = ja.PK WHERE ja.PK = ?;");
@@ -132,7 +132,7 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 	@Override
 	public JavaTypeModel getJavaAssemblyExtends(JavaAssemblyModel javaAssembly) {
 		try {
-			ResultSet rs = getJavaAssemblyExtendsInsert(javaAssembly, 1);
+			ResultSet rs = getJavaAssemblyExtendsImplements(javaAssembly, 1);
 			if (rs.next()) {
 				return extractEntry(JavaTypeModel.class, rs);
 			}
@@ -146,7 +146,7 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 	public List<JavaTypeModel> getJavaAssemblyImplements(JavaAssemblyModel javaAssembly) {
 		List<JavaTypeModel> result = new ArrayList<JavaTypeModel>();
 		try {
-			ResultSet rs = getJavaAssemblyExtendsInsert(javaAssembly, 0);
+			ResultSet rs = getJavaAssemblyExtendsImplements(javaAssembly, 0);
 			while (rs.next()) {
 				result.add(extractEntry(JavaTypeModel.class, rs));
 			}
