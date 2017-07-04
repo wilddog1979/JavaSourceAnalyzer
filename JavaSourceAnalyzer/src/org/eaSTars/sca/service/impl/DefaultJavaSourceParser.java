@@ -53,7 +53,7 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 
 			int subtotal = 0;
 			progressListener.setSubprogressCount(files.size());
-			JavaModuleModel javamodule = javaModuleDAO.createJavaModule(module.getName(), module.getBasedir().getAbsolutePath());
+			JavaModuleModel javamodule = javaModuleDAO.createJavaModule(module.getName(), true, module.getBasedir().getAbsolutePath());
 			for (File file : files) {
 				progressListener.setStatusText("("+((System.currentTimeMillis() - starttime) / 1000)+"s - "+averagetime+"ms - "+((filecount - processedcount) * averagetime / 1000)+"s) "+module.getName()+" - "+file.getName());
 

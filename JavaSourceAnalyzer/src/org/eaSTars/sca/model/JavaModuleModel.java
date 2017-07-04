@@ -10,6 +10,9 @@ public class JavaModuleModel extends GenericModel {
 	@Attribute(column="Name")
 	private String name;
 
+	@Attribute(column="IsProject")
+	private Boolean isProject;
+	
 	@Attribute(column="Path", nullable=true)
 	private String path;
 	
@@ -19,6 +22,14 @@ public class JavaModuleModel extends GenericModel {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Boolean getIsProject() {
+		return isProject;
+	}
+
+	public void setIsProject(Boolean isProject) {
+		this.isProject = isProject;
 	}
 
 	public String getPath() {

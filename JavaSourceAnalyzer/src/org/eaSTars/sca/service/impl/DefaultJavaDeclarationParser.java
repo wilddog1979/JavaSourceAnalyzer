@@ -2,7 +2,9 @@ package org.eaSTars.sca.service.impl;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -52,6 +54,8 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 			JAVALANGEXPR,
 			new QualifiedNameExpr(new NameExpr("java"), "util")
 			);
+	
+	private Map<JavaModuleModel, List<String>> externalLibraries = new HashMap<JavaModuleModel, List<String>>();
 	
 	private JavaModuleDAO javaModuleDAO;
 	
@@ -128,7 +132,14 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 							break;
 						}
 					} else if (importentry.getName().getName().equals(coit.getName())) {
-						result = createOtherStructure(importentry.getName(), confirmed, ctx.getJavaModule(), objecttype, null);
+						JavaModuleModel module = externalLibraries.entrySet().stream()
+						.filter(l -> l.getValue().stream()
+								.filter(p -> importentry.getName().toStringWithoutComments().startsWith(p))
+								.findFirst().isPresent())
+						.map(l -> l.getKey())
+						.findFirst().orElseGet(() -> ctx.getJavaModule());
+						
+						result = createOtherStructure(importentry.getName(), confirmed, module, objecttype, null);
 						break;
 					}
 				}
@@ -217,6 +228,12 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		throwstypes.forEach(methodthrow -> getJavaBodyDeclarationDAO().createJavathrows(jmm, processType(ctx, javatypeparameters, methodthrow, null)));
 		
 		return jmm;
+	}
+	
+	@Override
+	public void registerLibrary(String lib, List<String> packages) {
+		JavaModuleModel javaModule = javaModuleDAO.createJavaModule(lib, false,null);
+		externalLibraries.put(javaModule, packages);
 	}
 	
 	@Override
@@ -329,7 +346,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 
 	private JavaModuleModel getJavaRuntimeModule() {
 		if (javaRuntimeModule == null) {
-			javaRuntimeModule = javaModuleDAO.createJavaModule("Java Runtime",null);
+			javaRuntimeModule = javaModuleDAO.createJavaModule("Java Runtime", false,null);
 		}
 		return javaRuntimeModule;
 	}

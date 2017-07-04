@@ -5,5 +5,5 @@ import org.eaSTars.sca.model.JavaModuleModel;
 
 public interface JavaModuleDAO extends AbstractDBLayerDAO{
 
-	public JavaModuleModel createJavaModule(String name, String path);
+	public JavaModuleModel createJavaModule(String name, boolean isProject, String path);
 }

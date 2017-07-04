@@ -13,6 +13,7 @@ import org.eaSTars.sca.dao.JavaTypeDAO;
 import org.eaSTars.sca.gui.SourceCodeAnalizerGUI;
 import org.eaSTars.sca.model.JavaAssemblyModel;
 import org.eaSTars.sca.model.JavaTypeModel;
+import org.eaSTars.sca.service.JavaDeclarationParser;
 import org.eaSTars.sca.service.JavaSourceParser;
 import org.eaSTars.sca.service.ModuleInfo;
 import org.eaSTars.sca.service.SCADatabaseMaintenanceService;
@@ -35,6 +36,12 @@ public class JavaParserTest {
 	private static final String APP_BASEDIR_KEY = "app.conf.$package$.$module$.basedir";
 
 	private static final String APP_SUBDIRS_KEY = "app.conf.$package$.$module$.subdirs";
+	
+	private static final String APP_EXTERNALLIBRARY_LIST_KEY = "app.conf.$package$.ExternalLibrary.list";
+	
+	private static final String APP_EXTERNALLIBRARY_KEY = "app.conf.$package$.ExternalLibrary.$library$";
+	
+	private static final String LIBRARY_SELECTOR = "\\$library\\$";
 	
 	private enum TestType {
 		Simple,
@@ -148,6 +155,11 @@ public class JavaParserTest {
 		ConfigService configService = context.getBean(ConfigService.class);
 		
 		JavaSourceParser parser = context.getBean(JavaSourceParser.class);
+		
+		JavaDeclarationParser javaDeclarationParser = context.getBean(JavaDeclarationParser.class);
+		
+		Arrays.asList(configService.getProperty(APP_EXTERNALLIBRARY_LIST_KEY, "").split("\\|")).stream()
+		.forEach(lib -> javaDeclarationParser.registerLibrary(lib, Arrays.asList(configService.getProperty(APP_EXTERNALLIBRARY_KEY.replaceAll(LIBRARY_SELECTOR, lib), "").split("\\|"))));
 		
 		parser.process(Arrays.asList(Optional.ofNullable(configService.getProperty(APP_MODULS_KEY))
 				.orElseThrow(() -> new IllegalArgumentException(APP_MODULS_KEY+" configuration is missing"))

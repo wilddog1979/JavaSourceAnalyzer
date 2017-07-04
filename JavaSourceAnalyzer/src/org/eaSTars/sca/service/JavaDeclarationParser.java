@@ -11,6 +11,8 @@ import com.github.javaparser.ast.body.EnumDeclaration;
 
 public interface JavaDeclarationParser {
 
+	public void registerLibrary(String lib, List<String> packages);
+	
 	public void processBodyDeclarations(AssemblyParserContext ctx, String subpath, List<? extends BodyDeclaration> bodydeclarations);
 	
 	public JavaAssemblyModel parse(AssemblyParserContext ctx, String subpath, ClassOrInterfaceDeclaration coid);

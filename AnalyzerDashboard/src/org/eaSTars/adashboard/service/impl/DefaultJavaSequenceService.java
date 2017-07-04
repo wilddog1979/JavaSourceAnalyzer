@@ -303,7 +303,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			result = javaAssemblyService.getJavaAssemblyByAggregate(importname.toStringWithoutComments());
 		}
 		if (associate) {
-			if (result != null && result.getJavaModuleID() != 2) {
+			if (result != null && javaAssemblyService.getJavaModul(result.getJavaModuleID()).getIsProject()) {
 				if (result.getJavaObjectTypeID().equals(javaAssemblyService.getInterfaceType().getPK())) {
 					result = result;
 				} else if (result.getJavaObjectTypeID().equals(javaAssemblyService.getClassType().getPK())) {

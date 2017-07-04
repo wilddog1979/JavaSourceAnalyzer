@@ -47,7 +47,7 @@ public class DefaultBinaryScanner implements BinaryScanner, InitializingBean {
 	
 	@Override
 	public void beginScanning() {
-		JavaModuleModel module = javaModuleDAO.createJavaModule("Java Runtime", null);
+		JavaModuleModel module = javaModuleDAO.createJavaModule("Java Runtime", false, null);
 		
 		classLoader.getClasspath()
 		.forEach(cpentry -> {
