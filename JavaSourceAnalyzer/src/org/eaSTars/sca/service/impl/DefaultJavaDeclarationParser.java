@@ -1,5 +1,6 @@
 package org.eaSTars.sca.service.impl;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -47,6 +48,11 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 	
 	private static final QualifiedNameExpr JAVALANGEXPR = new QualifiedNameExpr(new NameExpr("java"), "lang");
 
+	private static final List<QualifiedNameExpr> JAVA_RUNTIMES = Arrays.asList(
+			JAVALANGEXPR,
+			new QualifiedNameExpr(new NameExpr("java"), "util")
+			);
+	
 	private JavaModuleDAO javaModuleDAO;
 	
 	private JavaSourceParser javaSourceParser;
@@ -107,7 +113,10 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		
 			// check java.lang first
 			if (result == null) {
-				result = resolveBinaryReference(new QualifiedNameExpr(JAVALANGEXPR, coit.getName()), getJavaRuntimeModule());
+				result = JAVA_RUNTIMES.stream()
+				.map(jr -> resolveBinaryReference(new QualifiedNameExpr(jr, coit.getName()), getJavaRuntimeModule()))
+				.filter(r -> r != null)
+				.findFirst().orElseGet(() -> null);
 			}
 			
 			// check import entries
@@ -318,7 +327,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		return ctx.getJavaAssembly();
 	}
 
-	public JavaModuleModel getJavaRuntimeModule() {
+	private JavaModuleModel getJavaRuntimeModule() {
 		if (javaRuntimeModule == null) {
 			javaRuntimeModule = javaModuleDAO.createJavaModule("Java Runtime",null);
 		}
