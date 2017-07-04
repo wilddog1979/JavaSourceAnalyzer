@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import org.eaSTars.adashboard.service.JavaAssemblyService;
 import org.eaSTars.adashboard.service.JavaBodyDeclarationService;
@@ -235,7 +236,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 				String ta = null;
 				if (t != null) {
 					if (t instanceof ReferenceType && ((ReferenceType)t).getType() instanceof ClassOrInterfaceType) {
-						JavaAssemblyModel ja = resolveReference(ctx, (ReferenceType)t);
+						JavaAssemblyModel ja = resolveReference(ctx, (ReferenceType)t, true);
 						if (ja != null) {
 							ta = ja.getName();
 							sequencebuffer.append(String.format("%s -> %s : %s\n", target, ta, methodcall.getNameExpr().toStringWithoutComments()));
@@ -261,14 +262,28 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		}
 	}
 	
-	private JavaAssemblyModel resolveReference(SequenceParserContext ctx, ReferenceType reference) {
+	private JavaAssemblyModel resolveReference(SequenceParserContext ctx, ReferenceType reference, boolean associate) {
 		Type type = reference.getType();
 		if (type instanceof ClassOrInterfaceType) {
 			ClassOrInterfaceType classorinterfacetype = (ClassOrInterfaceType) type;
-			System.out.printf("\tClassOrInterface: %s\n", classorinterfacetype.getName());
+			
+			List<JavaAssemblyModel> typeargumentmodels = classorinterfacetype.getTypeArgs().stream()
+			.map(a -> {
+				if (a instanceof ReferenceType) {
+					return resolveReference(ctx, (ReferenceType) a, false);
+				} else {
+					return null;
+				}
+			})
+			.filter(a -> a != null)
+			.collect(Collectors.toList());
+			
+			System.out.printf("\tClassOrInterface: %s %s\n",
+					classorinterfacetype.getName(),
+					typeargumentmodels.stream().map(a -> a.getName()).collect(Collectors.joining(",", "<", ">")));
 			
 			JavaAssemblyModel result = ctx.getImports().stream()
-			.map(i -> mapJavaAssemblyModel(i.isAsterisk(), i.getName(), classorinterfacetype.getName()))
+			.map(i -> mapJavaAssemblyModel(i.isAsterisk(), i.getName(), classorinterfacetype.getName(), associate))
 			.filter(a -> a != null)
 			.findFirst().orElseGet(() -> null);
 			
@@ -279,7 +294,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		return null;
 	}
 	
-	private JavaAssemblyModel mapJavaAssemblyModel(boolean isAsterisk, NameExpr importname, String name) {
+	private JavaAssemblyModel mapJavaAssemblyModel(boolean isAsterisk, NameExpr importname, String name, boolean associate) {
 		JavaAssemblyModel result = null;
 		
 		if (isAsterisk) {
@@ -287,10 +302,16 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		} else if (importname.getName().equals(name)){
 			result = javaAssemblyService.getJavaAssemblyByAggregate(importname.toStringWithoutComments());
 		}
-		if (result != null && result.getJavaObjectTypeID().equals(javaAssemblyService.getInterfaceType().getPK())) {
-			
-		} else {
-			result = null;
+		if (associate) {
+			if (result != null && result.getJavaModuleID() != 2) {
+				if (result.getJavaObjectTypeID().equals(javaAssemblyService.getInterfaceType().getPK())) {
+					result = result;
+				} else if (result.getJavaObjectTypeID().equals(javaAssemblyService.getClassType().getPK())) {
+					result = result;
+				}
+			} else {
+				result = null;
+			}
 		}
 		
 		return result;
