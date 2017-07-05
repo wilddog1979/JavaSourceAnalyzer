@@ -117,10 +117,30 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 				new FilterEntry("parentAssemblyID", parentid));
 	}
 	
+	/**
+	 * Runs the query to find what type is being extended or implemented
+	 * by the specified JavaAssembly. 
+	 * 
+	 * @param javaAssembly parent assembly
+	 * @param isExtends 1 is for extends, 2 is for implements
+	 * @return
+	 */
 	private ResultSet getJavaAssemblyExtendsImplements(JavaAssemblyModel javaAssembly, int isExtends) {
 		try {
-			PreparedStatement pstatement = customStatementCacheManager("getJavaAssemblyExtendsInsert",
+			PreparedStatement pstatement = customStatementCacheManager("getJavaAssemblyExtendsImplements",
 					"SELECT jt.* FROM JavaType AS jt JOIN JavaExtendsImplements AS jei ON jt.PK = jei.JavaTypeID AND jei.isExtends = ? JOIN JavaAssembly AS ja ON jei.ParentJavaAssemblyID = ja.PK WHERE ja.PK = ?;");
+			pstatement.setInt(1, isExtends);
+			pstatement.setInt(2, javaAssembly.getPK());
+			return pstatement.executeQuery();
+		} catch (SQLException e) {
+			throw new DatabaseConnectionException(e);
+		}
+	}
+	
+	private ResultSet getJavaAssemblyExtendingImplementing(JavaAssemblyModel javaAssembly, int isExtends) {
+		try {
+			PreparedStatement pstatement = customStatementCacheManager("getJavaAssemblyExtendingImplementing",
+					"SELECT ja.* FROM JavaAssembly AS ja JOIN JavaExtendsImplements AS jei ON ja.PK = jei.ParentJavaAssemblyID AND jei.isExtends = ? JOIN JavaType AS jt ON jei.JavaTypeID = jt.PK WHERE jt.JavaAssemblyID = ?;");
 			pstatement.setInt(1, isExtends);
 			pstatement.setInt(2, javaAssembly.getPK());
 			return pstatement.executeQuery();
@@ -149,6 +169,20 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 			ResultSet rs = getJavaAssemblyExtendsImplements(javaAssembly, 0);
 			while (rs.next()) {
 				result.add(extractEntry(JavaTypeModel.class, rs));
+			}
+		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+			throw new DatabaseConnectionException(e);
+		}
+		return result;
+	}
+	
+	@Override
+	public List<JavaAssemblyModel> getJavaAssemblyImplemented(JavaAssemblyModel javaAssembly) {
+		List<JavaAssemblyModel> result = new ArrayList<JavaAssemblyModel>();
+		try {
+			ResultSet rs = getJavaAssemblyExtendingImplementing(javaAssembly, 0);
+			while (rs.next()) {
+				result.add(extractEntry(JavaAssemblyModel.class, rs));
 			}
 		} catch (SQLException | InstantiationException | IllegalAccessException e) {
 			throw new DatabaseConnectionException(e);

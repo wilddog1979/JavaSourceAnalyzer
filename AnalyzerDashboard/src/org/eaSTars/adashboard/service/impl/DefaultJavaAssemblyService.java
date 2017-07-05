@@ -104,6 +104,9 @@ public class DefaultJavaAssemblyService implements JavaAssemblyService {
 		return result;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public TypeArgumentEntry getJavaExtendsArguments(JavaAssemblyModel javaAssembly) {
 		JavaTypeModel extendsType = javaAssemblyDAO.getJavaAssemblyExtends(javaAssembly);
@@ -113,11 +116,19 @@ public class DefaultJavaAssemblyService implements JavaAssemblyService {
 		return null;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public List<TypeArgumentEntry> getJavaImplementsArguments(JavaAssemblyModel javaAssembly) {
 		return javaAssemblyDAO.getJavaAssemblyImplements(javaAssembly).stream()
 				.map(i -> getJavaArgument(i))
 				.collect(Collectors.toList());
+	}
+	
+	@Override
+	public List<JavaAssemblyModel> getImplementingAssemblies(JavaAssemblyModel javaAssembly) {
+		return javaAssemblyDAO.getJavaAssemblyImplemented(javaAssembly);
 	}
 	
 	@Override

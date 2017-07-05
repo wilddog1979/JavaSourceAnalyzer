@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eaSTars.adashboard.service.JavaAssemblyService;
 import org.eaSTars.adashboard.service.JavaBodyDeclarationService;
 import org.eaSTars.adashboard.service.JavaSequenceService;
@@ -41,6 +43,8 @@ import com.github.javaparser.ast.type.Type;
 
 public class DefaultJavaSequenceService implements JavaSequenceService {
 
+	private static final Logger LOGGER = LogManager.getLogger(DefaultJavaSequenceService.class);
+	
 	private JavaBodyDeclarationService javaBobyDeclarationService;
 	
 	private JavaAssemblyService javaAssemblyService;
@@ -305,7 +309,15 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		if (associate) {
 			if (result != null && javaAssemblyService.getJavaModul(result.getJavaModuleID()).getIsProject()) {
 				if (result.getJavaObjectTypeID().equals(javaAssemblyService.getInterfaceType().getPK())) {
-					result = result;
+					List<JavaAssemblyModel> implementing = javaAssemblyService.getImplementingAssemblies(result);
+					System.out.printf("\tImplementing: %s\n", implementing.stream().map(i -> i.getAggregate()).collect(Collectors.joining(",")));
+					
+					if (implementing.size() == 1) {
+						result = implementing.get(0);
+					} else {
+						LOGGER.warn("Only one class is expected to implement "+result.getAggregate()+ " found "+implementing.size());
+						result = null;
+					}
 				} else if (result.getJavaObjectTypeID().equals(javaAssemblyService.getClassType().getPK())) {
 					result = result;
 				}
