@@ -42,5 +42,11 @@ public interface JavaAssemblyDAO extends AbstractDBLayerDAO {
 	
 	public List<JavaAssemblyModel> getJavaAssemblyImplemented(JavaAssemblyModel javaAssembly);
 	
+	public List<JavaAssemblyModel> getJavaAssemblyImplemented(JavaTypeModel javaType);
+	
+	public List<JavaTypeModel> getJavaTypes(JavaAssemblyModel javaAssembly, int argumentcount);
+	
+	public List<JavaTypeModel> getJavaTypeArguments(JavaTypeModel javaType);
+	
 	public void saveModel(JavaAssemblyModel model);
 }

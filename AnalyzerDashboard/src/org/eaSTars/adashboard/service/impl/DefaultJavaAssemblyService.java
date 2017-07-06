@@ -2,6 +2,7 @@ package org.eaSTars.adashboard.service.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.eaSTars.adashboard.service.JavaAssemblyService;
 import org.eaSTars.sca.dao.JavaAssemblyDAO;
@@ -129,6 +130,33 @@ public class DefaultJavaAssemblyService implements JavaAssemblyService {
 	@Override
 	public List<JavaAssemblyModel> getImplementingAssemblies(JavaAssemblyModel javaAssembly) {
 		return javaAssemblyDAO.getJavaAssemblyImplemented(javaAssembly);
+	}
+	
+	@Override
+	public List<JavaAssemblyModel> getImplementingAssemblies(JavaTypeModel javaType) {
+		return javaAssemblyDAO.getJavaAssemblyImplemented(javaType);
+	}
+	
+	@Override
+	public JavaTypeModel getJavaType(JavaAssemblyModel javaAssembly, List<JavaTypeModel> typearguments) {
+		List<JavaTypeModel> javaTypes = javaAssemblyDAO.getJavaTypes(javaAssembly, typearguments.size());
+
+		return javaTypes.stream()
+				.filter(jt -> {
+					if (typearguments.isEmpty()) {
+						return true;
+					} else {
+						List<JavaTypeModel> jta = javaAssemblyDAO.getJavaTypeArguments(jt);
+						if (typearguments.size() == jta.size()) {
+							return typearguments.size() == IntStream.range(0, typearguments.size())
+									.map(c -> typearguments.get(c).equals(jta.get(c)) ? 1 : 0).sum();
+						} else {
+							return false;
+						}
+					}
+				})
+				.findFirst()
+				.orElseGet(() -> javaTypeDAO.createJavaType(javaAssembly, typearguments));
 	}
 	
 	@Override

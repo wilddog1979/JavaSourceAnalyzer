@@ -30,4 +30,11 @@ public class JavaTypeModel extends GenericModel {
 	public void setArgumentCount(Integer argumentCount) {
 		this.argumentCount = argumentCount;
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof JavaTypeModel &&
+				((JavaTypeModel)obj).getArgumentCount().equals(getArgumentCount()) &&
+				((JavaTypeModel)obj).getJavaAssemblyID().equals(getJavaAssemblyID());
+	}
 }

@@ -16,6 +16,7 @@ import org.eaSTars.adashboard.service.JavaSequenceService;
 import org.eaSTars.sca.model.JavaAssemblyModel;
 import org.eaSTars.sca.model.JavaMethodModel;
 import org.eaSTars.sca.model.JavaModuleModel;
+import org.eaSTars.sca.model.JavaTypeModel;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
@@ -145,7 +146,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 	}
 	
 	private void processMethod(SequenceParserContext ctx, String source, String target, MethodDeclaration methodDeclaration, StringBuffer sequencebuffer) {
-		System.out.println(methodDeclaration.toStringWithoutComments());
+		LOGGER.debug(() -> methodDeclaration.toStringWithoutComments());
 		
 		ctx.pushNewDeclarationFrame();
 		
@@ -225,7 +226,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 	}
 	
 	private void processExpression(SequenceParserContext ctx, String source, String target, Expression expression, StringBuffer sequencebuffer) {
-		System.out.printf("Expression %s\n", expression.toStringWithoutComments());
+		LOGGER.debug("Expression %s\n", expression.toStringWithoutComments());
 		if (expression instanceof MethodCallExpr) {
 			MethodCallExpr methodcall = (MethodCallExpr) expression;
 			
@@ -281,7 +282,6 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 					.filter(a -> a != null)
 					.findFirst().map(a -> {
 						TypeDescriptor td = new TypeDescriptor();
-						td.setJavaAssembly(a);
 
 						td.getArguments().addAll(classorinterfacetype.getTypeArgs().stream()
 								.filter(t -> t instanceof ReferenceType)
@@ -289,6 +289,11 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 								.filter(t -> t != null)
 								.collect(Collectors.toList()));
 
+						td.setJavaAssembly(a);
+						
+						JavaTypeModel jta = javaAssemblyService.getJavaType(a, td.getArguments().stream().map(ar -> ar.getJavaType()).collect(Collectors.toList()));
+						td.setJavaType(jta);
+						
 						return td;
 					}).orElseGet(() -> null);
 		}
@@ -312,13 +317,13 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		if (typedescriptor.getJavaAssembly().getJavaObjectTypeID().equals(javaAssemblyService.getInterfaceType().getPK())) {
 			// hybris adjustment: Converter types are referring to Populators
 			if ("de.hybris.platform.servicelayer.dto.converter.Converter".equals(typedescriptor.getJavaAssembly().getAggregate())) {
-				typedescriptor.setJavaAssembly(javaAssemblyService.getJavaAssemblyByAggregate("de.hybris.platform.converters.Populator"));
+				JavaAssemblyModel javaAssembly = javaAssemblyService.getJavaAssemblyByAggregate("de.hybris.platform.converters.Populator"); 
+				typedescriptor.setJavaAssembly(javaAssembly);
+				typedescriptor.setJavaType(javaAssemblyService.getJavaType(javaAssembly,
+						typedescriptor.getArguments().stream().map(a -> a.getJavaType()).collect(Collectors.toList())));
 			}
 			
-			List<JavaAssemblyModel> implementing = javaAssemblyService.getImplementingAssemblies(typedescriptor.getJavaAssembly());
-			//TODO check type arguments
-			System.out.printf("\tImplementing: %s\n", implementing.stream().map(i -> i.getAggregate()).collect(Collectors.joining(",")));
-			
+			List<JavaAssemblyModel> implementing = javaAssemblyService.getImplementingAssemblies(typedescriptor.getJavaType());
 			if (implementing.size() == 1) {
 				typedescriptor.setJavaAssembly(implementing.get(0));
 			} else {

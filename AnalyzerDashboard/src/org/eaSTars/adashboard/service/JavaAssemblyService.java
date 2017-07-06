@@ -53,5 +53,9 @@ public interface JavaAssemblyService {
 	
 	public List<JavaAssemblyModel> getImplementingAssemblies(JavaAssemblyModel javaAssembly);
 	
+	public List<JavaAssemblyModel> getImplementingAssemblies(JavaTypeModel javaType);
+	
+	public JavaTypeModel getJavaType(JavaAssemblyModel javaAssembly, List<JavaTypeModel> typearguments);
+	
 	public TypeArgumentEntry getJavaArgument(JavaTypeModel javaType);
 }
