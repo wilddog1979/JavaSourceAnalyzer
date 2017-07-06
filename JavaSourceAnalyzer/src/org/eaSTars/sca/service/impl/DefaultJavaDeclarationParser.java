@@ -52,7 +52,18 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 
 	private static final List<QualifiedNameExpr> JAVA_RUNTIMES = Arrays.asList(
 			JAVALANGEXPR,
-			new QualifiedNameExpr(new NameExpr("java"), "util")
+			new QualifiedNameExpr(new NameExpr("java"), "beans"),
+			new QualifiedNameExpr(new NameExpr("java"), "io"),
+			new QualifiedNameExpr(new NameExpr("java"), "lang"),
+			new QualifiedNameExpr(new NameExpr("java"), "math"),
+			new QualifiedNameExpr(new NameExpr("java"), "net"),
+			new QualifiedNameExpr(new NameExpr("java"), "nio"),
+			new QualifiedNameExpr(new NameExpr("java"), "security"),
+			new QualifiedNameExpr(new NameExpr("java"), "sql"),
+			new QualifiedNameExpr(new NameExpr("java"), "text"),
+			new QualifiedNameExpr(new NameExpr("java"), "time"),
+			new QualifiedNameExpr(new NameExpr("java"), "util"),
+			new QualifiedNameExpr(new NameExpr("javax"), "naming")
 			);
 	
 	private Map<JavaModuleModel, List<String>> externalLibraries = new HashMap<JavaModuleModel, List<String>>();
