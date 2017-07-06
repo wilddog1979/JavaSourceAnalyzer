@@ -240,9 +240,12 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 				String ta = null;
 				if (t != null) {
 					if (t instanceof ReferenceType && ((ReferenceType)t).getType() instanceof ClassOrInterfaceType) {
-						JavaAssemblyModel ja = resolveReference(ctx, (ReferenceType)t, true);
-						if (ja != null) {
-							ta = ja.getName();
+						TypeDescriptor jtype = resolveTypeDescriptor(ctx, (ReferenceType)t);
+						if (jtype != null) {
+							jtype = associateType(ctx, jtype);
+						}
+						if (jtype != null && javaAssemblyService.getJavaModul(jtype.getJavaAssembly().getJavaModuleID()).getIsProject()) {
+							ta = jtype.getJavaAssembly().getName();
 							sequencebuffer.append(String.format("%s -> %s : %s\n", target, ta, methodcall.getNameExpr().toStringWithoutComments()));
 							sequencebuffer.append(String.format("activate %s\n", ta));
 							sequencebuffer.append(String.format("deactivate %s\n", ta));
@@ -266,39 +269,34 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		}
 	}
 	
-	private JavaAssemblyModel resolveReference(SequenceParserContext ctx, ReferenceType reference, boolean associate) {
+	private TypeDescriptor resolveTypeDescriptor(SequenceParserContext ctx, ReferenceType reference) {
+		TypeDescriptor result = null;
+
 		Type type = reference.getType();
 		if (type instanceof ClassOrInterfaceType) {
 			ClassOrInterfaceType classorinterfacetype = (ClassOrInterfaceType) type;
-			
-			List<JavaAssemblyModel> typeargumentmodels = classorinterfacetype.getTypeArgs().stream()
-			.map(a -> {
-				if (a instanceof ReferenceType) {
-					return resolveReference(ctx, (ReferenceType) a, false);
-				} else {
-					return null;
-				}
-			})
-			.filter(a -> a != null)
-			.collect(Collectors.toList());
-			
-			System.out.printf("\tClassOrInterface: %s %s\n",
-					classorinterfacetype.getName(),
-					typeargumentmodels.stream().map(a -> a.getName()).collect(Collectors.joining(",", "<", ">")));
-			
-			JavaAssemblyModel result = ctx.getImports().stream()
-			.map(i -> mapJavaAssemblyModel(i.isAsterisk(), i.getName(), classorinterfacetype.getName(), associate))
-			.filter(a -> a != null)
-			.findFirst().orElseGet(() -> null);
-			
-			System.out.printf("\tImport: %s\n", Optional.ofNullable(result).map(a -> a.getAggregate()).orElseGet(() -> "not found"));
-			
-			return result;
+
+			result = ctx.getImports().stream()
+					.map(i -> mapJavaAssemblyModel(i.isAsterisk(), i.getName(), classorinterfacetype.getName()))
+					.filter(a -> a != null)
+					.findFirst().map(a -> {
+						TypeDescriptor td = new TypeDescriptor();
+						td.setJavaAssembly(a);
+
+						td.getArguments().addAll(classorinterfacetype.getTypeArgs().stream()
+								.filter(t -> t instanceof ReferenceType)
+								.map(t -> resolveTypeDescriptor(ctx, (ReferenceType)t))
+								.filter(t -> t != null)
+								.collect(Collectors.toList()));
+
+						return td;
+					}).orElseGet(() -> null);
 		}
-		return null;
+
+		return result;
 	}
 	
-	private JavaAssemblyModel mapJavaAssemblyModel(boolean isAsterisk, NameExpr importname, String name, boolean associate) {
+	private JavaAssemblyModel mapJavaAssemblyModel(boolean isAsterisk, NameExpr importname, String name) {
 		JavaAssemblyModel result = null;
 		
 		if (isAsterisk) {
@@ -306,27 +304,29 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		} else if (importname.getName().equals(name)){
 			result = javaAssemblyService.getJavaAssemblyByAggregate(importname.toStringWithoutComments());
 		}
-		if (associate) {
-			if (result != null && javaAssemblyService.getJavaModul(result.getJavaModuleID()).getIsProject()) {
-				if (result.getJavaObjectTypeID().equals(javaAssemblyService.getInterfaceType().getPK())) {
-					List<JavaAssemblyModel> implementing = javaAssemblyService.getImplementingAssemblies(result);
-					System.out.printf("\tImplementing: %s\n", implementing.stream().map(i -> i.getAggregate()).collect(Collectors.joining(",")));
-					
-					if (implementing.size() == 1) {
-						result = implementing.get(0);
-					} else {
-						LOGGER.warn("Only one class is expected to implement "+result.getAggregate()+ " found "+implementing.size());
-						result = null;
-					}
-				} else if (result.getJavaObjectTypeID().equals(javaAssemblyService.getClassType().getPK())) {
-					result = result;
-				}
-			} else {
-				result = null;
-			}
-		}
 		
 		return result;
+	}
+	
+	private TypeDescriptor associateType(SequenceParserContext ctx, TypeDescriptor typedescriptor) {
+		if (typedescriptor.getJavaAssembly().getJavaObjectTypeID().equals(javaAssemblyService.getInterfaceType().getPK())) {
+			// hybris adjustment: Converter types are referring to Populators
+			if ("de.hybris.platform.servicelayer.dto.converter.Converter".equals(typedescriptor.getJavaAssembly().getAggregate())) {
+				typedescriptor.setJavaAssembly(javaAssemblyService.getJavaAssemblyByAggregate("de.hybris.platform.converters.Populator"));
+			}
+			
+			List<JavaAssemblyModel> implementing = javaAssemblyService.getImplementingAssemblies(typedescriptor.getJavaAssembly());
+			//TODO check type arguments
+			System.out.printf("\tImplementing: %s\n", implementing.stream().map(i -> i.getAggregate()).collect(Collectors.joining(",")));
+			
+			if (implementing.size() == 1) {
+				typedescriptor.setJavaAssembly(implementing.get(0));
+			} else {
+				LOGGER.warn("Only one class is expected to implement "+typedescriptor.getJavaAssembly().getAggregate()+ " found "+implementing.size());
+				typedescriptor = null;
+			}
+		}
+		return typedescriptor;
 	}
 
 	public JavaBodyDeclarationService getJavaBobyDeclarationService() {
