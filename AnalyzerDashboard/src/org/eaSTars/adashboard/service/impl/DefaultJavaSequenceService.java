@@ -25,9 +25,11 @@ import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.UnaryExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -227,7 +229,11 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 	
 	private void processExpression(SequenceParserContext ctx, String source, String target, Expression expression, StringBuffer sequencebuffer) {
 		LOGGER.debug("Expression %s\n", expression.toStringWithoutComments());
-		if (expression instanceof MethodCallExpr) {
+		if (expression instanceof AssignExpr) {
+			AssignExpr assignexpresssion = (AssignExpr) expression;
+			processExpression(ctx, source, target, assignexpresssion.getTarget(), sequencebuffer);
+			processExpression(ctx, source, target, assignexpresssion.getValue(), sequencebuffer);
+		} else if (expression instanceof MethodCallExpr) {
 			MethodCallExpr methodcall = (MethodCallExpr) expression;
 			
 			methodcall.getArgs().forEach(a -> processExpression(ctx, source, target, a, sequencebuffer));
@@ -259,6 +265,8 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 					}
 				}
 			}
+		} else if (expression instanceof ObjectCreationExpr) {
+			((ObjectCreationExpr)expression).getArgs().stream().forEach(a -> processExpression(ctx, source, target, a, sequencebuffer));
 		} else if (expression instanceof UnaryExpr) {
 			processExpression(ctx, source, target, ((UnaryExpr)expression).getExpr(), sequencebuffer);
 		} else if (expression instanceof VariableDeclarationExpr) {
