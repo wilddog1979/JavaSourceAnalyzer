@@ -21,10 +21,16 @@ import net.sourceforge.plantuml.preproc.Defines;
 
 public class DefaultJavaSequenceDiagramConverter implements Converter<String, JavaSequenceDiagramView> {
 
+	private static final String HEADLESS_KEY = "java.awt.headless";
+	
+	private static final String PLANTUML_IMAGE_LIMIT_KEY = "PLANTUML_LIMIT_SIZE";
+	
 	@Override
 	public JavaSequenceDiagramView convert(String source) {
-		String headlessOriginal = System.getProperty("java.awt.headless");
-		System.setProperty("java.awt.headless", "true");
+		String headlessOriginal = System.getProperty(HEADLESS_KEY);
+		String plantUMLLimitSize = System.getProperty(PLANTUML_IMAGE_LIMIT_KEY);
+		System.setProperty(HEADLESS_KEY, "true");
+		System.setProperty(PLANTUML_IMAGE_LIMIT_KEY, "8192");
 		
 		JavaSequenceDiagramView target = new JavaSequenceDiagramView();
 		
@@ -50,7 +56,8 @@ public class DefaultJavaSequenceDiagramConverter implements Converter<String, Ja
 			e.printStackTrace();
 		}
 		
-		System.setProperty("java.awt.headless", headlessOriginal == null ? "false" : headlessOriginal);
+		System.setProperty(HEADLESS_KEY, headlessOriginal == null ? "false" : headlessOriginal);
+		System.setProperty(PLANTUML_IMAGE_LIMIT_KEY, plantUMLLimitSize == null ? "4096" : plantUMLLimitSize);
 		
 		return target;
 	}
