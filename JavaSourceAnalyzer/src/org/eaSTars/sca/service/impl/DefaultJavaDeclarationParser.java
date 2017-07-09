@@ -63,7 +63,8 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 			new QualifiedNameExpr(new NameExpr("java"), "text"),
 			new QualifiedNameExpr(new NameExpr("java"), "time"),
 			new QualifiedNameExpr(new NameExpr("java"), "util"),
-			new QualifiedNameExpr(new NameExpr("javax"), "naming")
+			new QualifiedNameExpr(new NameExpr("javax"), "naming"),
+			new QualifiedNameExpr(new QualifiedNameExpr(new NameExpr("org"), "w3c"), "dom")
 			);
 	
 	private Map<JavaModuleModel, List<String>> externalLibraries = new HashMap<JavaModuleModel, List<String>>();
@@ -128,10 +129,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		
 			// check java.lang first
 			if (result == null) {
-				result = JAVA_RUNTIMES.stream()
-				.map(jr -> resolveBinaryReference(new QualifiedNameExpr(jr, coit.getName()), getJavaRuntimeModule()))
-				.filter(r -> r != null)
-				.findFirst().orElseGet(() -> null);
+				result = resolveBinaryReference(new QualifiedNameExpr(JAVALANGEXPR, coit.getName()), getJavaRuntimeModule());
 			}
 			
 			// check import entries
@@ -143,12 +141,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 							break;
 						}
 					} else if (importentry.getName().getName().equals(coit.getName())) {
-						JavaModuleModel module = externalLibraries.entrySet().stream()
-						.filter(l -> l.getValue().stream()
-								.filter(p -> importentry.getName().toStringWithoutComments().startsWith(p))
-								.findFirst().isPresent())
-						.map(l -> l.getKey())
-						.findFirst().orElseGet(() -> ctx.getJavaModule());
+						JavaModuleModel module = getJavaModuleOfImport(importentry, ctx);
 						
 						result = createOtherStructure(importentry.getName(), confirmed, module, objecttype, null);
 						break;
@@ -174,6 +167,19 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		return result;
 	}
 	
+	private JavaModuleModel getJavaModuleOfImport(ImportDeclaration importentry, AssemblyParserContext ctx) {
+		return JAVA_RUNTIMES.stream()
+		.filter(jr -> importentry.getName().toStringWithoutComments().startsWith(jr.toStringWithoutComments()))
+		.findFirst()
+		.map(jr -> getJavaRuntimeModule())
+		.orElseGet(() -> externalLibraries.entrySet().stream()
+				.filter(l -> l.getValue().stream()
+						.filter(p -> importentry.getName().toStringWithoutComments().startsWith(p))
+						.findFirst().isPresent())
+				.map(l -> l.getKey())
+				.findFirst().orElseGet(() -> ctx.getJavaModule()));
+	}
+	
 	private JavaTypeModel processType(AssemblyParserContext ctx, List<JavaTypeParameterModel> javamethodtypeparameters, Type type, JavaObjectTypeModel objtype) {
 		JavaTypeModel result = null;
 		if (type instanceof ReferenceType) {
@@ -182,7 +188,6 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		} else if (type instanceof ClassOrInterfaceType) {
 			ClassOrInterfaceType coit = (ClassOrInterfaceType) type;
 			
-			//JavaAssemblyModel javaassembly = resolveName(parent, coit.getName(), javamethodtypeparameters, imports, objtype, module);
 			JavaAssemblyModel javaassembly = resolveName(ctx, coit, javamethodtypeparameters, objtype);
 			List<JavaTypeModel> typeargs = coit.getTypeArgs().stream()
 			.map(typearg -> processType(ctx, javamethodtypeparameters, typearg, null))
@@ -192,7 +197,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		} else if (type instanceof PrimitiveType) {
 			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(new QualifiedNameExpr(JAVALANGEXPR, ((PrimitiveType)type).getType().name()), true, ctx.getJavaModule(), getJavaClassType(), null), Collections.emptyList());
 		} else if (type instanceof VoidType) {
-			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(null, null, "void", true, ctx.getJavaModule(), getJavaClassType(), null), Collections.emptyList());
+			result = getJavaTypeDAO().createJavaType(this.createOtherStructure(null, null, "void", true, getJavaRuntimeModule(), getJavaClassType(), null), Collections.emptyList());
 		} else if (type instanceof WildcardType) {
 			WildcardType wt = (WildcardType) type;
 			
@@ -249,6 +254,11 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 	
 	@Override
 	public void processBodyDeclarations(AssemblyParserContext ctx, String subpath, List<? extends BodyDeclaration> bodydeclarations) {
+		
+		ctx.getImports().forEach(i -> {
+			createOtherStructure(i.getName(), false, getJavaModuleOfImport(i, ctx), getJavaClassType(), null);
+		});
+		
 		// process class or interface and enum declarations first
 		for (BodyDeclaration bodydeclaration : bodydeclarations) {
 			AssemblyParserContext innerctx = new AssemblyParserContext();
