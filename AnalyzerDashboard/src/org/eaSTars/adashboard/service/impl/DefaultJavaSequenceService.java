@@ -3,6 +3,7 @@ package org.eaSTars.adashboard.service.impl;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -26,16 +27,29 @@ import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.ArrayAccessExpr;
+import com.github.javaparser.ast.expr.ArrayCreationExpr;
+import com.github.javaparser.ast.expr.ArrayInitializerExpr;
 import com.github.javaparser.ast.expr.AssignExpr;
+import com.github.javaparser.ast.expr.BinaryExpr;
+import com.github.javaparser.ast.expr.BooleanLiteralExpr;
+import com.github.javaparser.ast.expr.CastExpr;
+import com.github.javaparser.ast.expr.ClassExpr;
+import com.github.javaparser.ast.expr.ConditionalExpr;
 import com.github.javaparser.ast.expr.EnclosedExpr;
 import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.FieldAccessExpr;
+import com.github.javaparser.ast.expr.InstanceOfExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.NullLiteralExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.expr.UnaryExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.BreakStmt;
+import com.github.javaparser.ast.stmt.ContinueStmt;
 import com.github.javaparser.ast.stmt.DoStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ForStmt;
@@ -43,9 +57,11 @@ import com.github.javaparser.ast.stmt.ForeachStmt;
 import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.Statement;
+import com.github.javaparser.ast.stmt.ThrowStmt;
 import com.github.javaparser.ast.stmt.TryStmt;
 import com.github.javaparser.ast.stmt.WhileStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
+import com.github.javaparser.ast.type.PrimitiveType;
 import com.github.javaparser.ast.type.ReferenceType;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.type.VoidType;
@@ -192,6 +208,10 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 					.map(s -> processStatement(ctx, source, target, s, sequencebuffer))
 					.reduce(false, (a, b) -> a | b);
 			ctx.popDeclarationFrame();
+		} else if (statement instanceof BreakStmt) {
+			result = false;
+		} else if (statement instanceof ContinueStmt) {
+			result = false;
 		} else if (statement instanceof DoStmt) {
 			DoStmt dostatement = ((DoStmt)statement);
 			result |= processStatement(ctx, source, target, dostatement.getBody(), sequencebuffer);
@@ -231,6 +251,9 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 					})
 					.orElseGet(() -> "")));
 			result = true;
+		} else if (statement instanceof ThrowStmt) {
+			processExpression(ctx, source, target, ((ThrowStmt)statement).getExpr(), sequencebuffer);
+			result = false;
 		} else if (statement instanceof TryStmt) {
 			TryStmt trystatement = (TryStmt) statement;
 			result |= processStatement(ctx, source, target, trystatement.getTryBlock(), sequencebuffer);
@@ -263,12 +286,55 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 	private TypeDescriptor processExpression(SequenceParserContext ctx, String source, String target, Expression expression, StringBuffer sequencebuffer) {
 		LOGGER.debug("Expression %s\n", expression.toStringWithoutComments());
 		TypeDescriptor expressiontype = null;
-		if (expression instanceof AssignExpr) {
+		if (expression instanceof ArrayAccessExpr) {
+			ArrayAccessExpr arrayaccessexpression = (ArrayAccessExpr) expression;
+			expressiontype = processExpression(ctx, source, target, arrayaccessexpression.getName(), sequencebuffer);
+			processExpression(ctx, source, target, arrayaccessexpression.getIndex(), sequencebuffer);
+		} else if (expression instanceof ArrayCreationExpr) {
+			ArrayCreationExpr arraycreationexpression = (ArrayCreationExpr) expression;
+			
+			Optional.ofNullable(arraycreationexpression.getInitializer()).ifPresent(i -> processExpression(ctx, source, target, arraycreationexpression.getInitializer(), sequencebuffer));
+			//TODO define type???
+		} else if (expression instanceof ArrayInitializerExpr) {
+			((ArrayInitializerExpr)expression).getValues().stream().map(i -> processExpression(ctx, source, target, i, sequencebuffer));
+			//TODO define type???
+		} else if (expression instanceof AssignExpr) {
 			AssignExpr assignexpresssion = (AssignExpr) expression;
 			expressiontype = processExpression(ctx, source, target, assignexpresssion.getTarget(), sequencebuffer);
 			processExpression(ctx, source, target, assignexpresssion.getValue(), sequencebuffer);
+		} else if (expression instanceof BinaryExpr) {
+			BinaryExpr binaryexpression = (BinaryExpr) expression;
+			processExpression(ctx, source, target, binaryexpression.getLeft(), sequencebuffer);
+			processExpression(ctx, source, target, binaryexpression.getRight(), sequencebuffer);
+			expressiontype = createTypeDescriptor(javaAssemblyService.getJavaAssemblyByAggregate("java.lang.Boolean"), Collections.emptyList());
+		} else if (expression instanceof BooleanLiteralExpr) {
+			expressiontype = createTypeDescriptor(javaAssemblyService.getJavaAssemblyByAggregate("java.lang.Boolean"), Collections.emptyList());
+		} else if (expression instanceof CastExpr) {
+			CastExpr castexpression = (CastExpr) expression;
+			processExpression(ctx, source, target, castexpression.getExpr(), sequencebuffer);
+			expressiontype = resolveTypeDescriptor(ctx, castexpression.getType());
+		} else if (expression instanceof ConditionalExpr) {
+			ConditionalExpr conditionalexpression = (ConditionalExpr) expression;
+			processExpression(ctx, source, target, conditionalexpression.getCondition(), sequencebuffer);
+			TypeDescriptor t1 = processExpression(ctx, source, target, conditionalexpression.getThenExpr(), sequencebuffer);
+			TypeDescriptor t2 = processExpression(ctx, source, target, conditionalexpression.getElseExpr(), sequencebuffer);
+			if (t1 != null) {
+				expressiontype = t1;
+			} else {
+				expressiontype = t2;
+			}
+		} else if (expression instanceof ClassExpr) {
+			TypeDescriptor td = resolveTypeDescriptor(ctx, ((ClassExpr)expression).getType());
+			expressiontype = createTypeDescriptor(javaAssemblyService.getJavaAssemblyByAggregate("java.lang.Class"), Arrays.asList(td.getJavaType()));
 		} else if (expression instanceof EnclosedExpr) {
 			expressiontype = processExpression(ctx, source, target, ((EnclosedExpr)expression).getInner(), sequencebuffer);
+		} else if (expression instanceof FieldAccessExpr) {
+			// maybe not important(???)
+		} else if (expression instanceof InstanceOfExpr) {
+			InstanceOfExpr instanceofexpression = (InstanceOfExpr) expression;
+			processExpression(ctx, source, target, instanceofexpression.getExpr(), sequencebuffer);
+			resolveTypeDescriptor(ctx, instanceofexpression.getType());
+			expressiontype = createTypeDescriptor(javaAssemblyService.getJavaAssemblyByAggregate("java.lang.Boolean"), Collections.emptyList());
 		} else if (expression instanceof MethodCallExpr) {
 			MethodCallExpr methodcall = (MethodCallExpr) expression;
 			
@@ -298,15 +364,17 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 				// variable
 				expressiontype = resolveTypeDescriptor(ctx, type);
 			}
-		}else if (expression instanceof ObjectCreationExpr) {
+		} else if (expression instanceof NullLiteralExpr) {
+			//TODO figure out what to do
+		} else if (expression instanceof ObjectCreationExpr) {
 			ObjectCreationExpr objectcreation = (ObjectCreationExpr) expression;
 			objectcreation.getArgs().stream().forEach(a -> processExpression(ctx, source, target, a, sequencebuffer));
 			expressiontype = resolveTypeDescriptor(ctx, objectcreation.getType());
 		} else if (expression instanceof StringLiteralExpr) {
-			//TODO String
+			expressiontype = createTypeDescriptor(javaAssemblyService.getJavaAssemblyByAggregate("java.lang.String"), Collections.emptyList());
 		}else if (expression instanceof UnaryExpr) {
 			processExpression(ctx, source, target, ((UnaryExpr)expression).getExpr(), sequencebuffer);
-			//TODO Boolean
+			expressiontype = createTypeDescriptor(javaAssemblyService.getJavaAssemblyByAggregate("java.lang.Boolean"), Collections.emptyList());
 		} else if (expression instanceof VariableDeclarationExpr) {
 			VariableDeclarationExpr vdecl = (VariableDeclarationExpr) expression;
 			vdecl.getVars().stream().forEach(vd -> {
@@ -339,6 +407,8 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			ClassOrInterfaceType classorinterfacetype = (ClassOrInterfaceType) type;
 
 			result = resolveTypeFromImport(ctx, classorinterfacetype.getName(), classorinterfacetype.getTypeArgs());
+		} else if (type instanceof PrimitiveType) {
+			result = createTypeDescriptor(javaAssemblyService.getJavaAssemblyByAggregate(String.format("java.lang.%s", ((PrimitiveType)type).getType().name())), Collections.emptyList());
 		} else if (type instanceof ReferenceType) {
 			result = resolveTypeDescriptor(ctx, ((ReferenceType)type).getType());
 		} else if (type instanceof VoidType) {
