@@ -343,13 +343,23 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			
 			if (methodcall.getScope() == null) {
 				// this needs some work more
-				//methodCall(ctx, ctx.getJavaAssembly(), methodcall.getNameExpr().toStringWithoutComments(), target, sequencebuffer);
+				methodCall(ctx, ctx.getJavaAssembly(), methodcall.getNameExpr().toStringWithoutComments(), target, sequencebuffer);
 			} else if (!methodcall.getScope().toStringWithoutComments().contains("\"")) {
-				TypeDescriptor jtype = associateType(ctx, processExpression(ctx, source, target, methodcall.getScope(), sequencebuffer));
+				TypeDescriptor td = processExpression(ctx, source, target, methodcall.getScope(), sequencebuffer);
+				TypeDescriptor jtype = associateType(ctx, td);
 				
-				if (jtype != null && javaAssemblyService.getJavaModul(jtype.getJavaAssembly().getJavaModuleID()).getIsProject()) {
+				JavaModuleModel jam = jtype == null ? null : javaAssemblyService.getJavaModul(jtype.getJavaAssembly().getJavaModuleID());
+				
+				if (jtype != null && jam.getIsProject() && !"Bootstrap".equals(jam.getName())) {
+					System.out.printf("[methodcall] : %s - %s (%s)\n",
+							methodcall.getScope(),
+							jtype == null ? "null" : jtype.getJavaAssembly().getAggregate(),
+							jam == null ? "null" : jam.getName() + " " + jam.getIsProject());
+				}
+				
+				if (jtype != null && jam.getIsProject() && !"Bootstrap".equals(jam.getName())) {
 					// this needs some work more
-					//methodCall(ctx, jtype.getJavaAssembly(), methodcall.getNameExpr().toStringWithoutComments(), target, sequencebuffer);
+					methodCall(ctx, jtype.getJavaAssembly(), methodcall.getNameExpr().toStringWithoutComments(), target, sequencebuffer);
 				}
 			} else if (methodcall != null) {
 				processExpression(ctx, source, target, methodcall.getScope(), sequencebuffer);
