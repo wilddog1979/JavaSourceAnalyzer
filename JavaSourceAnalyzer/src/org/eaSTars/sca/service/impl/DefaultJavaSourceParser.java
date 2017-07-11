@@ -76,6 +76,8 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 	public JavaAssemblyModel processForwardReference(String name, JavaModuleModel module) {
 		String filename = name.replaceAll("\\.", /*File.separator*/"/")+".java";
 
+		//TODO module must be used correctly
+		
 		File file = modulecontent.entrySet().stream()
 				.map(m -> m.getValue().stream()
 						.filter(f -> f.getAbsolutePath().endsWith(filename))
