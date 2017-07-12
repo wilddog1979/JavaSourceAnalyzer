@@ -37,9 +37,9 @@ public class JavaParserTest {
 
 	private static final String APP_SUBDIRS_KEY = "app.conf.$package$.$module$.subdirs";
 	
-	private static final String APP_EXTERNALLIBRARY_LIST_KEY = "app.conf.$package$.ExternalLibrary.list";
+	private static final String APP_EXTERNALLIBRARY_LIST_KEY = "app.conf.ExternalLibrary.list";
 	
-	private static final String APP_EXTERNALLIBRARY_KEY = "app.conf.$package$.ExternalLibrary.$library$";
+	private static final String APP_EXTERNALLIBRARY_KEY = "app.conf.ExternalLibrary.$library$";
 	
 	private static final String LIBRARY_SELECTOR = "\\$library\\$";
 	
