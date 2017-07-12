@@ -10,6 +10,11 @@ import org.eaSTars.sca.model.JavaModuleModel;
 public class DefaultJavaModuleDAO extends DefaultAbstractDBLayerDAO implements JavaModuleDAO {
 
 	@Override
+	public JavaModuleModel getModuleByName(String name) {
+		return queryModel(JavaModuleModel.class, new FilterEntry("name", name));
+	}
+	
+	@Override
 	public JavaModuleModel createJavaModule(String name, boolean isProject, String path) {
 		return Optional.ofNullable(queryModel(JavaModuleModel.class, new FilterEntry("name", name)))
 		.orElseGet(() -> {

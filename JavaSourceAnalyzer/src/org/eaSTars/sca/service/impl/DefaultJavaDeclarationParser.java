@@ -156,7 +156,7 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 		}
 		
 		if (result == null) {
-			result = javaSourceParser.processForwardReference(ctx.getParentJavaAssembly().getAggregate()+"."+coit.getName(), ctx.getJavaModule());
+			result = javaSourceParser.processForwardReference(ctx.getParentJavaAssembly().getAggregate()+"."+coit.getName());
 			if (result == null) {
 				System.out.println("early reference not found to "+coit.toStringWithoutComments()+" in "+ctx.getJavaAssembly().getAggregate());
 				// it must be here but probably the file is not on class path or in any of the source folders

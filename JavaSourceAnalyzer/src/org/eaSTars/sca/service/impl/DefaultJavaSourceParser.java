@@ -73,30 +73,18 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 	}
 	
 	@Override
-	public JavaAssemblyModel processForwardReference(String name, JavaModuleModel module) {
-		String filename = name.replaceAll("\\.", /*File.separator*/"/")+".java";
+	public JavaAssemblyModel processForwardReference(String name) {
+		String filename = name.replaceAll("\\.", File.separator.equals("\\") ? "\\\\" : File.separator)+".java";
 
-		//TODO module must be used correctly
-		
-		File file = modulecontent.entrySet().stream()
+		return modulecontent.entrySet().stream()
 				.map(m -> m.getValue().stream()
 						.filter(f -> f.getAbsolutePath().endsWith(filename))
-						.findFirst().orElseGet(() -> null))
+						.findFirst()
+						.map(r -> Optional.ofNullable(getJavaAssemblyDAO().getAssemblyByAggregate(name))
+								.orElseGet(() -> processFile(javaModuleDAO.getModuleByName(m.getKey().getName()), r)))
+						.orElseGet(() -> null))
 				.filter(f -> f != null)
 				.findFirst().orElseGet(() -> null);
-		
-		if (file != null) {
-			// check if it was already processed - to avoid StackOverflow
-			JavaAssemblyModel result = getJavaAssemblyDAO().getAssemblyByAggregate(name);
-			if (result == null) {
-				processFile(module, file);
-				return getJavaAssemblyDAO().getAssemblyByAggregate(name);
-			} else {
-				return result;
-			}
-		} else {
-			return null;
-		}
 	}
 	
 	private List<File> fileCollector(File dir) {
@@ -111,7 +99,7 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 		return result;
 	}
 	
-	private void processFile(JavaModuleModel module, File file) {
+	private JavaAssemblyModel processFile(JavaModuleModel module, File file) {
 		try {
 			AssemblyParserContext ctx = new AssemblyParserContext();
 			CompilationUnit cu = JavaParser.parse(file);
@@ -121,6 +109,7 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 			ctx.setImports(cu.getImports());
 			
 			getJavaDeclarationParser().processBodyDeclarations(ctx, file.getAbsolutePath().substring(module.getPath().length()), cu.getTypes());
+			return ctx.getJavaAssembly();
 		} catch (ParseException | IOException e) {
 			throw new JavaParserException(e);
 		}
