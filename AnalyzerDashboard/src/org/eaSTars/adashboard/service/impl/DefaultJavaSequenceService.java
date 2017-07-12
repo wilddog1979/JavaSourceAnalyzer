@@ -172,8 +172,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 				
 				return bodydeclarations;
 			} catch (ParseException | IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				LOGGER.error("Error while processing source code", e);
 			}
 		}
 		return Collections.emptyList();
