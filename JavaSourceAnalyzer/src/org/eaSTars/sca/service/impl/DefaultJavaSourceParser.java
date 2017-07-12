@@ -41,6 +41,7 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 			}
 			filecount += files.size();
 			modulecontent.put(moduleinfo, files);
+			javaModuleDAO.createJavaModule(moduleinfo.getName(), true, moduleinfo.getBasedir().getAbsolutePath());
 		}
 		
 		progressListener.setOverallCount(filecount);
@@ -53,7 +54,7 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 
 			int subtotal = 0;
 			progressListener.setSubprogressCount(files.size());
-			JavaModuleModel javamodule = javaModuleDAO.createJavaModule(module.getName(), true, module.getBasedir().getAbsolutePath());
+			JavaModuleModel javamodule = javaModuleDAO.getModuleByName(module.getName());
 			for (File file : files) {
 				progressListener.setStatusText("("+((System.currentTimeMillis() - starttime) / 1000)+"s - "+averagetime+"ms - "+((filecount - processedcount) * averagetime / 1000)+"s) "+module.getName()+" - "+file.getName());
 
@@ -85,6 +86,19 @@ public class DefaultJavaSourceParser extends AbstractJavaParser implements JavaS
 						.orElseGet(() -> null))
 				.filter(f -> f != null)
 				.findFirst().orElseGet(() -> null);
+	}
+	
+	@Override
+	public JavaModuleModel getModuleOfReference(String name) {
+		String filename = name.replaceAll("\\.", File.separator.equals("\\") ? "\\\\" : File.separator)+".java";
+		
+		return modulecontent.entrySet().stream()
+		.filter(m -> m.getValue().stream()
+				.filter(f -> f.getAbsolutePath().endsWith(filename))
+				.findFirst().isPresent())
+		.findFirst()
+		.map(m -> javaModuleDAO.getModuleByName(m.getKey().getName()))
+		.orElseGet(() -> null);
 	}
 	
 	private List<File> fileCollector(File dir) {

@@ -168,16 +168,22 @@ public class DefaultJavaDeclarationParser extends AbstractJavaParser implements 
 	}
 	
 	private JavaModuleModel getJavaModuleOfImport(ImportDeclaration importentry, AssemblyParserContext ctx) {
+		// check in Java Runtime first
 		return JAVA_RUNTIMES.stream()
 		.filter(jr -> importentry.getName().toStringWithoutComments().startsWith(jr.toStringWithoutComments()))
 		.findFirst()
 		.map(jr -> getJavaRuntimeModule())
+		// check in external libraries
 		.orElseGet(() -> externalLibraries.entrySet().stream()
 				.filter(l -> l.getValue().stream()
 						.filter(p -> importentry.getName().toStringWithoutComments().startsWith(p))
 						.findFirst().isPresent())
 				.map(l -> l.getKey())
-				.findFirst().orElseGet(() -> ctx.getJavaModule()));
+				.findFirst()
+				// check in modules - but only by name to avoid infinite recursion
+				.orElseGet(() -> Optional.ofNullable(javaSourceParser.getModuleOfReference(importentry.getName().toStringWithoutComments()))
+						// ...or else return the reference of current module
+						.orElseGet(() -> ctx.getJavaModule())));
 	}
 	
 	private JavaTypeModel processType(AssemblyParserContext ctx, List<JavaTypeParameterModel> javamethodtypeparameters, Type type, JavaObjectTypeModel objtype) {
