@@ -59,7 +59,9 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 	
 	private JScrollPane rightPanel = new JScrollPane();
 	
-	private JSlider imageScalingSlider = new JSlider(JSlider.HORIZONTAL, 10, 200, 100);
+	private int sliderpreviousvalue = 100;
+	
+	private JSlider imageScalingSlider = new JSlider(JSlider.HORIZONTAL, 10, 200, sliderpreviousvalue);
 	
 	private JPanel currentview;
 	
@@ -136,9 +138,14 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 		JPanel bottompane = new JPanel(new BorderLayout());
 		bottompane.setBorder(BorderFactory.createLoweredBevelBorder());
 		imageScalingSlider.setEnabled(false);
+		imageScalingSlider.setMinorTickSpacing(10);
+		imageScalingSlider.setPaintTicks(true);
+		imageScalingSlider.setSnapToTicks(true);
 		imageScalingSlider.addChangeListener(e -> {
-			if (currentview != null && currentview instanceof JavaSequenceDiagramView) {
-				((JavaSequenceDiagramView)currentview).scaleImage(imageScalingSlider.getValue());
+			int slidervalue = imageScalingSlider.getValue();
+			if (currentview != null && currentview instanceof JavaSequenceDiagramView && !imageScalingSlider.getValueIsAdjusting() && slidervalue % 10 == 0 && sliderpreviousvalue != slidervalue) {
+				((JavaSequenceDiagramView)currentview).scaleImage(slidervalue);
+				sliderpreviousvalue = slidervalue;
 			}
 		});
 		bottompane.add(imageScalingSlider, BorderLayout.EAST);

@@ -36,6 +36,6 @@ public class JavaSequenceDiagramView extends JPanel {
 	public void scaleImage(int scale) {
 		int width = dimension.width * scale / 100;
 		int height = dimension.height * scale / 100;
-		content.setIcon(new ImageIcon(image.getScaledInstance(width, height, Image.SCALE_SMOOTH)));
+		content.setIcon(new ImageIcon(image.getScaledInstance(width, height, Image.SCALE_FAST)));
 	}
 }
