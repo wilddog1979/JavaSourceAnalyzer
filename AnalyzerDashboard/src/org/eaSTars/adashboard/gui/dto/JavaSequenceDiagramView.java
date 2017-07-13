@@ -1,5 +1,6 @@
 package org.eaSTars.adashboard.gui.dto;
 
+import java.awt.Dimension;
 import java.awt.Image;
 
 import javax.swing.Box;
@@ -14,6 +15,10 @@ public class JavaSequenceDiagramView extends JPanel {
 
 	private JLabel content = new JLabel();
 	
+	private Dimension dimension;
+	
+	private Image image;
+	
 	public JavaSequenceDiagramView() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
@@ -23,6 +28,14 @@ public class JavaSequenceDiagramView extends JPanel {
 	}
 	
 	public void setContentImage(Image image) {
+		this.image = image;
 		content.setIcon(new ImageIcon(image));
+		dimension = content.getPreferredSize();
+	}
+	
+	public void scaleImage(int scale) {
+		int width = dimension.width * scale / 100;
+		int height = dimension.height * scale / 100;
+		content.setIcon(new ImageIcon(image.getScaledInstance(width, height, Image.SCALE_SMOOTH)));
 	}
 }

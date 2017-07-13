@@ -12,11 +12,13 @@ import java.util.Stack;
 
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
+import javax.swing.BorderFactory;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
@@ -35,6 +37,7 @@ import org.eaSTars.adashboard.gui.MainFrameAdapter;
 import org.eaSTars.adashboard.gui.MainFrameDelegate;
 import org.eaSTars.adashboard.gui.dto.ADashboardObjectType;
 import org.eaSTars.adashboard.gui.dto.ADashboardObjectView;
+import org.eaSTars.adashboard.gui.dto.JavaSequenceDiagramView;
 import org.eaSTars.adashboard.gui.dto.ViewHistoryEntry;
 import org.eaSTars.adashboard.gui.dto.ViewType;
 
@@ -55,6 +58,10 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 	private JScrollPane leftPanel = new JScrollPane();
 	
 	private JScrollPane rightPanel = new JScrollPane();
+	
+	private JSlider imageScalingSlider = new JSlider(JSlider.HORIZONTAL, 10, 200, 100);
+	
+	private JPanel currentview;
 	
 	private JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
 	
@@ -125,6 +132,17 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 		rightPanel.setViewportView(new JPanel());
 
 		cnt.add(splitpane, BorderLayout.CENTER);
+		
+		JPanel bottompane = new JPanel(new BorderLayout());
+		bottompane.setBorder(BorderFactory.createLoweredBevelBorder());
+		imageScalingSlider.setEnabled(false);
+		imageScalingSlider.addChangeListener(e -> {
+			if (currentview != null && currentview instanceof JavaSequenceDiagramView) {
+				((JavaSequenceDiagramView)currentview).scaleImage(imageScalingSlider.getValue());
+			}
+		});
+		bottompane.add(imageScalingSlider, BorderLayout.EAST);
+		cnt.add(bottompane, BorderLayout.SOUTH);
 	}
 
 	private Component buildTreeView() {
@@ -159,16 +177,20 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 
 	@Override
 	public void openAssembly(Integer id) {
+		imageScalingSlider.setEnabled(false);
 		openDetailView(id, ViewType.Assembly, javaAssemblyController.getAssemblyFullView(id));
 	}
 
 	@Override
 	public void openMethod(Integer id) {
+		imageScalingSlider.setValue(100);
+		imageScalingSlider.setEnabled(true);
 		openDetailView(id, ViewType.Method, javaSequenceDiagramController.getSequenceView(id));
 	}
 
 	private void openDetailView(Integer id, ViewType viewtype, JPanel panel) {
 		if (panel != null) {
+			currentview = panel;
 			ViewHistoryEntry historyentry = new ViewHistoryEntry();
 			historyentry.setViewType(viewtype);
 			historyentry.setPK(id);
