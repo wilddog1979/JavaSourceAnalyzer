@@ -1,6 +1,8 @@
 package org.eaSTars.adashboard.service;
 
+import org.eaSTars.adashboard.service.dto.JavaSequenceScript;
+
 public interface JavaSequenceService {
 
-	public String generateMethodSequence(Integer methodid);
+	public JavaSequenceScript generateMethodSequence(Integer methodid);
 }

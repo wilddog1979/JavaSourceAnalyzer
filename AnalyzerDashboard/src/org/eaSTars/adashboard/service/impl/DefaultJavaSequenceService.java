@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.eaSTars.adashboard.service.JavaAssemblyService;
 import org.eaSTars.adashboard.service.JavaBodyDeclarationService;
 import org.eaSTars.adashboard.service.JavaSequenceService;
+import org.eaSTars.adashboard.service.dto.JavaSequenceScript;
 import org.eaSTars.sca.model.JavaAssemblyModel;
 import org.eaSTars.sca.model.JavaMethodModel;
 import org.eaSTars.sca.model.JavaModuleModel;
@@ -75,19 +76,17 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 	private JavaAssemblyService javaAssemblyService;
 	
 	@Override
-	public String generateMethodSequence(Integer methodid) {
-		StringBuffer sequencebuffer = new StringBuffer("@startuml\n");
+	public JavaSequenceScript generateMethodSequence(Integer methodid) {
+		JavaSequenceScript sequencebuffer = new JavaSequenceScript();
 		
 		JavaMethodModel javaMethod = javaBobyDeclarationService.getMethod(methodid);
 		
 		processMethod(javaMethod, "[", sequencebuffer);
 		
-		sequencebuffer.append("@enduml\n");
-		
-		return sequencebuffer.toString();
+		return sequencebuffer;
 	}
 	
-	private void processMethod(JavaMethodModel javaMethod, String source, StringBuffer sequencebuffer) {
+	private void processMethod(JavaMethodModel javaMethod, String source, JavaSequenceScript sequencebuffer) {
 		Stack<JavaAssemblyModel> javaAssemblies = new Stack<JavaAssemblyModel>();
 		JavaAssemblyModel sourceAccembly = getSourceAssembly(javaMethod, javaAssemblies);
 		if (sourceAccembly != null) {
@@ -178,7 +177,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		return Collections.emptyList();
 	}
 	
-	private void processMethod(SequenceParserContext ctx, String source, String target, MethodDeclaration methodDeclaration, StringBuffer sequencebuffer) {
+	private void processMethod(SequenceParserContext ctx, String source, String target, MethodDeclaration methodDeclaration, JavaSequenceScript sequencebuffer) {
 		LOGGER.debug(() -> methodDeclaration.toStringWithoutComments());
 		
 		ctx.pushNewDeclarationFrame();
@@ -187,18 +186,18 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			ctx.registerDeclaration(p.getId().getName(), p.getType());
 		});
 		
-		sequencebuffer.append(String.format("%s-> %s: %s\n", source, target, methodDeclaration.getName()));
-		sequencebuffer.append(String.format("activate %s\n", target));
+		sequencebuffer.appendContent(String.format("%s-> %s: %s\n", source, target, methodDeclaration.getName()));
+		sequencebuffer.appendContent(String.format("activate %s\n", target));
 		
 		if (!processStatement(ctx, source, target, methodDeclaration.getBody(), sequencebuffer)) {
-			sequencebuffer.append(String.format("%s<-- %s\n", source, target));
+			sequencebuffer.appendContent(String.format("%s<-- %s\n", source, target));
 		}
-		sequencebuffer.append(String.format("deactivate %s\n", target));
+		sequencebuffer.appendContent(String.format("deactivate %s\n", target));
 		
 		ctx.popDeclarationFrame();
 	}
 	
-	private boolean processStatement(SequenceParserContext ctx, String source, String target, Statement statement, StringBuffer sequencebuffer) {
+	private boolean processStatement(SequenceParserContext ctx, String source, String target, Statement statement, JavaSequenceScript sequencebuffer) {
 		boolean result = false;
 
 		if (statement instanceof BlockStmt) {
@@ -239,7 +238,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			result |= processStatement(ctx, source, target, ifstatement.getThenStmt(), sequencebuffer);
 			result |= Optional.ofNullable(ifstatement.getElseStmt()).map(e -> processStatement(ctx, source, target, e, sequencebuffer)).orElseGet(() -> false);
 		} else if (statement instanceof ReturnStmt) {
-			sequencebuffer.append(String.format(
+			sequencebuffer.appendContent(String.format(
 					"%s<--%s%s\n",
 					source,
 					target,
@@ -282,7 +281,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		return result;
 	}
 	
-	private TypeDescriptor processExpression(SequenceParserContext ctx, String source, String target, Expression expression, StringBuffer sequencebuffer) {
+	private TypeDescriptor processExpression(SequenceParserContext ctx, String source, String target, Expression expression, JavaSequenceScript sequencebuffer) {
 		LOGGER.debug("Expression %s\n", expression.toStringWithoutComments());
 		TypeDescriptor expressiontype = null;
 		if (expression instanceof ArrayAccessExpr) {
@@ -397,7 +396,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		return expressiontype;
 	}
 	
-	private void methodCall(SequenceParserContext ctx, JavaAssemblyModel javaAssembly, String methodname, String target, StringBuffer sequencebuffer) {
+	private void methodCall(SequenceParserContext ctx, JavaAssemblyModel javaAssembly, String methodname, String target, JavaSequenceScript sequencebuffer) {
 		List<JavaMethodModel> methods = javaBobyDeclarationService.getMethods(javaAssembly);
 		JavaMethodModel method = methods.stream().filter(m -> m.getName().equals(methodname))
 		.findFirst().orElseGet(() -> {
