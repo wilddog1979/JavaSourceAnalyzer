@@ -17,6 +17,7 @@ import org.eaSTars.adashboard.service.JavaAssemblyService;
 import org.eaSTars.adashboard.service.JavaBodyDeclarationService;
 import org.eaSTars.adashboard.service.JavaSequenceService;
 import org.eaSTars.adashboard.service.dto.JavaSequenceScript;
+import org.eaSTars.adashboard.service.dto.TypeDescriptor;
 import org.eaSTars.sca.model.JavaAssemblyModel;
 import org.eaSTars.sca.model.JavaMethodModel;
 import org.eaSTars.sca.model.JavaModuleModel;

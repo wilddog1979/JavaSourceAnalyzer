@@ -3,6 +3,7 @@ package org.eaSTars.adashboard.service.impl;
 import java.util.List;
 
 import org.eaSTars.adashboard.service.JavaBodyDeclarationService;
+import org.eaSTars.adashboard.service.dto.TypeDescriptor;
 import org.eaSTars.sca.dao.JavaBodyDeclarationDAO;
 import org.eaSTars.sca.model.JavaAssemblyModel;
 import org.eaSTars.sca.model.JavaFieldModel;

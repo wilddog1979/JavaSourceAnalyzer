@@ -2,7 +2,7 @@ package org.eaSTars.adashboard.service;
 
 import java.util.List;
 
-import org.eaSTars.adashboard.service.impl.TypeDescriptor;
+import org.eaSTars.adashboard.service.dto.TypeDescriptor;
 import org.eaSTars.sca.model.JavaAssemblyModel;
 import org.eaSTars.sca.model.JavaFieldModel;
 import org.eaSTars.sca.model.JavaMethodModel;

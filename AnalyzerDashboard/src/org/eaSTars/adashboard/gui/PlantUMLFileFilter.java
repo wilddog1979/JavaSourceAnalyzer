@@ -1,4 +1,4 @@
-package org.eaSTars.adashboard.controller.impl;
+package org.eaSTars.adashboard.gui;
 
 import java.io.File;
 

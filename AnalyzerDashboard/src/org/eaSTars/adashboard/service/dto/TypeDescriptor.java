@@ -1,4 +1,4 @@
-package org.eaSTars.adashboard.service.impl;
+package org.eaSTars.adashboard.service.dto;
 
 import java.util.ArrayList;
 import java.util.List;

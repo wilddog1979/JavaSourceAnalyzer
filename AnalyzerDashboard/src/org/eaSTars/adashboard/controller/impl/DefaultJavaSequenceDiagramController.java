@@ -11,6 +11,8 @@ import javax.swing.JOptionPane;
 import org.eaSTars.adashboard.controller.JavaSequenceDiagramController;
 import org.eaSTars.adashboard.controller.JavaSequenceDiagramDelegate;
 import org.eaSTars.adashboard.gui.FileDialog;
+import org.eaSTars.adashboard.gui.PNGFileFilter;
+import org.eaSTars.adashboard.gui.PlantUMLFileFilter;
 import org.eaSTars.adashboard.gui.dto.JavaSequenceDiagramView;
 import org.eaSTars.adashboard.service.JavaSequenceService;
 import org.eaSTars.adashboard.service.dto.JavaSequenceScript;
