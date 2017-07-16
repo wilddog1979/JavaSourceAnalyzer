@@ -43,6 +43,9 @@
 		<property name="adashboardGUIController" ref="adashboardGUIController"/>
 	</bean>
 	
+	<bean id="fileDialog" class="org.eaSTars.adashboard.gui.impl.DefaultFileDialog">
+	</bean>
+	
 	<!-- GUI end -->
 	
 	<!-- converters start -->
@@ -90,6 +93,9 @@
 	<bean id="javaSequenceDiagramConverter" class="org.eaSTars.adashboard.converter.impl.DefaultJavaSequenceDiagramConverter">
 	</bean>
 	
+	<bean id="javaSequenceOutputConverter" class="org.eaSTars.adashboard.converter.impl.DefaultJavaSequenceOutputConverter">
+	</bean>
+	
 	<bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean">
 		<property name="converters">
 			<list>
@@ -103,6 +109,7 @@
 				<ref bean="javaTypeArgumentConverter"/>
 				<ref bean="javaTypeParameterConverter"/>
 				<ref bean="javaSequenceDiagramConverter"/>
+				<ref bean="javaSequenceOutputConverter"/>
 			</list>
 		</property>
 	</bean>
@@ -119,6 +126,7 @@
 	</bean>
 	
 	<bean id="javaSequenceDiagramController" class="org.eaSTars.adashboard.controller.impl.DefaultJavaSequenceDiagramController">
+		<property name="fileDialog" ref="fileDialog"/>
 		<property name="javaSequenceService" ref="javaSequenceService"/>
 		
 		<property name="conversionService" ref="conversionService"/>

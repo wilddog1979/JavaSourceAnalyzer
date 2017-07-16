@@ -1,5 +1,6 @@
 /bin/
 /lib/
+/samples/
 /conf.properties
 /console.log
 /gui.properties

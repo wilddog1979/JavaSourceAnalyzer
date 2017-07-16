@@ -4,61 +4,31 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eaSTars.adashboard.gui.dto.JavaSequenceDiagramView;
 import org.eaSTars.adashboard.service.dto.JavaSequenceScript;
-import org.springframework.core.convert.converter.Converter;
 
-import net.sourceforge.plantuml.BlockUmlBuilder;
-import net.sourceforge.plantuml.FileFormat;
-import net.sourceforge.plantuml.FileFormatOption;
-import net.sourceforge.plantuml.core.Diagram;
-import net.sourceforge.plantuml.preproc.Defines;
+public class DefaultJavaSequenceDiagramConverter extends AbstractJavaSequenceDiagramConverter<JavaSequenceDiagramView> {
 
-public class DefaultJavaSequenceDiagramConverter implements Converter<JavaSequenceScript, JavaSequenceDiagramView> {
-
-	private static final String HEADLESS_KEY = "java.awt.headless";
-	
-	private static final String PLANTUML_IMAGE_LIMIT_KEY = "PLANTUML_LIMIT_SIZE";
+	private static final Logger LOGGER = LogManager.getLogger(DefaultJavaSequenceDiagramConverter.class);
 	
 	@Override
 	public JavaSequenceDiagramView convert(JavaSequenceScript source) {
-		String headlessOriginal = System.getProperty(HEADLESS_KEY);
-		String plantUMLLimitSize = System.getProperty(PLANTUML_IMAGE_LIMIT_KEY);
-		System.setProperty(HEADLESS_KEY, "true");
-		System.setProperty(PLANTUML_IMAGE_LIMIT_KEY, "32768");
-		
 		JavaSequenceDiagramView target = new JavaSequenceDiagramView();
 		
-		try {
-			Reader reader = new InputStreamReader(new ByteArrayInputStream(source.buildString().getBytes()));
-
-			BlockUmlBuilder builder = new BlockUmlBuilder(new ArrayList<String>(), null, Defines.createEmpty(), reader);
-
-			builder.getBlockUmls().stream()
-			.forEach(blockUml -> {
-				Diagram system = null;
-				try {
-					system = blockUml.getDiagram();
-
-					ByteArrayOutputStream bo = new ByteArrayOutputStream();
-					system.exportDiagram(bo, 0, new FileFormatOption(FileFormat.PNG));
-					BufferedImage bi = ImageIO.read(new ByteArrayInputStream(bo.toByteArray()));
-					target.setContentImage(bi);
-				} catch (Throwable t) {
-				}
-			});
-		} catch (IOException e) {
-			e.printStackTrace();
+		ByteArrayOutputStream bo = getOutputStream(source);
+		if (bo != null) {
+			try {
+				BufferedImage bi = ImageIO.read(new ByteArrayInputStream(bo.toByteArray()));
+				target.setContentImage(bi);
+			} catch (IOException e) {
+				LOGGER.error("Error while writing PNG image to the view", e);
+			}
 		}
-		
-		System.setProperty(HEADLESS_KEY, headlessOriginal == null ? "false" : headlessOriginal);
-		System.setProperty(PLANTUML_IMAGE_LIMIT_KEY, plantUMLLimitSize == null ? "4096" : plantUMLLimitSize);
 		
 		return target;
 	}
