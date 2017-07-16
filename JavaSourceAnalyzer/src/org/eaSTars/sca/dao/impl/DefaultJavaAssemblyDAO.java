@@ -30,6 +30,8 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 	
 	private EntityCache<String, JavaAssemblyModel> javaAssemblyEntityCache = new EntityCache<>(JavaAssemblyModel.class.getSimpleName(), JAVAASSEMBLY_CACHE_SIZE);
 	
+	private EntityCache<Integer, List<JavaTypeModel>> javaTypeArgumentsCache = new EntityCache<>(List.class.getSimpleName(), JAVAASSEMBLY_CACHE_SIZE);
+	
 	@Override
 	public JavaObjectTypeModel getPackageObjectType() {
 		return getObjectType("Package");
@@ -218,20 +220,22 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 	
 	@Override
 	public List<JavaTypeModel> getJavaTypeArguments(JavaTypeModel javaType) {
-		try {
-			PreparedStatement pstatement = customStatementCacheManager("getJavaTypeArguments",
-					"SELECT jt.* FROM JavaType AS jt JOIN JavaTypeArgument AS jta ON jt.PK = jta.JavaTypeID WHERE jta.ParentJavaTypeID = ? ORDER BY jta.OrderNumber;");
-			pstatement.setInt(1, javaType.getPK());
-			
-			List<JavaTypeModel> result = new ArrayList<JavaTypeModel>();
-			ResultSet rs = pstatement.executeQuery();
-			while (rs.next()) {
-				result.add(extractEntry(JavaTypeModel.class, rs));
+		return javaTypeArgumentsCache.getItemFromCache(javaType.getPK(), () -> {	
+			try {
+				PreparedStatement pstatement = customStatementCacheManager("getJavaTypeArguments",
+						"SELECT jt.* FROM JavaType AS jt JOIN JavaTypeArgument AS jta ON jt.PK = jta.JavaTypeID WHERE jta.ParentJavaTypeID = ? ORDER BY jta.OrderNumber;");
+				pstatement.setInt(1, javaType.getPK());
+
+				List<JavaTypeModel> result = new ArrayList<JavaTypeModel>();
+				ResultSet rs = pstatement.executeQuery();
+				while (rs.next()) {
+					result.add(extractEntry(JavaTypeModel.class, rs));
+				}
+				return result;
+			} catch (SQLException | InstantiationException | IllegalAccessException e) {
+				throw new DatabaseConnectionException(e);
 			}
-			return result;
-		} catch (SQLException | InstantiationException | IllegalAccessException e) {
-			throw new DatabaseConnectionException(e);
-		}
+		});
 	}
 	
 	@Override

@@ -5,16 +5,15 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eaSTars.dblayer.model.GenericModel;
 
-public class EntityCache <K extends Object, V extends GenericModel> {
+public class EntityCache <K extends Object, V extends Object> {
 	
 	private static final Logger LOGGER = LogManager.getLogger(EntityCache.class);
 	
 	private String name;
 	
 	@FunctionalInterface
-	public interface EntitityProvider <T extends GenericModel> {
+	public interface EntitityProvider <T extends Object> {
 		public T getEntry();
 	}
 	
