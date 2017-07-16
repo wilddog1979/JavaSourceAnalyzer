@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.Vector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -22,6 +23,8 @@ public class JavaSequenceScript {
 		private JavaAssemblyModel javaAssembly;
 	}
 
+	private Stack<Integer> methodCallStack = new Stack<Integer>();
+	
 	private boolean sorted = false;
 	
 	private int uniquecounter = 0;
@@ -90,7 +93,21 @@ public class JavaSequenceScript {
 		}
 		return result;
 	}
+	
+	public boolean pushToCallStack(Integer methodPK) {
+		boolean result = methodCallStack.contains(methodPK);
+		
+		if (!result) {
+			methodCallStack.push(methodPK);
+		}
+		
+		return result;
+	}
 
+	public int popFromCallStack() {
+		return methodCallStack.pop();
+	}
+	
 	public boolean isSorted() {
 		return sorted;
 	}

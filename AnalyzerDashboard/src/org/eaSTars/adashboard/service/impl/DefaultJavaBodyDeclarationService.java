@@ -34,6 +34,12 @@ public class DefaultJavaBodyDeclarationService implements JavaBodyDeclarationSer
 	}
 	
 	@Override
+	public List<JavaMethodModel> getMethods(JavaAssemblyModel javaAssembly, String name,
+			List<TypeDescriptor> parametertypes) {
+		return javaBodyDeclarationDAO.getJavaMethods(javaAssembly, name, parametertypes.size());
+	}
+	
+	@Override
 	public List<JavaMethodParameterModel> getJavaMethodParameters(JavaMethodModel javaMethod) {
 		return javaBodyDeclarationDAO.getJavaMethodParameters(javaMethod);
 	}

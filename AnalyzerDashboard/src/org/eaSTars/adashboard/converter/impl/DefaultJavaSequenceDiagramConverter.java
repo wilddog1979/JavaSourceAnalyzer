@@ -31,7 +31,7 @@ public class DefaultJavaSequenceDiagramConverter implements Converter<JavaSequen
 		String headlessOriginal = System.getProperty(HEADLESS_KEY);
 		String plantUMLLimitSize = System.getProperty(PLANTUML_IMAGE_LIMIT_KEY);
 		System.setProperty(HEADLESS_KEY, "true");
-		System.setProperty(PLANTUML_IMAGE_LIMIT_KEY, "16384");
+		System.setProperty(PLANTUML_IMAGE_LIMIT_KEY, "32768");
 		
 		JavaSequenceDiagramView target = new JavaSequenceDiagramView();
 		

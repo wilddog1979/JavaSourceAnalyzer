@@ -14,6 +14,8 @@ public interface JavaAssemblyService {
 	
 	public List<JavaAssemblyModel> getChildAssemblies(Integer parentId);
 	
+	public JavaAssemblyModel getAssembly(Integer parentId, String name);
+	
 	public JavaAssemblyModel getJavaAssembly(Integer id);
 	
 	public JavaAssemblyModel getJavaAssemblyByAggregate(String name);

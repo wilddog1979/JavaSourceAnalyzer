@@ -40,6 +40,11 @@ public class DefaultJavaAssemblyService implements JavaAssemblyService {
 	}
 	
 	@Override
+	public JavaAssemblyModel getAssembly(Integer parentId, String name) {
+		return javaAssemblyDAO.getAssembly(name, javaAssemblyDAO.getModelByPK(JavaAssemblyModel.class, parentId));
+	}
+	
+	@Override
 	public JavaAssemblyModel getJavaAssembly(Integer id) {
 		return javaAssemblyDAO.getAssembly(id);
 	}
