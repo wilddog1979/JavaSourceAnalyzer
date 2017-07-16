@@ -14,6 +14,7 @@ import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
 import javax.swing.InputMap;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -58,6 +59,8 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 	private JScrollPane leftPanel = new JScrollPane();
 	
 	private JScrollPane rightPanel = new JScrollPane();
+	
+	private JCheckBox orderchecker = new JCheckBox("Ordered sequence");
 	
 	private int sliderpreviousvalue = 100;
 	
@@ -137,7 +140,22 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 		
 		JPanel bottompane = new JPanel(new BorderLayout());
 		bottompane.setBorder(BorderFactory.createLoweredBevelBorder());
-		imageScalingSlider.setEnabled(false);
+		
+		JPanel sequencesettings = new JPanel();
+		setEnabledSequenceControllers(false);
+		
+		sequencesettings.add(orderchecker);
+		orderchecker.addActionListener(a -> {
+			JavaSequenceDiagramView panel = javaSequenceDiagramController.updateSequenceView(orderchecker.isSelected());
+			currentview = panel;
+			rightPanel.setViewportView(panel);
+			
+			int slidervalue = imageScalingSlider.getValue();
+			if (slidervalue != 100) {
+				panel.scaleImage(slidervalue);
+			}
+		});
+		
 		imageScalingSlider.setMinorTickSpacing(10);
 		imageScalingSlider.setPaintTicks(true);
 		imageScalingSlider.setSnapToTicks(true);
@@ -148,7 +166,9 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 				sliderpreviousvalue = slidervalue;
 			}
 		});
-		bottompane.add(imageScalingSlider, BorderLayout.EAST);
+		sequencesettings.add(imageScalingSlider);
+		
+		bottompane.add(sequencesettings, BorderLayout.EAST);
 		cnt.add(bottompane, BorderLayout.SOUTH);
 	}
 
@@ -184,15 +204,20 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 
 	@Override
 	public void openAssembly(Integer id) {
-		imageScalingSlider.setEnabled(false);
+		setEnabledSequenceControllers(false);
 		openDetailView(id, ViewType.Assembly, javaAssemblyController.getAssemblyFullView(id));
 	}
 
 	@Override
 	public void openMethod(Integer id) {
 		imageScalingSlider.setValue(100);
-		imageScalingSlider.setEnabled(true);
-		openDetailView(id, ViewType.Method, javaSequenceDiagramController.getSequenceView(id));
+		setEnabledSequenceControllers(true);
+		openDetailView(id, ViewType.Method, javaSequenceDiagramController.getSequenceView(id, orderchecker.isSelected()));
+	}
+	
+	private void setEnabledSequenceControllers(boolean value) {
+		orderchecker.setEnabled(value);
+		imageScalingSlider.setEnabled(value);
 	}
 
 	private void openDetailView(Integer id, ViewType viewtype, JPanel panel) {
