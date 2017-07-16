@@ -87,11 +87,14 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 	}
 	
 	private void processMethod(JavaMethodModel javaMethod, String source, JavaSequenceScript sequencebuffer) {
-		Stack<JavaAssemblyModel> javaAssemblies = new Stack<JavaAssemblyModel>();
-		JavaAssemblyModel sourceAccembly = getSourceAssembly(javaMethod, javaAssemblies);
-		if (sourceAccembly != null) {
+		Stack<JavaAssemblyModel> javaAssemblies = getSourceAssembly(javaMethod.getParentAssemblyID());
+		if (!javaAssemblies.isEmpty()) {
+			String embedded = javaAssemblies.stream().map(a -> a.getName()).collect(Collectors.joining("."));
+			
+			JavaAssemblyModel sourceAccembly = javaAssemblies.pop();
 			SequenceParserContext ctx = new SequenceParserContext();
 			ctx.setJavaAssembly(sourceAccembly);
+			
 			List<? extends BodyDeclaration> bodydeclarations = processSourceFile(ctx, javaAssemblies, sourceAccembly);
 			
 			MethodDeclaration methodDeclaration = bodydeclarations.stream()
@@ -102,7 +105,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 					.orElseGet(() -> null);
 			
 			if (methodDeclaration != null) {
-				processMethod(ctx, source, sourceAccembly.getName(), methodDeclaration, sequencebuffer);
+				processMethod(ctx, source, sequencebuffer.addParticipant(embedded, sourceAccembly), methodDeclaration, sequencebuffer);
 			}
 		}
 	}
@@ -118,22 +121,23 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		});
 	}
 	
-	private JavaAssemblyModel getSourceAssembly(JavaMethodModel javaMethod, Stack<JavaAssemblyModel> javaAssemblies) {
-		Integer parentid = javaMethod.getParentAssemblyID();
+	private Stack<JavaAssemblyModel> getSourceAssembly(Integer assemblyID) {
+		Stack<JavaAssemblyModel> javaAssemblies = new Stack<JavaAssemblyModel>();
+		
 		JavaAssemblyModel javaAssembly = null;
 		do {
-			javaAssembly = javaAssemblyService.getJavaAssembly(parentid);
-			if (javaAssembly != null) {
-				parentid = javaAssembly.getParentAssemblyID();
+			javaAssembly = javaAssemblyService.getJavaAssembly(assemblyID);
+			if (javaAssembly != null &&
+					javaAssemblyService.getPackageType() != null &&
+					!javaAssembly.getJavaObjectTypeID().equals(javaAssemblyService.getPackageType().getPK())) {
+				assemblyID = javaAssembly.getParentAssemblyID();
 				javaAssemblies.push(javaAssembly);
+			} else {
+				break;
 			}
-		} while (javaAssembly != null && javaAssembly.getSubpath() != null && parentid == null);
+		} while (assemblyID != null);
 		
-		if (!javaAssemblies.isEmpty() && javaAssemblies.peek().getJavaModuleID() != null) {
-			return javaAssemblies.pop();
-		} else {
-			return null;
-		}
+		return javaAssemblies;
 	}
 	
 	private List<? extends BodyDeclaration> processSourceFile(SequenceParserContext ctx, Stack<JavaAssemblyModel> javaAssemblies, JavaAssemblyModel javaAssembly) {
@@ -347,13 +351,6 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 				TypeDescriptor jtype = associateType(ctx, td);
 				
 				JavaModuleModel jam = jtype == null ? null : javaAssemblyService.getJavaModul(jtype.getJavaAssembly().getJavaModuleID());
-				
-				if (jtype != null && jam.getIsProject() && !"Bootstrap".equals(jam.getName())) {
-					System.out.printf("[methodcall] : %s - %s (%s)\n",
-							methodcall.getScope(),
-							jtype == null ? "null" : jtype.getJavaAssembly().getAggregate(),
-							jam == null ? "null" : jam.getName() + " " + jam.getIsProject());
-				}
 				
 				if (jtype != null && jam.getIsProject() && !"Bootstrap".equals(jam.getName())) {
 					// this needs some work more

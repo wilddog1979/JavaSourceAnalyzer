@@ -36,7 +36,7 @@ public class DefaultJavaSequenceDiagramConverter implements Converter<JavaSequen
 		JavaSequenceDiagramView target = new JavaSequenceDiagramView();
 		
 		try {
-			Reader reader = new InputStreamReader(new ByteArrayInputStream(source.buildString().getBytes()));
+			Reader reader = new InputStreamReader(new ByteArrayInputStream(source.buildString(true).getBytes()));
 
 			BlockUmlBuilder builder = new BlockUmlBuilder(new ArrayList<String>(), null, Defines.createEmpty(), reader);
 
