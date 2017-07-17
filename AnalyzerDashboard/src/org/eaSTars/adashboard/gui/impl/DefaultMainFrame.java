@@ -74,7 +74,7 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 	
 	private JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
 	
-	public void init() {
+	private void init() {
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		addWindowListener(mainFrameListener);
 
@@ -109,6 +109,8 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 	
 	@Override
 	public void buildMenu(boolean extended, ADashboardController controller) {
+		init();
+		
 		JMenuBar menubar = new JMenuBar();
 		
 		if (extended) {

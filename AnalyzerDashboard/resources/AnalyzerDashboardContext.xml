@@ -36,7 +36,7 @@
 	<bean id="mainFrameAdapter" class="org.eaSTars.adashboard.gui.impl.DefaultMainFrameAdapter">
 	</bean>
 
-	<bean id="mainFrame" class="org.eaSTars.adashboard.gui.impl.DefaultMainFrame" init-method="init">
+	<bean id="mainFrame" class="org.eaSTars.adashboard.gui.impl.DefaultMainFrame">
 		<property name="mainFrameListener" ref="mainFrameAdapter"/>
 		<property name="javaAssemblyController" ref="javaAssemblyController"/>
 		<property name="javaSequenceDiagramController" ref="javaSequenceDiagramController"/>
