@@ -56,8 +56,12 @@ public class JavaSequenceScript {
 	}
 
 	public String buildString() {
+		/*return String.format("@startuml\n%s%s@enduml\n",
+                    getSortedParticipants().collect(Collectors.joining())
+                    , content.toString());*/
+
 		return String.format("@startuml\n%s%s@enduml\n",
-				getSortedParticipants().collect(Collectors.joining())
+				getSortedParticipants2()
 				, content.toString());
 	}
 
@@ -65,6 +69,40 @@ public class JavaSequenceScript {
 		return aliasmap.entrySet().stream()
 				.sorted((o1, o2) -> compareAliasEntries(o2.getValue(), o1.getValue()))
 				.map(a -> String.format("participant %s as %s\n", a.getKey(), a.getValue().alias));
+	}
+
+	private String getSortedParticipants2() {
+		Map<Integer, List<AliasEntry>> m = aliasmap.entrySet().stream()
+				.map(a -> a.getValue())
+				.collect(Collectors.groupingBy(a -> a.javaAssembly.getJavaModuleID(), Collectors.toList()));
+
+		String r = m.entrySet().stream()
+				.sorted((o1, o2) -> Integer.compare(o2.getKey(), o1.getKey()))
+				.map(o -> {
+					String result = "";
+					result += "box \"" + o.getKey() + "\"\n";
+
+					result += o.getValue().stream()
+							.sorted((o1, o2) -> {
+								int idx1 = getNameIndex(o1.javaAssembly.getName());
+								int idx2 = getNameIndex(o2.javaAssembly.getName());
+								int cr = Integer.compare(idx1, idx2);
+								if (cr == 0) {
+									cr = Integer.compare(o2.count, o1.count);
+								}
+								return cr;
+							})
+							.map(o1 -> "\tparticipant "+o1.javaAssembly.getName()+" as "+o1.alias)
+							.collect(Collectors.joining("\n"))
+							;
+
+					result += "\nend box";
+					return result;
+				})
+				.collect(Collectors.joining("\n"))
+				+ "\n";
+
+		return r;
 	}
 
 	private int compareAliasEntries(AliasEntry entry1, AliasEntry entry2) {
