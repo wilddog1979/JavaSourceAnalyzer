@@ -1,21 +1,15 @@
 package org.eaSTars.adashboard.gui;
 
-import java.io.File;
+public class PlantUMLFileFilter extends AbstractFileFilter {
 
-import javax.swing.filechooser.FileFilter;
-
-public class PlantUMLFileFilter extends FileFilter {
-
-	public static final String EXTENSION = ".puml";
+	@Override
+	protected String getExtension() {
+		return ".puml";
+	}
 	
 	@Override
-	public boolean accept(File f) {
-		return f.isFile() && f.getName().toLowerCase().endsWith(EXTENSION);
-	}
-
-	@Override
-	public String getDescription() {
-		return String.format("PlantUML script (%s)", EXTENSION);
+	protected String getFileTypeName() {
+		return "PlantUML script";
 	}
 
 }
