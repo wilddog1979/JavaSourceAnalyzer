@@ -40,7 +40,7 @@
 		<property name="mainFrameListener" ref="mainFrameAdapter"/>
 		<property name="javaAssemblyController" ref="javaAssemblyController"/>
 		<property name="javaSequenceDiagramController" ref="javaSequenceDiagramController"/>
-		<property name="adashboardGUIController" ref="adashboardGUIController"/>
+		<property name="adashboardController" ref="aDashboardController"/>
 	</bean>
 	
 	<bean id="fileDialog" class="org.eaSTars.adashboard.gui.impl.DefaultFileDialog">
@@ -119,6 +119,7 @@
 	<!-- controllers start -->
 	
 	<bean id="aDashboardController" class="org.eaSTars.adashboard.controller.impl.DefaultADashboadController">
+		<property name="configService" ref="guiConfigService"/>
 		<property name="mainframe" ref="mainFrame"/>
 		<property name="mainframeAdapter" ref="mainFrameAdapter"/>
 	</bean>
@@ -135,10 +136,6 @@
 		<property name="javaSequenceService" ref="javaSequenceService"/>
 		
 		<property name="conversionService" ref="conversionService"/>
-	</bean>
-	
-	<bean name="adashboardGUIController" class="org.eaSTars.adashboard.controller.impl.DefaultADashboardGUIController">
-		<property name="guiConfigService" ref="guiConfigService"/>
 	</bean>
 	
 	<!-- controllers end -->

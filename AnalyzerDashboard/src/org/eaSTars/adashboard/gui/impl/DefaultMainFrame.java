@@ -35,7 +35,6 @@ import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.eaSTars.adashboard.controller.ADashboardController;
-import org.eaSTars.adashboard.controller.ADashboardGUIConfigController;
 import org.eaSTars.adashboard.controller.JavaAssemblyController;
 import org.eaSTars.adashboard.controller.JavaSequenceDiagramController;
 import org.eaSTars.adashboard.gui.MainFrame;
@@ -57,7 +56,7 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 
 	private JavaSequenceDiagramController javaSequenceDiagramController;
 
-	private ADashboardGUIConfigController adashboardGUIController;
+	private ADashboardController adashboardController;
 	
 	private Stack<ViewHistoryEntry> assemblyHistory = new Stack<ViewHistoryEntry>();
 
@@ -81,9 +80,9 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 
 		buildGUI();
 
-		Optional.ofNullable(adashboardGUIController.getWindowLocation()).ifPresent(l -> setLocation(l));
+		Optional.ofNullable(adashboardController.getWindowLocation()).ifPresent(l -> setLocation(l));
 		
-		Dimension dimension = adashboardGUIController.getWindowSize();
+		Dimension dimension = adashboardController.getWindowSize();
 		if (dimension != null) {
 			setSize(dimension);
 		} else {
@@ -93,13 +92,13 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 			setLocation((screensize.width - dimension.width) / 2, (screensize.height - dimension.height) / 2);
 		}
 		
-		Optional.ofNullable(adashboardGUIController.getDividerLocation()).ifPresent(d -> splitpane.setDividerLocation(d));
+		Optional.ofNullable(adashboardController.getDividerLocation()).ifPresent(d -> splitpane.setDividerLocation(d));
 		
 		mainFrameListener.addFrameClosingListener(w -> {
-			adashboardGUIController.setWindowLocation(w.getLocation());
-			adashboardGUIController.setWindowSize(w.getSize());
-			adashboardGUIController.setDividerLocation(splitpane.getDividerLocation());
-			adashboardGUIController.saveSettings();
+			adashboardController.setWindowLocation(w.getLocation());
+			adashboardController.setWindowSize(w.getSize());
+			adashboardController.setDividerLocation(splitpane.getDividerLocation());
+			adashboardController.saveSettings();
 		});
 	}
 
@@ -311,11 +310,11 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 		this.javaSequenceDiagramController = javaSequenceDiagramController;
 	}
 
-	public ADashboardGUIConfigController getAdashboardGUIController() {
-		return adashboardGUIController;
+	public ADashboardController getAdashboardController() {
+		return adashboardController;
 	}
 
-	public void setAdashboardGUIController(ADashboardGUIConfigController adashboardGUIController) {
-		this.adashboardGUIController = adashboardGUIController;
+	public void setAdashboardController(ADashboardController adashboardController) {
+		this.adashboardController = adashboardController;
 	}
 }
