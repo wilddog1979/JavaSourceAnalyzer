@@ -267,7 +267,9 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 					Optional.ofNullable(((ReturnStmt)statement).getExpr())
 					.map(e -> {
 						processExpression(ctx, source, target, e, sequencebuffer);
-						return String.format(":%s", e.toStringWithoutComments().replaceAll("\\.", ".\\\\n"));
+						//TODO add option to turn on/off return labels
+						//return String.format(":%s", e.toStringWithoutComments().replaceAll("\\.", ".\\\\n"));
+						return "";
 					})
 					.orElseGet(() -> "")));
 			result = true;
