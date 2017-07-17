@@ -3,7 +3,6 @@ package org.eaSTars.adashboard.gui.impl;
 import java.awt.Component;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -11,12 +10,9 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 
 import org.eaSTars.adashboard.gui.dto.ADashboardObjectType;
 import org.eaSTars.adashboard.gui.dto.ADashboardObjectView;
+import org.eaSTars.adashboard.gui.resources.Resources;
 
 public class ADashboardTreeCellRenderer extends DefaultTreeCellRenderer {
-
-	private static final Icon PACKAGEICON = new ImageIcon(ADashboardTreeCellRenderer.class.getClassLoader().getResource("org/eaSTars/adashboard/gui/impl/packageicon.png"));
-	
-	private static final Icon CLASSICON = new ImageIcon(ADashboardTreeCellRenderer.class.getClassLoader().getResource("org/eaSTars/adashboard/gui/impl/classicon.png"));
 	
 	private static final long serialVersionUID = -4611277782352746408L;
 
@@ -28,13 +24,13 @@ public class ADashboardTreeCellRenderer extends DefaultTreeCellRenderer {
 		if (type != null) {
 			switch(type) {
 			case PACKAGE:
-				result = PACKAGEICON;
+				result = Resources.PACKAGEICON;
 				break;
 			case CLASS:
 			case INTERFACE:
 			case ENUM:
 			case ANNOTATION:
-				result = CLASSICON;
+				result = Resources.CLASSICON;
 				break;
 			default:
 				result = super.getLeafIcon();

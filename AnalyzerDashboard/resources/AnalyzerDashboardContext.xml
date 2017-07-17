@@ -46,6 +46,12 @@
 	<bean id="fileDialog" class="org.eaSTars.adashboard.gui.impl.DefaultFileDialog">
 	</bean>
 	
+	<bean id="aboutDialog" class="org.eaSTars.adashboard.gui.impl.DefaultAboutDialog">
+	</bean>
+	
+	<bean id="preferencesDialog" class="org.eaSTars.adashboard.gui.impl.DefaultPreferencesDialog">
+	</bean>
+	
 	<!-- GUI end -->
 	
 	<!-- converters start -->
@@ -122,6 +128,9 @@
 		<property name="configService" ref="guiConfigService"/>
 		<property name="mainframe" ref="mainFrame"/>
 		<property name="mainframeAdapter" ref="mainFrameAdapter"/>
+		
+		<property name="aboutDialog" ref="aboutDialog"/>
+		<property name="preferencesDialog" ref="preferencesDialog"/>
 	</bean>
 	
 	<bean id="javaAssemblyController" class="org.eaSTars.adashboard.controller.impl.DefaultJavaAssemblyController">

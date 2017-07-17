@@ -4,9 +4,11 @@ import java.awt.Dimension;
 import java.awt.Point;
 
 import org.eaSTars.adashboard.controller.ADashboardController;
+import org.eaSTars.adashboard.gui.ADashboardDialog;
 import org.eaSTars.adashboard.gui.FrameClosedListener;
 import org.eaSTars.adashboard.gui.MainFrame;
 import org.eaSTars.adashboard.gui.MainFrameAdapter;
+import org.eaSTars.adashboard.gui.PreferencesDialog;
 import org.eaSTars.util.ConfigService;
 
 public class DefaultADashboadController implements ADashboardController {
@@ -26,6 +28,10 @@ public class DefaultADashboadController implements ADashboardController {
 	private MainFrame mainframe;
 	
 	private MainFrameAdapter mainframeAdapter;
+	
+	private ADashboardDialog aboutDialog;
+	
+	private PreferencesDialog preferencesDialog;
 	
 	@Override
 	public void buildMenu(boolean extended) {
@@ -49,14 +55,14 @@ public class DefaultADashboadController implements ADashboardController {
 
 	@Override
 	public void showAbout() {
-		// TODO Auto-generated method stub
-		
+		aboutDialog.showDialog();
 	}
 	
 	@Override
 	public void showPreferences() {
-		// TODO Auto-generated method stub
-		
+		if (preferencesDialog.showDialog()) {
+			//TODO extract settings
+		}
 	}
 	
 	@Override
@@ -143,6 +149,22 @@ public class DefaultADashboadController implements ADashboardController {
 
 	public void setMainframeAdapter(MainFrameAdapter mainframeAdapter) {
 		this.mainframeAdapter = mainframeAdapter;
+	}
+
+	public ADashboardDialog getAboutDialog() {
+		return aboutDialog;
+	}
+
+	public void setAboutDialog(ADashboardDialog aboutDialog) {
+		this.aboutDialog = aboutDialog;
+	}
+
+	public PreferencesDialog getPreferencesDialog() {
+		return preferencesDialog;
+	}
+
+	public void setPreferencesDialog(PreferencesDialog preferencesDialog) {
+		this.preferencesDialog = preferencesDialog;
 	}
 
 }
