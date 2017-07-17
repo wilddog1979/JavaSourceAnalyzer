@@ -1,8 +1,6 @@
 package org.eaSTars;
 
-import java.awt.event.WindowEvent;
-
-import org.eaSTars.adashboard.gui.impl.DefaultMainFrame;
+import org.eaSTars.adashboard.controller.ADashboardController;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import com.apple.eawt.Application;
@@ -19,13 +17,15 @@ public class MacApplicationFunctions implements ApplicationFunctions {
 				"com.apple.mrj.application.apple.menu.about.name",
 				APP_NAME);
 		
+		ADashboardController controller = context.getBean(ADashboardController.class);
+		controller.buildMenu(false);
+		
 		Application macApplication = Application.getApplication();
-		macApplication.setAboutHandler(paramAboutEvent -> {});
-		macApplication.setPreferencesHandler(paramPreferencesEvent -> {});
+		macApplication.setAboutHandler(paramAboutEvent -> controller.showAbout());
+		macApplication.setPreferencesHandler(paramPreferencesEvent -> controller.showPreferences());
 		
 		macApplication.setQuitHandler((quitevent, quitresponse) -> {
-			DefaultMainFrame mainframe = context.getBean(DefaultMainFrame.class);
-			mainframe.dispatchEvent(new WindowEvent(mainframe, WindowEvent.WINDOW_CLOSING));
+			controller.dispatchClosingEvent();
 			context.close();
 			quitresponse.performQuit();
 		});

@@ -2,8 +2,7 @@ package org.eaSTars;
 
 import java.util.Optional;
 
-import org.eaSTars.adashboard.gui.MainFrame;
-import org.eaSTars.adashboard.gui.MainFrameAdapter;
+import org.eaSTars.adashboard.controller.ADashboardController;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
@@ -18,14 +17,17 @@ public class ADashboard {
 	public ADashboard() {
 		initApplication();
 		
-		context.getBean(MainFrameAdapter.class).addFrameClosedListener(w -> context.close());
-		context.getBean(MainFrame.class).start();
+		ADashboardController controller = context.getBean(ADashboardController.class);
+		controller.addFrameClosedListener(w -> context.close());
+		controller.start();
 	}
 	
 	private void initApplication() {
 		String os = System.getProperty("os.name").toLowerCase();
 		if (os.indexOf("mac") != -1) {
 			instantiate("org.eaSTars.MacApplicationFunctions", ApplicationFunctions.class).ifPresent(i -> i.initApplication(context));
+		} else {
+			instantiate("org.eaSTars.WindowsApplicationFunctions", ApplicationFunctions.class).ifPresent(i -> i.initApplication(context));
 		}
 	}
 	

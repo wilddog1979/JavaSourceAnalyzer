@@ -118,6 +118,11 @@
 	
 	<!-- controllers start -->
 	
+	<bean id="aDashboardController" class="org.eaSTars.adashboard.controller.impl.DefaultADashboadController">
+		<property name="mainframe" ref="mainFrame"/>
+		<property name="mainframeAdapter" ref="mainFrameAdapter"/>
+	</bean>
+	
 	<bean id="javaAssemblyController" class="org.eaSTars.adashboard.controller.impl.DefaultJavaAssemblyController">
 		<property name="javaAssemblyService" ref="javaAssemblyService"/>
 		<property name="javaBodyDeclarationService" ref="javaBodyDeclarationService"/>

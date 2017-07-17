@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.Optional;
 import java.util.Stack;
@@ -17,6 +18,9 @@ import javax.swing.InputMap;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -30,6 +34,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.eaSTars.adashboard.controller.ADashboardController;
 import org.eaSTars.adashboard.controller.ADashboardGUIConfigController;
 import org.eaSTars.adashboard.controller.JavaAssemblyController;
 import org.eaSTars.adashboard.controller.JavaSequenceDiagramController;
@@ -98,6 +103,32 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 		});
 	}
 
+	@Override
+	public void dispatchClosingEvent() {
+		dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+	}
+	
+	@Override
+	public void buildMenu(boolean extended, ADashboardController controller) {
+		JMenuBar menubar = new JMenuBar();
+		
+		if (extended) {
+			JMenu menuSettings = new JMenu("Settings");
+			JMenuItem menuitemPreferences = new JMenuItem("Preferences...");
+			menuitemPreferences.addActionListener(l -> controller.showPreferences());
+			menuSettings.add(menuitemPreferences);
+			menubar.add(menuSettings);
+			
+			JMenu menuHelp = new JMenu("Help");
+			JMenuItem menuitemAbout = new JMenuItem("About...");
+			menuitemAbout.addActionListener(l -> controller.showAbout());
+			menuHelp.add(menuitemAbout);
+			menubar.add(menuHelp);
+		}
+		
+		setJMenuBar(menubar);
+	}
+	
 	private void buildGUI() {
 		JPanel cnt = (JPanel) getContentPane();
 
@@ -254,11 +285,6 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 	@Override
 	public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {
 
-	}
-
-	@Override
-	public void start() {
-		setVisible(true);
 	}
 
 	public WindowListener getMainFrameListener() {
