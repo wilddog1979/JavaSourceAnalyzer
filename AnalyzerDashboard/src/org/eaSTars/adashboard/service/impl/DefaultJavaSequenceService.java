@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.eaSTars.adashboard.service.JavaAssemblyService;
 import org.eaSTars.adashboard.service.JavaBodyDeclarationService;
 import org.eaSTars.adashboard.service.JavaSequenceService;
+import org.eaSTars.adashboard.service.JavaTypeService;
 import org.eaSTars.adashboard.service.dto.JavaSequenceScript;
 import org.eaSTars.adashboard.service.dto.TypeDescriptor;
 import org.eaSTars.sca.model.JavaAssemblyModel;
@@ -73,35 +74,37 @@ import com.github.javaparser.ast.type.VoidType;
 public class DefaultJavaSequenceService implements JavaSequenceService {
 
 	private static final Logger LOGGER = LogManager.getLogger(DefaultJavaSequenceService.class);
-	
+
 	private JavaBodyDeclarationService javaBobyDeclarationService;
-	
+
 	private JavaAssemblyService javaAssemblyService;
+
+	private JavaTypeService javaTypeService;
 	
 	@Override
 	public JavaSequenceScript generateMethodSequence(Integer methodid) {
 		JavaSequenceScript sequencebuffer = new JavaSequenceScript();
-		
+
 		JavaMethodModel javaMethod = javaBobyDeclarationService.getMethod(methodid);
-		
+
 		processMethod(javaMethod, "[", sequencebuffer);
-		
+
 		return sequencebuffer;
 	}
-	
+
 	private void processMethod(JavaMethodModel javaMethod, String source, JavaSequenceScript sequencebuffer) {
 		Stack<JavaAssemblyModel> javaAssemblies = getSourceAssembly(javaMethod.getParentAssemblyID());
 		if (!javaAssemblies.isEmpty()) {
 			String embedded = IntStream.range(0, javaAssemblies.size())
 					.mapToObj(c -> javaAssemblies.get(javaAssemblies.size() - c - 1).getName())
 					.collect(Collectors.joining("."));
-			
+
 			JavaAssemblyModel sourceAccembly = javaAssemblies.pop();
 			SequenceParserContext ctx = new SequenceParserContext();
 			ctx.setJavaAssembly(sourceAccembly);
-			
+
 			List<? extends BodyDeclaration> bodydeclarations = processSourceFile(ctx, javaAssemblies, sourceAccembly);
-			
+
 			MethodDeclaration methodDeclaration = bodydeclarations.stream()
 					//TODO return type and parameter list types should be checked as well
 					.filter(bd -> bd instanceof MethodDeclaration &&
@@ -110,7 +113,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 					.findFirst()
 					.map(bd -> (MethodDeclaration)bd)
 					.orElseGet(() -> null);
-			
+
 			if (methodDeclaration != null) {
 				if (!sequencebuffer.pushToCallStack(javaMethod.getPK())) {
 					processMethod(ctx, source, sequencebuffer.addParticipant(embedded, sourceAccembly), methodDeclaration, sequencebuffer);
@@ -121,7 +124,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			}
 		}
 	}
-	
+
 	private void collectDeclarations(List<? extends BodyDeclaration> bodydeclarations, SequenceParserContext ctx) {
 		bodydeclarations.stream()
 		.filter(bd -> bd instanceof FieldDeclaration)
@@ -132,10 +135,10 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			.forEach(vd -> ctx.registerDeclaration(vd.getId().getName(), type));
 		});
 	}
-	
+
 	private Stack<JavaAssemblyModel> getSourceAssembly(Integer assemblyID) {
 		Stack<JavaAssemblyModel> javaAssemblies = new Stack<JavaAssemblyModel>();
-		
+
 		JavaAssemblyModel javaAssembly = null;
 		do {
 			javaAssembly = javaAssemblyService.getJavaAssembly(assemblyID);
@@ -148,44 +151,44 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 				break;
 			}
 		} while (assemblyID != null);
-		
+
 		return javaAssemblies;
 	}
-	
+
 	private List<? extends BodyDeclaration> processSourceFile(SequenceParserContext ctx, Stack<JavaAssemblyModel> javaAssemblies, JavaAssemblyModel javaAssembly) {
 		JavaModuleModel javaModule = javaAssemblyService.getJavaModul(javaAssembly.getJavaModuleID());
-		
+
 		if (javaModule != null && javaModule.getPath() != null && javaAssembly != null && javaAssembly.getSubpath() != null) {
 			try {
 				CompilationUnit cu = JavaParser.parse(new File(javaModule.getPath(), javaAssembly.getSubpath()));
-				
+
 				ctx.setJavaModule(javaModule);
 				ctx.setParentJavaAssembly(javaAssemblyService.getJavaAssemblyByAggregate(cu.getPackage().getPackageName()));
 				ctx.setImports(cu.getImports());
 				ctx.setJavaAssembly(ctx.getParentJavaAssembly());
-				
+
 				List<? extends BodyDeclaration> bodydeclarations = cu.getTypes().stream()
 						.filter(td -> td.getName().equals(javaAssembly.getName()))
 						.findFirst()
 						.map(td -> extractBodyDeclarations(ctx, td))
 						.orElseGet(() -> new ArrayList<>());
-	
+
 				collectDeclarations(bodydeclarations, ctx);
-				
+
 				while (!javaAssemblies.isEmpty()) {
 					JavaAssemblyModel jAssembly = javaAssemblies.pop();
 					ctx.setParentJavaAssembly(jAssembly);
-	
+
 					bodydeclarations = bodydeclarations.stream()
 							.filter(bd -> bd instanceof TypeDeclaration && ((TypeDeclaration)bd).getName().equals(jAssembly.getName()))
 							.findFirst()
 							.map(bd -> extractBodyDeclarations(ctx, (TypeDeclaration) bd))
 							.orElseGet(() -> new ArrayList<>());
-					
+
 					ctx.pushNewDeclarationFrame();
 					collectDeclarations(bodydeclarations, ctx);
 				}
-				
+
 				return bodydeclarations;
 			} catch (ParseException | IOException e) {
 				LOGGER.error("Error while processing source code", e);
@@ -193,32 +196,32 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		}
 		return Collections.emptyList();
 	}
-	
+
 	private List<BodyDeclaration> extractBodyDeclarations(SequenceParserContext ctx, TypeDeclaration td) {
 		ctx.setJavaAssembly(javaAssemblyService.getAssembly(ctx.getJavaAssembly().getPK(), td.getName()));
 		return td.getMembers();
 	}
-	
+
 	private void processMethod(SequenceParserContext ctx, String source, String target, MethodDeclaration methodDeclaration, JavaSequenceScript sequencebuffer) {
 		LOGGER.debug(() -> methodDeclaration.toStringWithoutComments());
-		
+
 		ctx.pushNewDeclarationFrame();
-		
+
 		methodDeclaration.getParameters().stream().forEach(p -> {
 			ctx.registerDeclaration(p.getId().getName(), p.getType());
 		});
-		
+
 		sequencebuffer.appendContent(String.format("%s-> %s: %s\n", source, target, methodDeclaration.getName()));
 		sequencebuffer.appendContent(String.format("activate %s\n", target));
-		
+
 		if (!processStatement(ctx, source, target, methodDeclaration.getBody(), sequencebuffer)) {
 			sequencebuffer.appendContent(String.format("%s<-- %s\n", source, target));
 		}
 		sequencebuffer.appendContent(String.format("deactivate %s\n", target));
-		
+
 		ctx.popDeclarationFrame();
 	}
-	
+
 	private boolean processStatement(SequenceParserContext ctx, String source, String target, Statement statement, JavaSequenceScript sequencebuffer) {
 		boolean result = false;
 
@@ -241,18 +244,18 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			result = false;
 		} else if (statement instanceof ForeachStmt) {
 			ForeachStmt foreachstatement = (ForeachStmt) statement;
-			
+
 			processExpression(ctx, source, target, foreachstatement.getIterable(), sequencebuffer);
 			processExpression(ctx, source, target, foreachstatement.getVariable(), sequencebuffer);
-			
+
 			result = processStatement(ctx, source, target, foreachstatement.getBody(), sequencebuffer);
 		} else if (statement instanceof ForStmt) {
 			ForStmt forstatement = (ForStmt) statement;
-			
+
 			forstatement.getInit().forEach(i -> processExpression(ctx, source, target, i, sequencebuffer));
 			processExpression(ctx, source, target, forstatement.getCompare(), sequencebuffer);
 			forstatement.getUpdate().forEach(u -> processExpression(ctx, source, target, u, sequencebuffer));
-			
+
 			result = processStatement(ctx, source, target, forstatement.getBody(), sequencebuffer);
 		} else if (statement instanceof IfStmt) {
 			IfStmt ifstatement = (IfStmt) statement;
@@ -304,7 +307,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 
 		return result;
 	}
-	
+
 	private TypeDescriptor processExpression(SequenceParserContext ctx, String source, String target, Expression expression, JavaSequenceScript sequencebuffer) {
 		LOGGER.debug("Expression %s\n", expression.toStringWithoutComments());
 		TypeDescriptor expressiontype = null;
@@ -314,7 +317,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			processExpression(ctx, source, target, arrayaccessexpression.getIndex(), sequencebuffer);
 		} else if (expression instanceof ArrayCreationExpr) {
 			ArrayCreationExpr arraycreationexpression = (ArrayCreationExpr) expression;
-			
+
 			Optional.ofNullable(arraycreationexpression.getInitializer()).ifPresent(i -> processExpression(ctx, source, target, arraycreationexpression.getInitializer(), sequencebuffer));
 			//TODO define type???
 		} else if (expression instanceof ArrayInitializerExpr) {
@@ -359,27 +362,23 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			expressiontype = createTypeDescriptor(javaAssemblyService.getJavaAssemblyByAggregate("java.lang.Boolean"), Collections.emptyList());
 		} else if (expression instanceof MethodCallExpr) {
 			MethodCallExpr methodcall = (MethodCallExpr) expression;
-			
-			// list of argument types may be used later
+
 			List<TypeDescriptor> parametertypes = methodcall.getArgs().stream().map(a -> processExpression(ctx, source, target, a, sequencebuffer)).collect(Collectors.toList());
-			
+
 			if (methodcall.getScope() == null) {
-				// this needs some work more
-				methodCall(ctx, ctx.getJavaAssembly(), methodcall.getNameExpr().toStringWithoutComments(), parametertypes, target, sequencebuffer);
+				expressiontype = methodCall(ctx, ctx.getJavaAssembly(), methodcall.getNameExpr().toStringWithoutComments(), parametertypes, target, sequencebuffer);
 			} else if (!methodcall.getScope().toStringWithoutComments().contains("\"")) {
 				TypeDescriptor td = processExpression(ctx, source, target, methodcall.getScope(), sequencebuffer);
 				TypeDescriptor jtype = associateType(ctx, td);
-				
+
 				JavaModuleModel jam = jtype == null ? null : javaAssemblyService.getJavaModul(jtype.getJavaAssembly().getJavaModuleID());
-				
+
 				if (jtype != null && jam.getIsProject() && !"Bootstrap".equals(jam.getName())) {
-					// this needs some work more
-					methodCall(ctx, jtype.getJavaAssembly(), methodcall.getNameExpr().toStringWithoutComments(), parametertypes, target, sequencebuffer);
+					expressiontype = methodCall(ctx, jtype.getJavaAssembly(), methodcall.getNameExpr().toStringWithoutComments(), parametertypes, target, sequencebuffer);
 				}
 			} else if (methodcall != null) {
 				processExpression(ctx, source, target, methodcall.getScope(), sequencebuffer);
 			}
-			// method call return type?
 		} else if (expression instanceof NameExpr) {
 			Type type = ctx.findDeclaration(expression.toStringWithoutComments());
 			if (type == null) {
@@ -415,29 +414,41 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		}
 		return expressiontype;
 	}
-	
-	private void methodCall(SequenceParserContext ctx, JavaAssemblyModel javaAssembly, String methodname, List<TypeDescriptor> parametertypes, String target, JavaSequenceScript sequencebuffer) {
-		//List<JavaMethodModel> methods = javaBobyDeclarationService.getMethods(javaAssembly);
+
+	private TypeDescriptor methodCall(SequenceParserContext ctx, JavaAssemblyModel javaAssembly, String methodname, List<TypeDescriptor> parametertypes, String target, JavaSequenceScript sequencebuffer) {
 		List<JavaMethodModel> methods = javaBobyDeclarationService.getMethods(javaAssembly, methodname, parametertypes);
-		
+
 		if (methods.size() != 1) {
-			LOGGER.warn("Only one matching method expected: "+javaAssembly.getName() + "." + methodname);
+			LOGGER.warn("Only one matching method expected: "+javaAssembly.getName() + "." + methodname + " (" + methods.size() + ")");
 		}
-		
-		JavaMethodModel method = null;
-		
+
+		JavaMethodModel method = null;     
 		if (!methods.isEmpty()) {
 			method = methods.get(0);
 		}
-		
+
 		if (method != null) {
 			processMethod(method, target, sequencebuffer);
+			return resolveTypeDescriptor(method.getJavaTypeID());
 		}
+		return null;
 	}
-	
+
+	private TypeDescriptor resolveTypeDescriptor(int typeid) {
+		TypeDescriptor result = new TypeDescriptor();
+
+		JavaTypeModel javaType = javaTypeService.getJavaType(typeid);
+		result.setJavaType(javaType);
+		result.setJavaAssembly(javaAssemblyService.getJavaAssembly(javaType.getJavaAssemblyID()));     
+		result.getArguments().addAll(javaTypeService.getTypeArguments(javaType).stream()
+				.map(jt -> resolveTypeDescriptor(jt.getPK())).collect(Collectors.toList()));
+
+		return result;
+	}
+
 	private TypeDescriptor resolveTypeDescriptor(SequenceParserContext ctx, Type type) {
 		TypeDescriptor result = null;
-		
+
 		if (type instanceof ClassOrInterfaceType) {
 			ClassOrInterfaceType classorinterfacetype = (ClassOrInterfaceType) type;
 
@@ -451,10 +462,10 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 		} else if (type != null){
 			LOGGER.warn("Missing type processor: " + type.getClass().getSimpleName());
 		}
-		
+
 		return result;
 	}
-	
+
 	private TypeDescriptor resolveTypeFromImport(SequenceParserContext ctx, String name, List<Type> typeargs) {
 		return ctx.getImports().stream()
 				.map(i -> mapJavaAssemblyModel(i.isAsterisk(), i.getName(), name))
@@ -476,29 +487,29 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 					return td;
 				}).orElseGet(() -> null);
 	}
-	
+
 	private TypeDescriptor createTypeDescriptor(JavaAssemblyModel javaAssembly, List<JavaTypeModel> typearguments) {
 		TypeDescriptor result = new TypeDescriptor();
-		
+
 		result.setJavaAssembly(javaAssembly);
 		result.setJavaType(javaAssemblyService.getJavaType(javaAssembly, typearguments));
-		
+
 		return result;
 	}
-	
+
 	private JavaAssemblyModel mapJavaAssemblyModel(boolean isAsterisk, NameExpr importname, String name) {
 		JavaAssemblyModel result = null;
-		
+
 		if (isAsterisk) {
 			result = javaAssemblyService.getJavaAssemblyByAggregate(String.format("%s.%s", importname.toStringWithoutComments(), name));
 		} else if (importname.getName().equals(name)){
 			result = javaAssemblyService.getJavaAssemblyByAggregate(importname.toStringWithoutComments());
 			//TODO create Java Object if it does not exist yet
 		}
-		
+
 		return result;
 	}
-	
+
 	private TypeDescriptor associateType(SequenceParserContext ctx, TypeDescriptor typedescriptor) {
 		if (typedescriptor != null && typedescriptor.getJavaAssembly().getJavaObjectTypeID().equals(javaAssemblyService.getInterfaceType().getPK())) {
 			// hybris adjustment: Converter types are referring to Populators
@@ -508,7 +519,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 				typedescriptor.setJavaType(javaAssemblyService.getJavaType(javaAssembly,
 						typedescriptor.getArguments().stream().map(a -> a.getJavaType()).collect(Collectors.toList())));
 			}
-			
+
 			List<JavaAssemblyModel> implementing = javaAssemblyService.getImplementingAssemblies(typedescriptor.getJavaType());
 			if (implementing.size() == 1) {
 				typedescriptor.setJavaAssembly(implementing.get(0));
@@ -534,6 +545,14 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 
 	public void setJavaAssemblyService(JavaAssemblyService javaAssemblyService) {
 		this.javaAssemblyService = javaAssemblyService;
+	}
+
+	public JavaTypeService getJavaTypeService() {
+		return javaTypeService;
+	}
+
+	public void setJavaTypeService(JavaTypeService javaTypeService) {
+		this.javaTypeService = javaTypeService;
 	}
 
 }

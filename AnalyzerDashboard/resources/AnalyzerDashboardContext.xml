@@ -160,6 +160,7 @@
 	<bean id="javaSequenceService" class="org.eaSTars.adashboard.service.impl.DefaultJavaSequenceService">
 		<property name="javaBobyDeclarationService" ref="javaBodyDeclarationService"/>
 		<property name="javaAssemblyService" ref="javaAssemblyService"/>
+		<property name="javaTypeService" ref="javaTypeService"/>
 	</bean>
 	
 	<!-- services end -->
