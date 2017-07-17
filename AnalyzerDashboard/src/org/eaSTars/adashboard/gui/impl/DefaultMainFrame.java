@@ -45,6 +45,7 @@ import org.eaSTars.adashboard.gui.dto.ADashboardObjectView;
 import org.eaSTars.adashboard.gui.dto.JavaSequenceDiagramView;
 import org.eaSTars.adashboard.gui.dto.ViewHistoryEntry;
 import org.eaSTars.adashboard.gui.dto.ViewType;
+import org.eaSTars.adashboard.gui.resources.Resources;
 
 public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDelegate, TreeWillExpandListener {
 
@@ -75,6 +76,7 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 	private JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
 	
 	private void init() {
+		setIconImage(Resources.APPICON16);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		addWindowListener(mainFrameListener);
 
