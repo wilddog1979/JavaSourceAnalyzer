@@ -6,7 +6,7 @@ public class PNGFileFilter extends AbstractFileFilter {
 	
 	@Override
 	protected String getExtension() {
-		return ".png";
+		return EXTENSION;
 	}
 	
 	@Override
