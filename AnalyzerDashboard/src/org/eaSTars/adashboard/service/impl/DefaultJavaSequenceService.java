@@ -13,6 +13,7 @@ import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eaSTars.adashboard.controller.AdashboardDelegate;
 import org.eaSTars.adashboard.service.JavaAssemblyService;
 import org.eaSTars.adashboard.service.JavaBodyDeclarationService;
 import org.eaSTars.adashboard.service.JavaSequenceService;
@@ -75,6 +76,8 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 
 	private static final Logger LOGGER = LogManager.getLogger(DefaultJavaSequenceService.class);
 
+	private AdashboardDelegate adashboardDelegate;
+	
 	private JavaBodyDeclarationService javaBobyDeclarationService;
 
 	private JavaAssemblyService javaAssemblyService;
@@ -270,9 +273,7 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 					Optional.ofNullable(((ReturnStmt)statement).getExpr())
 					.map(e -> {
 						processExpression(ctx, source, target, e, sequencebuffer);
-						//TODO add option to turn on/off return labels
-						//return String.format(":%s", e.toStringWithoutComments().replaceAll("\\.", ".\\\\n"));
-						return "";
+						return adashboardDelegate.getIncludeReturnLabels() ?  String.format(":%s", e.toStringWithoutComments().replaceAll("\\.", ".\\\\n")) : "";
 					})
 					.orElseGet(() -> "")));
 			result = true;
@@ -529,6 +530,14 @@ public class DefaultJavaSequenceService implements JavaSequenceService {
 			}
 		}
 		return typedescriptor;
+	}
+
+	public AdashboardDelegate getAdashboardDelegate() {
+		return adashboardDelegate;
+	}
+
+	public void setAdashboardDelegate(AdashboardDelegate adashboardDelegate) {
+		this.adashboardDelegate = adashboardDelegate;
 	}
 
 	public JavaBodyDeclarationService getJavaBobyDeclarationService() {

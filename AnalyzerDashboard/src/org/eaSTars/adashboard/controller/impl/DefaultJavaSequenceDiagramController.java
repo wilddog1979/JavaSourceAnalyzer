@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import javax.swing.JOptionPane;
 
+import org.eaSTars.adashboard.controller.AdashboardDelegate;
 import org.eaSTars.adashboard.controller.JavaSequenceDiagramController;
 import org.eaSTars.adashboard.controller.JavaSequenceDiagramDelegate;
 import org.eaSTars.adashboard.gui.FileDialog;
@@ -21,6 +22,8 @@ import org.springframework.core.convert.ConversionService;
 public class DefaultJavaSequenceDiagramController implements JavaSequenceDiagramController, JavaSequenceDiagramDelegate {
 
 	private FileDialog fileDialog;
+	
+	private AdashboardDelegate adashboardDelegate;
 	
 	private JavaSequenceService javaSequenceService;
 	
@@ -57,7 +60,7 @@ public class DefaultJavaSequenceDiagramController implements JavaSequenceDiagram
 				file = new File(file.getAbsolutePath()+PlantUMLFileFilter.EXTENSION);
 			}
 			try (FileOutputStream fout = new FileOutputStream(file)) {
-				fout.write(sequencescript.buildString().getBytes());
+				fout.write(sequencescript.buildString(adashboardDelegate.getOrderSequence()).getBytes());
 			} catch (IOException e) {
 				JOptionPane.showMessageDialog(null, "Error while saving PlantUML file\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
@@ -86,6 +89,14 @@ public class DefaultJavaSequenceDiagramController implements JavaSequenceDiagram
 
 	public void setFileDialog(FileDialog fileDialog) {
 		this.fileDialog = fileDialog;
+	}
+
+	public AdashboardDelegate getAdashboardDelegate() {
+		return adashboardDelegate;
+	}
+
+	public void setAdashboardDelegate(AdashboardDelegate adashboardDelegate) {
+		this.adashboardDelegate = adashboardDelegate;
 	}
 
 	public JavaSequenceService getJavaSequenceService() {

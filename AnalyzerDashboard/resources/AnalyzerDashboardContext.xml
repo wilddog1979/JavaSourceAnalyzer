@@ -142,6 +142,7 @@
 	
 	<bean id="javaSequenceDiagramController" class="org.eaSTars.adashboard.controller.impl.DefaultJavaSequenceDiagramController">
 		<property name="fileDialog" ref="fileDialog"/>
+		<property name="adashboardDelegate" ref="aDashboardController"/>
 		<property name="javaSequenceService" ref="javaSequenceService"/>
 		
 		<property name="conversionService" ref="conversionService"/>
@@ -169,6 +170,7 @@
 	</bean>
 	
 	<bean id="javaSequenceService" class="org.eaSTars.adashboard.service.impl.DefaultJavaSequenceService">
+		<property name="adashboardDelegate" ref="aDashboardController"/>
 		<property name="javaBobyDeclarationService" ref="javaBodyDeclarationService"/>
 		<property name="javaAssemblyService" ref="javaAssemblyService"/>
 		<property name="javaTypeService" ref="javaTypeService"/>

@@ -9,7 +9,10 @@ import java.util.ArrayList;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eaSTars.adashboard.controller.AdashboardDelegate;
 import org.eaSTars.adashboard.service.dto.JavaSequenceScript;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.converter.Converter;
 
 import net.sourceforge.plantuml.BlockUmlBuilder;
@@ -22,6 +25,10 @@ public abstract class AbstractJavaSequenceDiagramConverter<TARGET> implements Co
 
 	private static final Logger LOGGER = LogManager.getLogger(AbstractJavaSequenceDiagramConverter.class);
 	
+	@Autowired
+	@Lazy
+	private AdashboardDelegate adashboardDelegate;
+	
 	private static final String HEADLESS_KEY = "java.awt.headless";
 	
 	private static final String PLANTUML_IMAGE_LIMIT_KEY = "PLANTUML_LIMIT_SIZE";
@@ -32,7 +39,7 @@ public abstract class AbstractJavaSequenceDiagramConverter<TARGET> implements Co
 		System.setProperty(HEADLESS_KEY, "true");
 		System.setProperty(PLANTUML_IMAGE_LIMIT_KEY, "32768");
 
-		Reader reader = new InputStreamReader(new ByteArrayInputStream(source.buildString().getBytes()));
+		Reader reader = new InputStreamReader(new ByteArrayInputStream(source.buildString(adashboardDelegate.getOrderSequence()).getBytes()));
 
 		try {
 			BlockUmlBuilder builder = new BlockUmlBuilder(new ArrayList<String>(), null, Defines.createEmpty(), reader);
@@ -58,5 +65,13 @@ public abstract class AbstractJavaSequenceDiagramConverter<TARGET> implements Co
 			System.setProperty(HEADLESS_KEY, headlessOriginal == null ? "false" : headlessOriginal);
 			System.setProperty(PLANTUML_IMAGE_LIMIT_KEY, plantUMLLimitSize == null ? "4096" : plantUMLLimitSize);
 		}
+	}
+
+	public AdashboardDelegate getAdashboardDelegate() {
+		return adashboardDelegate;
+	}
+
+	public void setAdashboardDelegate(AdashboardDelegate adashboardDelegate) {
+		this.adashboardDelegate = adashboardDelegate;
 	}
 }

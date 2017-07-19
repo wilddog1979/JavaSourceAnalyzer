@@ -34,7 +34,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeSelectionModel;
 
-import org.eaSTars.adashboard.controller.ADashboardController;
+import org.eaSTars.adashboard.controller.AdashboardDelegate;
 import org.eaSTars.adashboard.controller.JavaAssemblyController;
 import org.eaSTars.adashboard.controller.JavaSequenceDiagramController;
 import org.eaSTars.adashboard.gui.MainFrame;
@@ -57,13 +57,15 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 
 	private JavaSequenceDiagramController javaSequenceDiagramController;
 
-	private ADashboardController adashboardController;
+	private AdashboardDelegate adashboardDelegate;
 	
 	private Stack<ViewHistoryEntry> assemblyHistory = new Stack<ViewHistoryEntry>();
 
 	private JScrollPane leftPanel = new JScrollPane();
 	
 	private JScrollPane rightPanel = new JScrollPane();
+	
+	private JMenu menuSequence = new JMenu("Sequence");
 	
 	private JCheckBox orderchecker = new JCheckBox("Ordered sequence");
 	
@@ -75,6 +77,8 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 	
 	private JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
 	
+	private int selectedMethodId = -1;
+	
 	private void init() {
 		setIconImage(Resources.APPICON16);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -82,9 +86,9 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 
 		buildGUI();
 
-		Optional.ofNullable(adashboardController.getWindowLocation()).ifPresent(l -> setLocation(l));
+		Optional.ofNullable(adashboardDelegate.getWindowLocation()).ifPresent(l -> setLocation(l));
 		
-		Dimension dimension = adashboardController.getWindowSize();
+		Dimension dimension = adashboardDelegate.getWindowSize();
 		if (dimension != null) {
 			setSize(dimension);
 		} else {
@@ -94,13 +98,13 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 			setLocation((screensize.width - dimension.width) / 2, (screensize.height - dimension.height) / 2);
 		}
 		
-		Optional.ofNullable(adashboardController.getDividerLocation()).ifPresent(d -> splitpane.setDividerLocation(d));
+		Optional.ofNullable(adashboardDelegate.getDividerLocation()).ifPresent(d -> splitpane.setDividerLocation(d));
 		
 		mainFrameListener.addFrameClosingListener(w -> {
-			adashboardController.setWindowLocation(w.getLocation());
-			adashboardController.setWindowSize(w.getSize());
-			adashboardController.setDividerLocation(splitpane.getDividerLocation());
-			adashboardController.saveSettings();
+			adashboardDelegate.setWindowLocation(w.getLocation());
+			adashboardDelegate.setWindowSize(w.getSize());
+			adashboardDelegate.setDividerLocation(splitpane.getDividerLocation());
+			adashboardDelegate.saveSettings();
 		});
 	}
 
@@ -110,21 +114,33 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 	}
 	
 	@Override
-	public void buildMenu(boolean extended, ADashboardController controller) {
+	public void buildMenu(boolean extended) {
 		init();
 		
 		JMenuBar menubar = new JMenuBar();
 		
+		JMenu menuFile = new JMenu("File");
+		menuSequence.setEnabled(false);
+		menuFile.add(menuSequence);
+		
+		JMenuItem menuitemSaveScript = new JMenuItem("Save script...");
+		menuitemSaveScript.addActionListener(a -> javaSequenceDiagramController.saveScript());
+		menuSequence.add(menuitemSaveScript);
+		JMenuItem menuitemSaveImage = new JMenuItem("Save image...");
+		menuitemSaveImage.addActionListener(a -> javaSequenceDiagramController.saveImage());
+		menuSequence.add(menuitemSaveImage);
+		menubar.add(menuFile);
+		
 		if (extended) {
 			JMenu menuSettings = new JMenu("Settings");
 			JMenuItem menuitemPreferences = new JMenuItem("Preferences...");
-			menuitemPreferences.addActionListener(l -> controller.showPreferences());
+			menuitemPreferences.addActionListener(l -> adashboardDelegate.showPreferences());
 			menuSettings.add(menuitemPreferences);
 			menubar.add(menuSettings);
 			
 			JMenu menuHelp = new JMenu("Help");
 			JMenuItem menuitemAbout = new JMenuItem("About...");
-			menuitemAbout.addActionListener(l -> controller.showAbout());
+			menuitemAbout.addActionListener(l -> adashboardDelegate.showAbout());
 			menuHelp.add(menuitemAbout);
 			menubar.add(menuHelp);
 		}
@@ -179,15 +195,10 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 		setEnabledSequenceControllers(false);
 		
 		sequencesettings.add(orderchecker);
+		orderchecker.setSelected(adashboardDelegate.getOrderSequence());
 		orderchecker.addActionListener(a -> {
-			JavaSequenceDiagramView panel = javaSequenceDiagramController.updateSequenceView(orderchecker.isSelected());
-			currentview = panel;
-			rightPanel.setViewportView(panel);
-			
-			int slidervalue = imageScalingSlider.getValue();
-			if (slidervalue != 100) {
-				panel.scaleImage(slidervalue);
-			}
+			adashboardDelegate.setOrderedSequence(orderchecker.isSelected());
+			updateOrderChecker(orderchecker.isSelected());
 		});
 		
 		imageScalingSlider.setMinorTickSpacing(10);
@@ -225,7 +236,9 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 				ADashboardTreeNode node = (ADashboardTreeNode) obj;
 				ADashboardObjectView jav = (ADashboardObjectView) node.getUserObject();
 
+				selectedMethodId = -1;
 				if (jav.getType() == ADashboardObjectType.METHOD) {
+					selectedMethodId = jav.getId();
 					openMethod(jav.getId());
 				} else if (jav.getType() != ADashboardObjectType.PACKAGE) {
 					openAssembly(jav.getId());
@@ -249,7 +262,35 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 		openDetailView(id, ViewType.Method, javaSequenceDiagramController.getSequenceView(id, orderchecker.isSelected()));
 	}
 	
+	@Override
+	public void redrawSequence() {
+		boolean orderedSequence = adashboardDelegate.getOrderSequence();
+		orderchecker.setSelected(orderedSequence);
+		JavaSequenceDiagramView panel = javaSequenceDiagramController.getSequenceView(selectedMethodId, orderedSequence);
+		currentview = panel;
+		rightPanel.setViewportView(panel);
+		adjustSequenceSize(imageScalingSlider.getValue());
+	}
+	
+	@Override
+	public void updateOrderChecker(boolean value) {
+		if (currentview != null && currentview instanceof JavaSequenceDiagramView) {
+			orderchecker.setSelected(value);
+			JavaSequenceDiagramView panel = javaSequenceDiagramController.updateSequenceView(orderchecker.isSelected());
+			adjustSequenceSize(imageScalingSlider.getValue());
+			currentview = panel;
+			rightPanel.setViewportView(panel);
+		}
+	}
+	
+	private void adjustSequenceSize(int slidervalue) {
+		if (slidervalue != 100) {
+			((JavaSequenceDiagramView)currentview).scaleImage(slidervalue);
+		}
+	}
+	
 	private void setEnabledSequenceControllers(boolean value) {
+		menuSequence.setEnabled(value);
 		orderchecker.setEnabled(value);
 		imageScalingSlider.setEnabled(value);
 	}
@@ -314,11 +355,11 @@ public class DefaultMainFrame extends JFrame implements MainFrame, MainFrameDele
 		this.javaSequenceDiagramController = javaSequenceDiagramController;
 	}
 
-	public ADashboardController getAdashboardController() {
-		return adashboardController;
+	public AdashboardDelegate getAdashboardController() {
+		return adashboardDelegate;
 	}
 
-	public void setAdashboardController(ADashboardController adashboardController) {
-		this.adashboardController = adashboardController;
+	public void setAdashboardController(AdashboardDelegate adashboardDelegate) {
+		this.adashboardDelegate = adashboardDelegate;
 	}
 }

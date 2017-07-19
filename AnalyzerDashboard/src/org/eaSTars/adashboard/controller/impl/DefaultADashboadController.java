@@ -23,6 +23,10 @@ public class DefaultADashboadController implements ADashboardController {
 	
 	private static final String GUI_DIVIDER = "adashboard.gui.divider";
 	
+	private static final String SEQ_ORDERED_SEQUENCE = "adashboard.seq.orderedsequence";
+	
+	private static final String SEQ_INCLUDE_RETURN_LABEL = "adashboard.seq.includereturnlabel";
+	
 	private ConfigService configService;
 	
 	private MainFrame mainframe;
@@ -35,7 +39,7 @@ public class DefaultADashboadController implements ADashboardController {
 	
 	@Override
 	public void buildMenu(boolean extended) {
-		mainframe.buildMenu(extended, this);
+		mainframe.buildMenu(extended);
 	}
 	
 	@Override
@@ -60,8 +64,20 @@ public class DefaultADashboadController implements ADashboardController {
 	
 	@Override
 	public void showPreferences() {
+		boolean oldorderedsequence = getBooleanValueFromConfig(SEQ_ORDERED_SEQUENCE);
+		boolean oldreturnlabel = getBooleanValueFromConfig(SEQ_INCLUDE_RETURN_LABEL);
+		preferencesDialog.setOrderedSequence(oldorderedsequence);
+		preferencesDialog.setIncludeReturnLabels(oldreturnlabel);
 		if (preferencesDialog.showDialog()) {
-			//TODO extract settings
+			boolean neworderedsequence = preferencesDialog.getOrderedSequence();
+			boolean newreturnlabel = preferencesDialog.getIncludeReturnLabels();
+			configService.setProperty(SEQ_ORDERED_SEQUENCE, Boolean.toString(neworderedsequence));
+			configService.setProperty(SEQ_INCLUDE_RETURN_LABEL, Boolean.toString(newreturnlabel));
+			if (oldreturnlabel != newreturnlabel) {
+				mainframe.redrawSequence();
+			} else if (oldorderedsequence != neworderedsequence) {
+				mainframe.updateOrderChecker(neworderedsequence);
+			}
 		}
 	}
 	
@@ -111,6 +127,21 @@ public class DefaultADashboadController implements ADashboardController {
 	}
 	
 	@Override
+	public boolean getOrderSequence() {
+		return Boolean.parseBoolean(configService.getProperty(SEQ_ORDERED_SEQUENCE));
+	}
+	
+	@Override
+	public void setOrderedSequence(boolean value) {
+		configService.setProperty(SEQ_ORDERED_SEQUENCE, Boolean.toString(value));
+	}
+	
+	@Override
+	public boolean getIncludeReturnLabels() {
+		return Boolean.parseBoolean(configService.getProperty(SEQ_INCLUDE_RETURN_LABEL));
+	}
+	
+	@Override
 	public void saveSettings() {
 		configService.saveConfig();
 	}
@@ -125,6 +156,11 @@ public class DefaultADashboadController implements ADashboardController {
 			}
 		}
 		return null;
+	}
+	
+	private Boolean getBooleanValueFromConfig(String key) {
+		String rawvalue = configService.getProperty(key);
+		return Boolean.parseBoolean(rawvalue);
 	}
 	
 	public ConfigService getConfigService() {

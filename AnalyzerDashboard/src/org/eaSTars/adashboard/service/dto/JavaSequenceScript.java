@@ -55,23 +55,19 @@ public class JavaSequenceScript {
 		content.append(cnt);
 	}
 
-	public String buildString() {
-		/*return String.format("@startuml\n%s%s@enduml\n",
-                    getSortedParticipants().collect(Collectors.joining())
-                    , content.toString());*/
-
+	public String buildString(boolean ordersequence) {
 		return String.format("@startuml\n%s%s@enduml\n",
-				getSortedParticipants2()
+				ordersequence ? getGroupedParticipants() : getNaturalOrderParticipants().collect(Collectors.joining())
 				, content.toString());
 	}
 
-	private Stream<String> getSortedParticipants() {
+	private Stream<String> getNaturalOrderParticipants() {
 		return aliasmap.entrySet().stream()
 				.sorted((o1, o2) -> compareAliasEntries(o2.getValue(), o1.getValue()))
 				.map(a -> String.format("participant %s as %s\n", a.getKey(), a.getValue().alias));
 	}
 
-	private String getSortedParticipants2() {
+	private String getGroupedParticipants() {
 		Map<Integer, List<AliasEntry>> m = aliasmap.entrySet().stream()
 				.map(a -> a.getValue())
 				.collect(Collectors.groupingBy(a -> a.javaAssembly.getJavaModuleID(), Collectors.toList()));
