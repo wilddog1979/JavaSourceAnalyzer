@@ -39,9 +39,9 @@ public abstract class AbstractJavaSequenceDiagramConverter<TARGET> implements Co
 		System.setProperty(HEADLESS_KEY, "true");
 		System.setProperty(PLANTUML_IMAGE_LIMIT_KEY, "32768");
 
-		Reader reader = new InputStreamReader(new ByteArrayInputStream(source.buildString(adashboardDelegate.getOrderSequence()).getBytes()));
-
-		try {
+		String sourcestring = source.buildString(adashboardDelegate.getOrderSequence());
+		
+		try (Reader reader = new InputStreamReader(new ByteArrayInputStream(sourcestring.getBytes()));) {
 			BlockUmlBuilder builder = new BlockUmlBuilder(new ArrayList<String>(), null, Defines.createEmpty(), reader);
 
 			return builder.getBlockUmls().stream()
