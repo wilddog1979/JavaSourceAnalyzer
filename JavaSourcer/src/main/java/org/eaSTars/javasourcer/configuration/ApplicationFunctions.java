@@ -1,0 +1,9 @@
+package org.eaSTars.javasourcer.configuration;
+
+import org.eaSTars.javasourcer.controller.MainFrameController;
+import org.springframework.context.ConfigurableApplicationContext;
+
+public interface ApplicationFunctions {
+
+	public void initApplication(ConfigurableApplicationContext context, MainFrameController controller);
+}
