@@ -1,11 +1,16 @@
 package org.eaSTars.javasourcer.configuration;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 import org.eaSTars.javasourcer.controller.impl.DefaultMainFrameController;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.ConversionServiceFactoryBean;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.converter.Converter;
 
 @Configuration
 public class JavaSourcesContextConfiguration {
@@ -38,4 +43,13 @@ public class JavaSourcesContextConfiguration {
 			return Optional.empty();
 		}
 	}
+	
+	@Bean(name="javasourcerconversionservice")
+	public ConversionService getConversionServiceFactoryBean(List<Converter<?,?>> converters) {
+	    ConversionServiceFactoryBean conversionServiceFactoryBean = new ConversionServiceFactoryBean();
+	    conversionServiceFactoryBean.setConverters(new HashSet<>(converters));
+	    conversionServiceFactoryBean.afterPropertiesSet();
+	    return conversionServiceFactoryBean.getObject();
+	}
+	
 }

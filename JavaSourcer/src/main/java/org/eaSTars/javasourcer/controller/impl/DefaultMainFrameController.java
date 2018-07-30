@@ -13,13 +13,14 @@ import javax.annotation.Resource;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu.Separator;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
@@ -31,14 +32,16 @@ import javax.swing.tree.TreeSelectionModel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eaSTars.javasourcer.configuration.ApplicationResources;
+import org.eaSTars.javasourcer.controller.JavaSourcerDataInputDialog;
 import org.eaSTars.javasourcer.controller.JavaSourcerDialog;
 import org.eaSTars.javasourcer.controller.MainFrameController;
+import org.eaSTars.javasourcer.dto.CreateProjectDTO;
 import org.eaSTars.javasourcer.facade.ApplicationGuiFacade;
-import org.eaSTars.javasourcer.repository.JavaSourceProjectRepository;
+import org.eaSTars.javasourcer.facade.ProjectFacade;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class DefaultMainFrameController extends JFrame implements MainFrameController, InitializingBean {
+public class DefaultMainFrameController extends AbstractFrameController implements MainFrameController, InitializingBean {
 
 	private static final long serialVersionUID = -8106581169394657574L;
 	
@@ -48,10 +51,13 @@ public class DefaultMainFrameController extends JFrame implements MainFrameContr
 	private ApplicationGuiFacade applicationGuiFacade;
 	
 	@Autowired
-	private JavaSourceProjectRepository javaSourceProjectRepo;
+	private ProjectFacade projectFacade;
 	
 	@Resource(name="aboutdailogcontroller")
 	private JavaSourcerDialog aboutDialog;
+	
+	@Resource(name="createprojectdailogcontroller")
+	private JavaSourcerDataInputDialog<CreateProjectDTO> createProjectDialog;
 	
 	private boolean extendedMenu = false;
 	
@@ -60,6 +66,30 @@ public class DefaultMainFrameController extends JFrame implements MainFrameContr
 	private JScrollPane rightPanel = new JScrollPane();
 	
 	private JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
+	
+	private ButtonGroup projectGroup = new ButtonGroup();
+	private JMenu menuProject = createMenu("Project",
+			new JMenuItemSeparator(),
+			createMenuItem("Add...", a -> {
+				createProjectDialog.getInputData(this).ifPresent(c -> {
+					JRadioButtonMenuItem menuitem = projectFacade.createProject(c);
+					addProjectMenuEntry(menuitem);
+					menuitem.setSelected(true);
+				});
+			}));
+	
+	private void addProjectMenuEntry(JRadioButtonMenuItem menuitem) {
+		int index = 0;
+		for (Component component : menuProject.getMenuComponents()) {
+			if (component instanceof Separator) {
+				break;
+			}
+			index++;
+		}
+		
+		menuProject.add(menuitem, index);
+		projectGroup.add(menuitem);
+	}
 	
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -77,7 +107,7 @@ public class DefaultMainFrameController extends JFrame implements MainFrameContr
 		
 		buildMenu();
 		
-		applicationGuiFacade.getWindowLocation().ifPresent(l -> setLocation(l));
+		applicationGuiFacade.getWindowLocation().ifPresent(this::setLocation);
 		
 		setSize(applicationGuiFacade.getWindowSize().orElseGet(() -> {
 			Dimension dimension = new Dimension(640, 480);
@@ -86,30 +116,20 @@ public class DefaultMainFrameController extends JFrame implements MainFrameContr
 			return dimension;
 		}));
 		
-		applicationGuiFacade.getDividerLocation().ifPresent(d -> splitpane.setDividerLocation(d));
+		applicationGuiFacade.getDividerLocation().ifPresent(splitpane::setDividerLocation);
 		
-		javaSourceProjectRepo.findAll().forEach(p -> LOGGER.debug(String.format("Project: %s", p.getName())));
+		projectFacade.getProjects().forEach(this::addProjectMenuEntry);
 	}
 	
 	private void buildMenu() {
 		JMenuBar menubar = new JMenuBar();
 		
-		JMenu menuFile = new JMenu("File");
-		
-		menubar.add(menuFile);
+		menubar.add(menuProject);
 		
 		if (isExtendedMenu()) {
-			JMenu menuSettings = new JMenu("Settings");
-			JMenuItem menuitemPreferences = new JMenuItem("Preferences...");
-			//menuitemPreferences.addActionListener(l -> adashboardDelegate.showPreferences());
-			menuSettings.add(menuitemPreferences);
-			menubar.add(menuSettings);
+			menubar.add(createMenu("Settings", createMenuItem("Preferences...", a -> this.showPreferences())));
 			
-			JMenu menuHelp = new JMenu("Help");
-			JMenuItem menuitemAbout = new JMenuItem("About...");
-			//menuitemAbout.addActionListener(l -> adashboardDelegate.showAbout());
-			menuHelp.add(menuitemAbout);
-			menubar.add(menuHelp);
+			menubar.add(createMenu("Help", createMenuItem("About...", a -> this.showAbout())));
 		}
 		
 		setJMenuBar(menubar);
@@ -169,7 +189,6 @@ public class DefaultMainFrameController extends JFrame implements MainFrameContr
 
 	@Override
 	public void showAbout() {
-		LOGGER.debug("showAbout");
 		aboutDialog.showDialog(this);
 	}
 
