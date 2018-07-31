@@ -40,6 +40,7 @@ import org.eaSTars.javasourcer.facade.ApplicationGuiFacade;
 import org.eaSTars.javasourcer.facade.ProjectFacade;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.ConversionFailedException;
 
 public class DefaultMainFrameController extends AbstractFrameController implements MainFrameController, InitializingBean {
 
@@ -71,11 +72,19 @@ public class DefaultMainFrameController extends AbstractFrameController implemen
 	private JMenu menuProject = createMenu("Project",
 			new JMenuItemSeparator(),
 			createMenuItem("Add...", a -> {
-				createProjectDialog.getInputData(this).ifPresent(c -> {
-					JRadioButtonMenuItem menuitem = projectFacade.createProject(c);
-					addProjectMenuEntry(menuitem);
-					menuitem.setSelected(true);
-				});
+				boolean error = false;
+				while(true) {
+					try {
+						createProjectDialog.getInputData(this, error).ifPresent(c -> {
+							JRadioButtonMenuItem menuitem = projectFacade.createProject(c);
+							addProjectMenuEntry(menuitem);
+							menuitem.setSelected(true);
+						});
+						break;
+					}catch (ConversionFailedException e) {
+						error = true;
+					}
+				}
 			}));
 	
 	private void addProjectMenuEntry(JRadioButtonMenuItem menuitem) {
