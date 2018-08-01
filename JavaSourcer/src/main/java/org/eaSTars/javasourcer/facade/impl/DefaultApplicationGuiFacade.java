@@ -2,6 +2,7 @@ package org.eaSTars.javasourcer.facade.impl;
 
 import java.awt.Dimension;
 import java.awt.Point;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.eaSTars.javasourcer.facade.ApplicationGuiFacade;
@@ -12,15 +13,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class DefaultApplicationGuiFacade implements ApplicationGuiFacade {
 
-	private static final String GUI_X = "adashboard.gui.x";
+	private static final String GUI_X = "javasourcer.gui.x";
 	
-	private static final String GUI_Y = "adashboard.gui.y";
+	private static final String GUI_Y = "javasourcer.gui.y";
 	
-	private static final String GUI_WIDTH = "adashboard.gui.width";
+	private static final String GUI_WIDTH = "javasourcer.gui.width";
 	
-	private static final String GUI_HEIGHT = "adashboard.gui.height";
+	private static final String GUI_HEIGHT = "javasourcer.gui.height";
 	
-	private static final String GUI_DIVIDER = "adashboard.gui.divider";
+	private static final String GUI_DIVIDER = "javasourcer.gui.divider";
+	
+	private static final String GUI_LANGUAGE = "javasourcer.gui.language";
+
+	private static final String DEFAULT_LANGUAGE = "en_US";
 	
 	@Autowired
 	private ConfiguarionService configurationService;
@@ -69,6 +74,19 @@ public class DefaultApplicationGuiFacade implements ApplicationGuiFacade {
 	@Override
 	public void setDividerLocation(Integer dividerlocation) {
 		configurationService.setProperty(GUI_DIVIDER, dividerlocation.toString());
+	}
+	
+	@Override
+	public Locale getLocale() {
+		String[] localeinfo = configurationService.getValue(GUI_LANGUAGE, DEFAULT_LANGUAGE).split("_");
+
+		if (localeinfo.length == 1) {
+			return new Locale(localeinfo[0]);
+		} else if (localeinfo.length > 1) {
+			return new Locale(localeinfo[0], localeinfo[1]);
+		}
+		
+		return null;
 	}
 
 }

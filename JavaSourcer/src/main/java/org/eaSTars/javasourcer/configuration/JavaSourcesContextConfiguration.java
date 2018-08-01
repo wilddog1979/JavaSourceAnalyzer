@@ -5,10 +5,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.eaSTars.javasourcer.controller.impl.DefaultMainFrameController;
+import org.eaSTars.javasourcer.facade.ApplicationGuiFacade;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ConversionServiceFactoryBean;
+import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 
@@ -16,8 +19,13 @@ import org.springframework.core.convert.converter.Converter;
 public class JavaSourcesContextConfiguration {
 
 	@Bean
-	public DefaultMainFrameController getDefaultMainFrameController(ConfigurableApplicationContext context) {
-		DefaultMainFrameController controller = new DefaultMainFrameController();
+	public DefaultMainFrameController getDefaultMainFrameController(
+			ConfigurableApplicationContext context,
+			MessageSource messageSource,
+			ApplicationGuiFacade applicationGuiFacade) {
+		DefaultMainFrameController controller = new DefaultMainFrameController(
+				messageSource,
+				applicationGuiFacade);
 
 		instantiate(getApplicationFunctionClassName(), ApplicationFunctions.class)
 		.ifPresent(i -> i.initApplication(context, controller));
@@ -51,5 +59,13 @@ public class JavaSourcesContextConfiguration {
 	    conversionServiceFactoryBean.afterPropertiesSet();
 	    return conversionServiceFactoryBean.getObject();
 	}
+	
+	@Bean
+    public ReloadableResourceBundleMessageSource messageSource(){
+        ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
+        messageSource.setBasename("classpath:locale/ResourceBundle");
+        messageSource.setDefaultEncoding("UTF-8");
+        return messageSource;
+    }
 	
 }

@@ -12,7 +12,9 @@ public class JavaSourceProjectJRadioButtonMenuItemConverter
 
 	@Override
 	public JRadioButtonMenuItem convert(JavaSourceProject source) {
-		return new JRadioButtonMenuItem(source.getName());
+		JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(source.getName());
+		menuItem.setActionCommand(source.getName());
+		return menuItem;
 	}
 
 }

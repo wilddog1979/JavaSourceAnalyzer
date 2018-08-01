@@ -8,12 +8,14 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
+import java.util.Locale;
 
 import javax.annotation.Resource;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.ButtonModel;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
@@ -34,13 +36,17 @@ import org.apache.logging.log4j.Logger;
 import org.eaSTars.javasourcer.configuration.ApplicationResources;
 import org.eaSTars.javasourcer.controller.JavaSourcerDataInputDialog;
 import org.eaSTars.javasourcer.controller.JavaSourcerDialog;
+import org.eaSTars.javasourcer.controller.JavaSourcerMessageDialog;
 import org.eaSTars.javasourcer.controller.MainFrameController;
 import org.eaSTars.javasourcer.dto.CreateProjectDTO;
 import org.eaSTars.javasourcer.facade.ApplicationGuiFacade;
 import org.eaSTars.javasourcer.facade.ProjectFacade;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.core.convert.ConversionFailedException;
+
+import static org.eaSTars.javasourcer.configuration.ApplicationResources.ResourceBundle.*;
 
 public class DefaultMainFrameController extends AbstractFrameController implements MainFrameController, InitializingBean {
 
@@ -48,7 +54,10 @@ public class DefaultMainFrameController extends AbstractFrameController implemen
 	
 	private static final Logger LOGGER = LogManager.getLogger(DefaultMainFrameController.class);
 	
-	@Autowired
+	private Locale locale;
+	
+	private MessageSource messageSource;
+	
 	private ApplicationGuiFacade applicationGuiFacade;
 	
 	@Autowired
@@ -60,6 +69,9 @@ public class DefaultMainFrameController extends AbstractFrameController implemen
 	@Resource(name="createprojectdailogcontroller")
 	private JavaSourcerDataInputDialog<CreateProjectDTO> createProjectDialog;
 	
+	@Resource(name="messagedialog")
+	private JavaSourcerMessageDialog messageDialog;
+	
 	private boolean extendedMenu = false;
 	
 	private JScrollPane leftPanel = new JScrollPane();
@@ -69,34 +81,25 @@ public class DefaultMainFrameController extends AbstractFrameController implemen
 	private JSplitPane splitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
 	
 	private ButtonGroup projectGroup = new ButtonGroup();
-	private JMenu menuProject = createMenu("Project",
-			new JMenuItemSeparator(),
-			createMenuItem("Add...", a -> {
-				boolean error = false;
-				while(true) {
-					try {
-						createProjectDialog.getInputData(this, error).ifPresent(c -> {
-							JRadioButtonMenuItem menuitem = projectFacade.createProject(c);
-							addProjectMenuEntry(menuitem);
-							menuitem.setSelected(true);
-						});
-						break;
-					}catch (ConversionFailedException e) {
-						error = true;
-					}
-				}
-			}));
+	private JMenu menuSwitch;
+	
+	public DefaultMainFrameController(MessageSource messageSource, ApplicationGuiFacade applicationGuiFacade) {
+		this.messageSource = messageSource;
+		this.applicationGuiFacade = applicationGuiFacade;
+		
+		locale = applicationGuiFacade.getLocale();
+	}
 	
 	private void addProjectMenuEntry(JRadioButtonMenuItem menuitem) {
 		int index = 0;
-		for (Component component : menuProject.getMenuComponents()) {
+		for (Component component : menuSwitch.getMenuComponents()) {
 			if (component instanceof Separator) {
 				break;
 			}
 			index++;
 		}
 		
-		menuProject.add(menuitem, index);
+		menuSwitch.add(menuitem, index);
 		projectGroup.add(menuitem);
 	}
 	
@@ -133,12 +136,44 @@ public class DefaultMainFrameController extends AbstractFrameController implemen
 	private void buildMenu() {
 		JMenuBar menubar = new JMenuBar();
 		
+		menuSwitch = createMenu(getResourceBundle(MAIN_MENU_SWITCH),
+				new JMenuItemSeparator(),
+				createMenuItem(getResourceBundle(MAIN_MENU_ADD), a -> {
+					boolean error = false;
+					while(true) {
+						try {
+							createProjectDialog.getInputData(this, error).ifPresent(c -> {
+								JRadioButtonMenuItem menuitem = projectFacade.createProject(c);
+								addProjectMenuEntry(menuitem);
+								menuitem.setSelected(true);
+							});
+							break;
+						}catch (ConversionFailedException e) {
+							messageDialog.showMessage(this, e.getRootCause().getMessage());
+							error = true;
+						}
+					}
+				}));
+		
+		JMenu menuProject = createMenu(getResourceBundle(MAIN_MENU_PROJECT),
+				menuSwitch,
+				createMenuItem(getResourceBundle(MAIN_MENU_PROPERTIES), a -> {
+					ButtonModel selection = projectGroup.getSelection();
+					if (selection != null) {
+						LOGGER.debug(() -> String.format("Selection %s", selection.getActionCommand()));
+					}
+				}));
+		
 		menubar.add(menuProject);
 		
 		if (isExtendedMenu()) {
-			menubar.add(createMenu("Settings", createMenuItem("Preferences...", a -> this.showPreferences())));
+			menubar.add(
+					createMenu(getResourceBundle(MAIN_MENU_SETTINGS),
+							createMenuItem(getResourceBundle(MAIN_MENU_PREFERENCES), a -> this.showPreferences())));
 			
-			menubar.add(createMenu("Help", createMenuItem("About...", a -> this.showAbout())));
+			menubar.add(
+					createMenu(getResourceBundle(MAIN_MENU_HELP),
+							createMenuItem(getResourceBundle(MAIN_MENU_ABOUT), a -> this.showAbout())));
 		}
 		
 		setJMenuBar(menubar);
@@ -196,6 +231,10 @@ public class DefaultMainFrameController extends AbstractFrameController implemen
 		return tree;
 	}
 
+	private String getResourceBundle(String key) {
+		return messageSource.getMessage(key, null, locale);
+	}
+	
 	@Override
 	public void showAbout() {
 		aboutDialog.showDialog(this);

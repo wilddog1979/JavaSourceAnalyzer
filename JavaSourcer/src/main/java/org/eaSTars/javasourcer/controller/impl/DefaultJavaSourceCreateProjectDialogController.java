@@ -6,12 +6,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.eaSTars.javasourcer.controller.JavaSourcerDataInputDialog;
 import org.eaSTars.javasourcer.dto.CreateProjectDTO;
 import org.springframework.stereotype.Component;
 
 @Component("createprojectdailogcontroller")
-public class DefaultJavaSourceCreateProjectDialogController extends JavaSourcerDataInputDialog<CreateProjectDTO> {
+public class DefaultJavaSourceCreateProjectDialogController extends AbstractJavaSourcerDataInputDialog<CreateProjectDTO> {
 
 	private JTextField nameTextField = new JTextField(20);
 	

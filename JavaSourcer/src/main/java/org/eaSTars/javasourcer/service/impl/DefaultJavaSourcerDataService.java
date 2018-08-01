@@ -1,6 +1,5 @@
 package org.eaSTars.javasourcer.service.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.eaSTars.javasourcer.model.JavaSourceProject;
@@ -17,9 +16,7 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 	
 	@Override
 	public List<JavaSourceProject> getJavaSourceProjects() {
-		List<JavaSourceProject> list = new ArrayList<>();
-		javaSourceProjectRepo.findAll().forEach(list::add);
-		return list;
+		return javaSourceProjectRepo.findAllByOrderByCreationDateAsc();
 	}
 
 }

@@ -2,6 +2,7 @@ package org.eaSTars.javasourcer.facade;
 
 import java.awt.Dimension;
 import java.awt.Point;
+import java.util.Locale;
 import java.util.Optional;
 
 public interface ApplicationGuiFacade {
@@ -17,5 +18,7 @@ public interface ApplicationGuiFacade {
 	public Optional<Integer> getDividerLocation();
 	
 	public void setDividerLocation(Integer dividerlocation);
+	
+	public Locale getLocale();
 	
 }

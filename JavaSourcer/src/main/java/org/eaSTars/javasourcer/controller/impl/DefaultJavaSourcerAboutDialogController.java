@@ -14,7 +14,7 @@ public class DefaultJavaSourcerAboutDialogController implements JavaSourcerDialo
 	@Override
 	public boolean showDialog(java.awt.Component parent) {
 		JLabel label = new JLabel("About Java Sourcer", new ImageIcon(ApplicationResources.APPICON16), JLabel.LEFT);
-		JOptionPane.showMessageDialog(parent, label, "About Java Sourcer", JOptionPane.PLAIN_MESSAGE);
+		JOptionPane.showMessageDialog(parent, label, "About", JOptionPane.PLAIN_MESSAGE);
 		return true;
 	}
 

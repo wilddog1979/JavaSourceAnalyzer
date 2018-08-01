@@ -11,7 +11,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name="Project")
-public class JavaSourceProject implements Serializable {
+public class JavaSourceProject extends Auditable implements Serializable {
 
 	private static final long serialVersionUID = -298370160335505916L;
 
