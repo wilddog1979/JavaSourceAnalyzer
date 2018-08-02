@@ -1,5 +1,7 @@
 package org.eaSTars.javasourcer.facade.impl;
 
+import static org.eaSTars.javasourcer.configuration.ApplicationResources.Config.*;
+
 import java.awt.Dimension;
 import java.awt.Point;
 import java.util.Locale;
@@ -12,20 +14,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class DefaultApplicationGuiFacade implements ApplicationGuiFacade {
-
-	private static final String GUI_X = "javasourcer.gui.x";
-	
-	private static final String GUI_Y = "javasourcer.gui.y";
-	
-	private static final String GUI_WIDTH = "javasourcer.gui.width";
-	
-	private static final String GUI_HEIGHT = "javasourcer.gui.height";
-	
-	private static final String GUI_DIVIDER = "javasourcer.gui.divider";
-	
-	private static final String GUI_LANGUAGE = "javasourcer.gui.language";
-
-	private static final String DEFAULT_LANGUAGE = "en_US";
 	
 	@Autowired
 	private ConfiguarionService configurationService;

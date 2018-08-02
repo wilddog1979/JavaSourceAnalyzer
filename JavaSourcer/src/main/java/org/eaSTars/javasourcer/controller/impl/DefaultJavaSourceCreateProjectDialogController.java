@@ -1,12 +1,16 @@
 package org.eaSTars.javasourcer.controller.impl;
 
+import static org.eaSTars.javasourcer.configuration.ApplicationResources.ResourceBundle.*;
+
 import java.util.Arrays;
+import java.util.Locale;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.eaSTars.javasourcer.dto.CreateProjectDTO;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
 @Component("createprojectdailogcontroller")
@@ -14,16 +18,20 @@ public class DefaultJavaSourceCreateProjectDialogController extends AbstractJava
 
 	private JTextField nameTextField = new JTextField(20);
 	
+	public DefaultJavaSourceCreateProjectDialogController(MessageSource messageSource, Locale locale) {
+		super(messageSource, locale);
+	}
+	
 	@Override
 	protected String getTitle() {
-		return "Preferences";
+		return getResourceBundle(TITLE);
 	}
 
 	@Override
 	protected JPanel buildPanel() {
 		JPanel mainpanel = new JPanel();
 		
-		JLabel nameLabel = new JLabel("Name");
+		JLabel nameLabel = new JLabel(getResourceBundle(CREATEPROJECT_DIALOG_NAME));
 		nameLabel.setLabelFor(nameTextField);
 		JPanel sequencesettingpanel = makeCompactGrid(Arrays.asList(nameLabel, nameTextField), 1, 2, 6, 6, 6, 6);
 		

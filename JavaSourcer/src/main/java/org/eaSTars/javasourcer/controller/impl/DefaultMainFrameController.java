@@ -1,5 +1,7 @@
 package org.eaSTars.javasourcer.controller.impl;
 
+import static org.eaSTars.javasourcer.configuration.ApplicationResources.ResourceBundle.*;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -8,7 +10,6 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
-import java.util.Locale;
 
 import javax.annotation.Resource;
 import javax.swing.AbstractAction;
@@ -18,6 +19,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JPanel;
@@ -46,17 +48,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.core.convert.ConversionFailedException;
 
-import static org.eaSTars.javasourcer.configuration.ApplicationResources.ResourceBundle.*;
+public class DefaultMainFrameController extends AbstractInternationalizableController implements ControllerSupport, MainFrameController, InitializingBean {
 
-public class DefaultMainFrameController extends AbstractFrameController implements MainFrameController, InitializingBean {
-
-	private static final long serialVersionUID = -8106581169394657574L;
-	
 	private static final Logger LOGGER = LogManager.getLogger(DefaultMainFrameController.class);
 	
-	private Locale locale;
-	
-	private MessageSource messageSource;
+	private JFrame frame = new JFrame();
 	
 	private ApplicationGuiFacade applicationGuiFacade;
 	
@@ -84,10 +80,8 @@ public class DefaultMainFrameController extends AbstractFrameController implemen
 	private JMenu menuSwitch;
 	
 	public DefaultMainFrameController(MessageSource messageSource, ApplicationGuiFacade applicationGuiFacade) {
-		this.messageSource = messageSource;
+		super(messageSource, applicationGuiFacade.getLocale());
 		this.applicationGuiFacade = applicationGuiFacade;
-		
-		locale = applicationGuiFacade.getLocale();
 	}
 	
 	private void addProjectMenuEntry(JRadioButtonMenuItem menuitem) {
@@ -107,24 +101,24 @@ public class DefaultMainFrameController extends AbstractFrameController implemen
 	public void afterPropertiesSet() throws Exception {
 		EventQueue.invokeLater(() -> {
 			initGui();
-			setVisible(true);
+			frame.setVisible(true);
 		});
 	}
 	
 	private void initGui() {
-		setIconImage(ApplicationResources.APPICON16);
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		frame.setIconImage(ApplicationResources.APPICON16);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
 		buildGui();
 		
 		buildMenu();
 		
-		applicationGuiFacade.getWindowLocation().ifPresent(this::setLocation);
+		applicationGuiFacade.getWindowLocation().ifPresent(frame::setLocation);
 		
-		setSize(applicationGuiFacade.getWindowSize().orElseGet(() -> {
+		frame.setSize(applicationGuiFacade.getWindowSize().orElseGet(() -> {
 			Dimension dimension = new Dimension(640, 480);
 			Dimension screensize = Toolkit.getDefaultToolkit().getScreenSize();
-			setLocation((screensize.width - dimension.width) / 2, (screensize.height - dimension.height) / 2);
+			frame.setLocation((screensize.width - dimension.width) / 2, (screensize.height - dimension.height) / 2);
 			return dimension;
 		}));
 		
@@ -142,14 +136,14 @@ public class DefaultMainFrameController extends AbstractFrameController implemen
 					boolean error = false;
 					while(true) {
 						try {
-							createProjectDialog.getInputData(this, error).ifPresent(c -> {
+							createProjectDialog.getInputData(frame, error).ifPresent(c -> {
 								JRadioButtonMenuItem menuitem = projectFacade.createProject(c);
 								addProjectMenuEntry(menuitem);
 								menuitem.setSelected(true);
 							});
 							break;
 						}catch (ConversionFailedException e) {
-							messageDialog.showMessage(this, e.getRootCause().getMessage());
+							messageDialog.showMessage(frame, e.getRootCause().getMessage());
 							error = true;
 						}
 					}
@@ -176,11 +170,11 @@ public class DefaultMainFrameController extends AbstractFrameController implemen
 							createMenuItem(getResourceBundle(MAIN_MENU_ABOUT), a -> this.showAbout())));
 		}
 		
-		setJMenuBar(menubar);
+		frame.setJMenuBar(menubar);
 	}
 
 	private void buildGui() {
-		JPanel cnt = (JPanel) getContentPane();
+		JPanel cnt = (JPanel) frame.getContentPane();
 
 		InputMap inputmap = cnt.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
 		ActionMap actionmap = cnt.getActionMap();
@@ -230,14 +224,10 @@ public class DefaultMainFrameController extends AbstractFrameController implemen
 		
 		return tree;
 	}
-
-	private String getResourceBundle(String key) {
-		return messageSource.getMessage(key, null, locale);
-	}
 	
 	@Override
 	public void showAbout() {
-		aboutDialog.showDialog(this);
+		aboutDialog.showDialog(frame);
 	}
 
 	@Override
@@ -247,7 +237,7 @@ public class DefaultMainFrameController extends AbstractFrameController implemen
 
 	@Override
 	public void dispatchClosingEvent() {
-		dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+		frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
 	}
 
 	public boolean isExtendedMenu() {

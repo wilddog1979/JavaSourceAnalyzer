@@ -2,6 +2,7 @@ package org.eaSTars.javasourcer.controller.impl;
 
 import java.awt.Component;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import javax.swing.JOptionPane;
@@ -10,8 +11,9 @@ import javax.swing.Spring;
 import javax.swing.SpringLayout;
 
 import org.eaSTars.javasourcer.controller.JavaSourcerDataInputDialog;
+import org.springframework.context.MessageSource;
 
-public abstract class AbstractJavaSourcerDataInputDialog<T> implements JavaSourcerDataInputDialog<T> {
+public abstract class AbstractJavaSourcerDataInputDialog<T> extends AbstractInternationalizableController implements JavaSourcerDataInputDialog<T> {
 
 	private JPanel settingspanel;
 	
@@ -24,6 +26,10 @@ public abstract class AbstractJavaSourcerDataInputDialog<T> implements JavaSourc
 	protected abstract void initializePanel(T parameter);
 	
 	protected abstract T getInputData();
+	
+	public AbstractJavaSourcerDataInputDialog(MessageSource messageSource, Locale locale) {
+		super(messageSource, locale);
+	}
 	
 	private JPanel getDialogPanel(T parameter, boolean error) {
 		if (settingspanel == null) {

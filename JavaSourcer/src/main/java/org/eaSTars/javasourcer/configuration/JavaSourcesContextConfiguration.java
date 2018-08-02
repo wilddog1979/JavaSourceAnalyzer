@@ -2,6 +2,7 @@ package org.eaSTars.javasourcer.configuration;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.eaSTars.javasourcer.controller.impl.DefaultMainFrameController;
@@ -67,5 +68,10 @@ public class JavaSourcesContextConfiguration {
         messageSource.setDefaultEncoding("UTF-8");
         return messageSource;
     }
+	
+	@Bean
+	public Locale getLocale(ApplicationGuiFacade applicationGuiFacade) {
+		return applicationGuiFacade.getLocale();
+	}
 	
 }

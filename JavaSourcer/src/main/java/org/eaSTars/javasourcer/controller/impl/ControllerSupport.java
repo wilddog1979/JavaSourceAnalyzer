@@ -4,16 +4,13 @@ import java.awt.Toolkit;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 
-import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
-public abstract class AbstractFrameController extends JFrame {
+public interface ControllerSupport {
 
-	private static final long serialVersionUID = -3182407145498086393L;
-
-	public JMenuItem createMenuItem(String name, ActionListener actionListener) {
+	public default JMenuItem createMenuItem(String name, ActionListener actionListener) {
 		JMenuItem menuitem = new JMenuItem(name);
 		
 		if (actionListener != null) {
@@ -23,7 +20,7 @@ public abstract class AbstractFrameController extends JFrame {
 		return menuitem;
 	}
 	
-	public JMenuItem createMenuItem(String name, char shortcut, ActionListener actionListener) {
+	public  default JMenuItem createMenuItem(String name, char shortcut, ActionListener actionListener) {
 		JMenuItem menuitem = createMenuItem(name, actionListener);
 		
 		menuitem.setAccelerator(
@@ -36,7 +33,7 @@ public abstract class AbstractFrameController extends JFrame {
 		return menuitem;
 	}
 	
-	public JMenuItem createMenuItem(String name, String shortcut, ActionListener actionListener) {
+	public default JMenuItem createMenuItem(String name, String shortcut, ActionListener actionListener) {
 		JMenuItem menuitem = createMenuItem(name, actionListener);
 		
 		menuitem.setAccelerator(KeyStroke.getKeyStroke(shortcut));
@@ -44,7 +41,7 @@ public abstract class AbstractFrameController extends JFrame {
 		return menuitem;
 	}
 	
-	public JMenu createMenu(String name, JMenuItem...items) {
+	public default JMenu createMenu(String name, JMenuItem...items) {
 		JMenu menu = new JMenu(name);
 		
 		Arrays.asList(items).forEach(item ->{
