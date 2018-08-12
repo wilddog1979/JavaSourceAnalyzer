@@ -1,10 +1,13 @@
 package org.eaSTars.javasourcer.gui.controller.impl;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.Spring;
@@ -26,6 +29,8 @@ public abstract class AbstractJavaSourcerDataInputDialog<T> extends AbstractInte
 	protected abstract void initializePanel(T parameter);
 	
 	protected abstract T getInputData();
+	
+	protected abstract boolean validateInputData();
 	
 	public AbstractJavaSourcerDataInputDialog(MessageSource messageSource, Locale locale) {
 		super(messageSource, locale);
@@ -55,12 +60,24 @@ public abstract class AbstractJavaSourcerDataInputDialog<T> extends AbstractInte
 		return getInputDataInternal(parent, getDialogPanel(null, error));
 	}
 	
-	protected Optional<T> getInputDataInternal(Component parent, JPanel panel) {
-		if (JOptionPane.showConfirmDialog(null, panel, getTitle(), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
-			return Optional.of(getInputData());
+	protected boolean indicateError(JComponent component, boolean errorcondition) {
+		if (errorcondition) {
+			component.setBorder(BorderFactory.createLineBorder(Color.RED));
 		} else {
-			return Optional.empty();
+			component.setBorder(null);
 		}
+		return errorcondition;
+	}
+	
+	protected Optional<T> getInputDataInternal(Component parent, JPanel panel) {
+		//resetValidation();
+		
+		while (JOptionPane.showConfirmDialog(null, panel, getTitle(), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+			if (validateInputData()) {
+				return Optional.of(getInputData());
+			}
+		}
+		return Optional.empty();
 	}
 	
     protected JPanel makeCompactGrid(

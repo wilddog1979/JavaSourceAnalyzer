@@ -28,6 +28,10 @@ public class ApplicationResources {
 		
 		public static final String CREATEPROJECT_DIALOG_NAME = "dialog.name";
 		
+		public static final String CREATEPROJECT_DIALOG_DIRECTORY = "dialog.directory.label";
+		
+		public static final String CREATEPROJECT_DIALOG_SELECT = "dialog.directory.select";
+		
 		public static final String ABOUT_TEXT = "text";
 		
 	}
