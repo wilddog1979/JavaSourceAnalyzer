@@ -1,13 +1,14 @@
 package org.eaSTars.javasourcer.gui.service.impl;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.swing.JRadioButtonMenuItem;
 
 import org.eaSTars.javasourcer.data.model.JavaSourceProject;
 import org.eaSTars.javasourcer.data.service.JavaSourcerDataService;
-import org.eaSTars.javasourcer.gui.dto.CreateProjectDTO;
+import org.eaSTars.javasourcer.gui.dto.ProjectDTO;
 import org.eaSTars.javasourcer.gui.service.ProjectService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -35,7 +36,13 @@ public class DefaultProjectService implements ProjectService {
 	}
 	
 	@Override
-	public JRadioButtonMenuItem createProject(CreateProjectDTO createProjectDTO) {
+	public Optional<ProjectDTO> getProject(String name) {
+		return dataService.getJavaSourceProject(name)
+				.map(jsp -> conversionService.convert(jsp, ProjectDTO.class));
+	}
+	
+	@Override
+	public JRadioButtonMenuItem createProject(ProjectDTO createProjectDTO) {
 		JavaSourceProject javaSourceProject = conversionService.convert(createProjectDTO, JavaSourceProject.class);
 		return conversionService.convert(javaSourceProject, JRadioButtonMenuItem.class);
 	}

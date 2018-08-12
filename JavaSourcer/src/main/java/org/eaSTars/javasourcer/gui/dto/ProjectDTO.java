@@ -1,6 +1,6 @@
 package org.eaSTars.javasourcer.gui.dto;
 
-public class CreateProjectDTO {
+public class ProjectDTO {
 
 	private String name;
 	

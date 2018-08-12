@@ -8,7 +8,7 @@ import org.eaSTars.javasourcer.gui.controller.JavaSourcerDataInputDialog;
 import org.eaSTars.javasourcer.gui.controller.JavaSourcerDialog;
 import org.eaSTars.javasourcer.gui.controller.JavaSourcerMessageDialog;
 import org.eaSTars.javasourcer.gui.controller.impl.DefaultMainFrameController;
-import org.eaSTars.javasourcer.gui.dto.CreateProjectDTO;
+import org.eaSTars.javasourcer.gui.dto.ProjectDTO;
 import org.eaSTars.javasourcer.gui.service.ApplicationGuiService;
 import org.eaSTars.javasourcer.gui.service.ProjectService;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -31,14 +31,14 @@ public class JavaSourcesContextConfiguration {
 			ApplicationGuiService applicationGuiService,
 			ProjectService projectService,
 			@Qualifier("aboutdailogcontroller") JavaSourcerDialog aboutDialog,
-			@Qualifier("createprojectdailogcontroller") JavaSourcerDataInputDialog<CreateProjectDTO> createProjectDialog,
+			@Qualifier("projectdailogcontroller") JavaSourcerDataInputDialog<ProjectDTO> projectDialog,
 			@Qualifier("messagedialog") JavaSourcerMessageDialog messageDialog) {
 		DefaultMainFrameController controller = new DefaultMainFrameController(
 				messageSource,
 				applicationGuiService,
 				projectService,
 				aboutDialog,
-				createProjectDialog,
+				projectDialog,
 				messageDialog);
 
 		instantiate(getApplicationFunctionClassName(), ApplicationFunctions.class)

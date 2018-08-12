@@ -46,7 +46,7 @@ import org.eaSTars.javasourcer.gui.controller.JavaSourcerDataInputDialog;
 import org.eaSTars.javasourcer.gui.controller.JavaSourcerDialog;
 import org.eaSTars.javasourcer.gui.controller.JavaSourcerMessageDialog;
 import org.eaSTars.javasourcer.gui.controller.MainFrameController;
-import org.eaSTars.javasourcer.gui.dto.CreateProjectDTO;
+import org.eaSTars.javasourcer.gui.dto.ProjectDTO;
 import org.eaSTars.javasourcer.gui.service.ApplicationGuiService;
 import org.eaSTars.javasourcer.gui.service.ProjectService;
 import org.springframework.beans.factory.InitializingBean;
@@ -61,7 +61,7 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 	
 	private JavaSourcerDialog aboutDialog;
 	
-	private JavaSourcerDataInputDialog<CreateProjectDTO> createProjectDialog;
+	private JavaSourcerDataInputDialog<ProjectDTO> projectDialog;
 	
 	private JavaSourcerMessageDialog messageDialog;
 	
@@ -85,13 +85,13 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 			ApplicationGuiService applicationGuiService,
 			ProjectService projectService,
 			JavaSourcerDialog aboutDialog,
-			JavaSourcerDataInputDialog<CreateProjectDTO> createProjectDialog,
+			JavaSourcerDataInputDialog<ProjectDTO> projectDialog,
 			JavaSourcerMessageDialog messageDialog) {
 		super(messageSource, applicationGuiService.getLocale());
 		this.applicationGuiService = applicationGuiService;
 		this.projectService = projectService;
 		this.aboutDialog = aboutDialog;
-		this.createProjectDialog = createProjectDialog;
+		this.projectDialog = projectDialog;
 		this.messageDialog = messageDialog;
 	}
 	
@@ -147,7 +147,7 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 					boolean error = false;
 					while(true) {
 						try {
-							createProjectDialog.getInputData(frame, error).ifPresent(c -> {
+							projectDialog.getInputData(frame, error).ifPresent(c -> {
 								JRadioButtonMenuItem menuitem = projectService.createProject(c);
 								addProjectMenuEntry(menuitem);
 								menuitem.setSelected(true);
@@ -165,7 +165,23 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 				createMenuItem(getResourceBundle(MAIN_MENU_PROPERTIES), a -> {
 					ButtonModel selection = projectGroup.getSelection();
 					if (selection != null) {
-						LOGGER.debug(() -> String.format("Selection %s", selection.getActionCommand()));
+						projectService.getProject(selection.getActionCommand())
+						.ifPresent(dto -> {
+							boolean error = false;
+							while(true) {
+								try {
+									projectDialog.getInputData(frame, dto, error)
+									.ifPresent(updateDTO -> {
+										
+									});
+										
+									break;
+								}catch (ConversionFailedException e) {
+									messageDialog.showMessage(frame, e.getRootCause().getMessage());
+									error = true;
+								}
+							}
+						});
 					}
 				}));
 		

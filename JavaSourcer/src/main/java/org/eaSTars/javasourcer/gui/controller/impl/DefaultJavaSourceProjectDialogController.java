@@ -12,14 +12,14 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.eaSTars.javasourcer.gui.context.ApplicationResources.ResourceBundle;
-import org.eaSTars.javasourcer.gui.dto.CreateProjectDTO;
+import org.eaSTars.javasourcer.gui.dto.ProjectDTO;
 import org.eaSTars.javasourcer.gui.service.ApplicationGuiService;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-@Component("createprojectdailogcontroller")
-public class DefaultJavaSourceCreateProjectDialogController extends AbstractJavaSourcerDataInputDialog<CreateProjectDTO> {
+@Component("projectdailogcontroller")
+public class DefaultJavaSourceProjectDialogController extends AbstractJavaSourcerDataInputDialog<ProjectDTO> {
 
 	private JTextField textFieldName = new JTextField(20);
 	
@@ -29,7 +29,7 @@ public class DefaultJavaSourceCreateProjectDialogController extends AbstractJava
 	
 	private File projectdir;
 	
-	public DefaultJavaSourceCreateProjectDialogController(
+	public DefaultJavaSourceProjectDialogController(
 			MessageSource messageSource,
 			ApplicationGuiService applicationGuiService) {
 		super(messageSource, applicationGuiService.getLocale());
@@ -37,7 +37,7 @@ public class DefaultJavaSourceCreateProjectDialogController extends AbstractJava
 	
 	@Override
 	protected String getTitle() {
-		return getResourceBundle(ResourceBundle.TITLE);
+		return getResourceBundle(ResourceBundle.TITLE_NEW);
 	}
 
 	@Override
@@ -95,15 +95,15 @@ public class DefaultJavaSourceCreateProjectDialogController extends AbstractJava
 	}
 
 	@Override
-	protected void initializePanel(CreateProjectDTO parameter) {
+	protected void initializePanel(ProjectDTO parameter) {
 		textFieldName.setText(parameter.getName());
 		projectdir = new File(parameter.getBasedir());
 		dirDisplay.setText(projectdir.getName());
 	}
 	
 	@Override
-	protected CreateProjectDTO getInputData() {
-		CreateProjectDTO dto = new CreateProjectDTO();
+	protected ProjectDTO getInputData() {
+		ProjectDTO dto = new ProjectDTO();
 		dto.setName(textFieldName.getText().trim());
 		try {
 			dto.setBasedir(projectdir.getCanonicalPath());

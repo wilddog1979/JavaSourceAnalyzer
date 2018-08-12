@@ -4,23 +4,23 @@ import java.util.Optional;
 
 import org.eaSTars.javasourcer.data.model.JavaSourceProject;
 import org.eaSTars.javasourcer.data.service.JavaSourcerDataService;
-import org.eaSTars.javasourcer.gui.dto.CreateProjectDTO;
+import org.eaSTars.javasourcer.gui.dto.ProjectDTO;
 import org.eaSTars.javasourcer.gui.exception.JavaSourcerProjectAlreadyExistsException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CreateProjectDTOJavaSourceProjectConverter implements Converter<CreateProjectDTO, JavaSourceProject> {
+public class ProjectDTOJavaSourceProjectConverter implements Converter<ProjectDTO, JavaSourceProject> {
 
 	private JavaSourcerDataService javaSourcerDataService;
 
-	public CreateProjectDTOJavaSourceProjectConverter(
+	public ProjectDTOJavaSourceProjectConverter(
 			JavaSourcerDataService javaSourcerDataService) {
 		this.javaSourcerDataService = javaSourcerDataService;
 	}
 	
 	@Override
-	public JavaSourceProject convert(CreateProjectDTO source) {
+	public JavaSourceProject convert(ProjectDTO source) {
 		Optional<JavaSourceProject> javaSourceProject = javaSourcerDataService.getJavaSourceProject(source.getName());
 		
 		if (javaSourceProject.isPresent()) {
@@ -29,6 +29,7 @@ public class CreateProjectDTOJavaSourceProjectConverter implements Converter<Cre
 		
 		JavaSourceProject target = new JavaSourceProject();
 		target.setName(source.getName());
+		target.setBasedir(source.getBasedir());
 		
 		javaSourcerDataService.save(target);
 		

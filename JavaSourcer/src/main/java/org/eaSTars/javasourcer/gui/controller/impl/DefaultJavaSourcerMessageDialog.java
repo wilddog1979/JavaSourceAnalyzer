@@ -1,6 +1,6 @@
 package org.eaSTars.javasourcer.gui.controller.impl;
 
-import static org.eaSTars.javasourcer.gui.context.ApplicationResources.ResourceBundle.TITLE;
+import static org.eaSTars.javasourcer.gui.context.ApplicationResources.ResourceBundle.TITLE_NEW;
 
 import java.awt.Component;
 
@@ -21,7 +21,7 @@ public class DefaultJavaSourcerMessageDialog extends AbstractInternationalizable
 
 	@Override
 	public boolean showMessage(Component parent, String message) {
-		JOptionPane.showMessageDialog(parent, message, getResourceBundle(TITLE), JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(parent, message, getResourceBundle(TITLE_NEW), JOptionPane.ERROR_MESSAGE);
 		return true;
 	}
 

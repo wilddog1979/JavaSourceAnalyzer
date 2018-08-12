@@ -22,6 +22,9 @@ public class JavaSourceProject extends Auditable implements Serializable {
 	@Column(unique=true)
 	private String name;
 
+	@Column(nullable=false)
+	private String basedir;
+	
 	public Long getId() {
 		return id;
 	}
@@ -36,6 +39,14 @@ public class JavaSourceProject extends Auditable implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getBasedir() {
+		return basedir;
+	}
+
+	public void setBasedir(String basedir) {
+		this.basedir = basedir;
 	}
 	
 }
