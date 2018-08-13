@@ -13,14 +13,13 @@ import javax.swing.JPanel;
 import javax.swing.Spring;
 import javax.swing.SpringLayout;
 
+import org.eaSTars.javasourcer.gui.context.ApplicationResources.ResourceBundle;
 import org.eaSTars.javasourcer.gui.controller.JavaSourcerDataInputDialog;
 import org.springframework.context.MessageSource;
 
 public abstract class AbstractJavaSourcerDataInputDialog<T> extends AbstractInternationalizableController implements JavaSourcerDataInputDialog<T> {
 
 	private JPanel settingspanel;
-	
-	protected abstract String getTitle();
 	
 	protected abstract JPanel buildPanel();
 	
@@ -32,6 +31,12 @@ public abstract class AbstractJavaSourcerDataInputDialog<T> extends AbstractInte
 	
 	protected abstract boolean validateInputData();
 	
+	private boolean newobject = false;
+	
+	protected String getTitle() {
+		return getResourceBundle(newobject ? ResourceBundle.TITLE_NEW : ResourceBundle.TITLE_PROPERTIES);
+	}
+	
 	public AbstractJavaSourcerDataInputDialog(MessageSource messageSource, Locale locale) {
 		super(messageSource, locale);
 	}
@@ -41,10 +46,11 @@ public abstract class AbstractJavaSourcerDataInputDialog<T> extends AbstractInte
 			settingspanel = buildPanel();
 		}
 		if (!error) {
-			if (parameter != null) {
-				initializePanel(parameter);
-			} else {
+			newobject = parameter == null;
+			if (newobject) {
 				cleanupPanel();
+			} else {
+				initializePanel(parameter);
 			}
 		}
 		return settingspanel;

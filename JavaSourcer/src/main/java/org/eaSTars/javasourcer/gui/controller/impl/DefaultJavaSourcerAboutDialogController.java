@@ -1,7 +1,7 @@
 package org.eaSTars.javasourcer.gui.controller.impl;
 
 import static org.eaSTars.javasourcer.gui.context.ApplicationResources.ResourceBundle.ABOUT_TEXT;
-import static org.eaSTars.javasourcer.gui.context.ApplicationResources.ResourceBundle.TITLE_NEW;
+import static org.eaSTars.javasourcer.gui.context.ApplicationResources.ResourceBundle.TITLE;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -25,7 +25,7 @@ public class DefaultJavaSourcerAboutDialogController extends AbstractInternation
 	@Override
 	public boolean showDialog(java.awt.Component parent) {
 		JLabel label = new JLabel(getResourceBundle(ABOUT_TEXT), new ImageIcon(ApplicationResources.APPICON16), JLabel.LEFT);
-		JOptionPane.showMessageDialog(parent, label, getResourceBundle(TITLE_NEW), JOptionPane.PLAIN_MESSAGE);
+		JOptionPane.showMessageDialog(parent, label, getResourceBundle(TITLE), JOptionPane.PLAIN_MESSAGE);
 		return true;
 	}
 

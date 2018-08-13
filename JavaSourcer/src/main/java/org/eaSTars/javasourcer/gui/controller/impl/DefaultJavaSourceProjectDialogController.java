@@ -34,11 +34,6 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 			ApplicationGuiService applicationGuiService) {
 		super(messageSource, applicationGuiService.getLocale());
 	}
-	
-	@Override
-	protected String getTitle() {
-		return getResourceBundle(ResourceBundle.TITLE_NEW);
-	}
 
 	@Override
 	protected JPanel buildPanel() {

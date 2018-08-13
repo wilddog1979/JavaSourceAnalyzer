@@ -13,6 +13,8 @@ public interface ProjectService {
 	
 	public Optional<ProjectDTO> getProject(String name);
 	
+	public void updateProject(String originalName, ProjectDTO newValue);
+	
 	public JRadioButtonMenuItem createProject(ProjectDTO createProjectDTO);
 	
 }

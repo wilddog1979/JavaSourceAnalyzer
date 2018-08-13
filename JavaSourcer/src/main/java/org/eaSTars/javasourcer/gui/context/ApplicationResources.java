@@ -24,6 +24,8 @@ public class ApplicationResources {
 		
 		public static final String MAIN_MENU_ABOUT = "menu.about";
 		
+		public static final String TITLE = "title";
+		
 		public static final String TITLE_NEW = "title.new";
 		
 		public static final String TITLE_PROPERTIES = "title.properties";

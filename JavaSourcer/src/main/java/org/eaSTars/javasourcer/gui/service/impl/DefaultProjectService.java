@@ -1,5 +1,6 @@
 package org.eaSTars.javasourcer.gui.service.impl;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -9,6 +10,7 @@ import javax.swing.JRadioButtonMenuItem;
 import org.eaSTars.javasourcer.data.model.JavaSourceProject;
 import org.eaSTars.javasourcer.data.service.JavaSourcerDataService;
 import org.eaSTars.javasourcer.gui.dto.ProjectDTO;
+import org.eaSTars.javasourcer.gui.exception.JavaSourcerProjectAlreadyExistsException;
 import org.eaSTars.javasourcer.gui.service.ProjectService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class DefaultProjectService implements ProjectService {
 
+	private static final Comparator<String> STRINGCOMPARATOR = Comparator.comparing(String::toString);
+	
 	private ConversionService conversionService;
 	
 	private JavaSourcerDataService dataService;
@@ -47,4 +51,27 @@ public class DefaultProjectService implements ProjectService {
 		return conversionService.convert(javaSourceProject, JRadioButtonMenuItem.class);
 	}
 
+	@Override
+	public void updateProject(String originalName, ProjectDTO newValue) {
+		
+		dataService.getJavaSourceProject(originalName)
+		.ifPresent(jsp -> {
+			boolean dirty = false;
+			if (STRINGCOMPARATOR.compare(jsp.getName(), newValue.getName()) != 0) {
+				if (jsp.getId() != dataService.getJavaSourceProject(newValue.getName()).get().getId()) {
+					throw new JavaSourcerProjectAlreadyExistsException(newValue.getName());
+				}
+				jsp.setName(newValue.getName());
+				dirty = true;
+			}
+			if (STRINGCOMPARATOR.compare(jsp.getBasedir(), newValue.getBasedir()) != 0) {
+				jsp.setBasedir(newValue.getBasedir());
+				dirty = true;
+			}
+			if (dirty) {
+				dataService.save(jsp);
+			}
+		});
+	}
+	
 }
