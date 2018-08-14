@@ -2,6 +2,7 @@ package org.eaSTars.javasourcer.gui.controller.impl;
 
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -91,13 +92,18 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 		scrollpane.setPreferredSize(new Dimension(200, 50));
 		sources.add(scrollpane);
 		
+		JPanel panelButtons = new JPanel(new GridLayout(3, 1));
+		
 		JButton buttonEdit = new JButton("...");
+		panelButtons.add(buttonEdit);
 		
 		JButton buttonNew = new JButton("+");
+		panelButtons.add(buttonNew);
 		
 		JButton buttonDelete = new JButton("-");
+		panelButtons.add(buttonDelete);
 		
-		sources.add(makeCompactGrid(Arrays.asList(buttonEdit, buttonNew, buttonDelete), 3, 1, 0, 0, 0, 0));
+		sources.add(panelButtons);
 		
 		return sources;
 	}
