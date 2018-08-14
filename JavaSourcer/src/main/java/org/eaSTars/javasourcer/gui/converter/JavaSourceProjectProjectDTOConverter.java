@@ -15,6 +15,8 @@ public class JavaSourceProjectProjectDTOConverter implements Converter<JavaSourc
 		target.setName(source.getName());
 		target.setBasedir(source.getBasedir());
 		
+		source.getSourceFolders().forEach(sf -> target.getSourceFolders().add(sf.getRelativedir()));
+		
 		return target;
 	}
 

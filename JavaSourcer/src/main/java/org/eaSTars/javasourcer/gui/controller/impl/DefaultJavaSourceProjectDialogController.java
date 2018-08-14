@@ -1,15 +1,20 @@
 package org.eaSTars.javasourcer.gui.controller.impl;
 
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 
 import org.eaSTars.javasourcer.gui.context.ApplicationResources.ResourceBundle;
 import org.eaSTars.javasourcer.gui.dto.ProjectDTO;
@@ -29,6 +34,8 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 	
 	private File projectdir;
 	
+	private DefaultListModel<String> sourceFoldersModel = new DefaultListModel<>();
+	
 	public DefaultJavaSourceProjectDialogController(
 			MessageSource messageSource,
 			ApplicationGuiService applicationGuiService) {
@@ -37,18 +44,24 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 
 	@Override
 	protected JPanel buildPanel() {
-		JPanel mainpanel = new JPanel();
-		
-		JLabel labelName = new JLabel(getResourceBundle(ResourceBundle.CREATEPROJECT_DIALOG_NAME));
-		labelName.setLabelFor(textFieldName);
-		
+		return makeCompactGrid(
+				Arrays.asList(
+						new JLabel(getResourceBundle(ResourceBundle.ROJECTDIALOG_NAME)),
+						textFieldName,
+						new JLabel(getResourceBundle(ResourceBundle.PROJECTDIALOG_DIRECTORY)),
+						createDirSelectionPanel(),
+						new JLabel(getResourceBundle(ResourceBundle.PROJECTDIALOG_SOURCES)),
+						createSourcesPanel()),
+				3, 2, 0, 0, 0, 0);
+	}
+	
+	private JPanel createDirSelectionPanel() {
 		panelDirSelection = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		JLabel labelDir = new JLabel(getResourceBundle(ResourceBundle.CREATEPROJECT_DIALOG_DIRECTORY));
-		JButton buttonDir = new JButton(getResourceBundle(ResourceBundle.CREATEPROJECT_DIALOG_SELECT));
+		JButton buttonDir = new JButton(getResourceBundle(ResourceBundle.PROJECTDIALOG_SELECT));
 		buttonDir.addActionListener(a -> {
 			JFileChooser chooser = new JFileChooser(".");
 			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			int result = chooser.showOpenDialog(mainpanel);
+			int result = chooser.showOpenDialog(panelDirSelection);
 			switch (result) {
 			case JFileChooser.APPROVE_OPTION:
 				projectdir = chooser.getSelectedFile();
@@ -63,15 +76,30 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 		panelDirSelection.add(buttonDir);
 		panelDirSelection.add(dirDisplay);
 		
-		JPanel sequencesettingpanel = makeCompactGrid(
-				Arrays.asList(
-						labelName, textFieldName,
-						labelDir, panelDirSelection),
-				2, 2, 6, 6, 6, 6);
+		return panelDirSelection;
+	}
+	
+	private JPanel createSourcesPanel() {
+		JPanel sources = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		
-		mainpanel.add(sequencesettingpanel);
+		JList<String> sourcelist = new JList<>(sourceFoldersModel);
 		
-		return mainpanel;
+		sourcelist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		sourcelist.setVisibleRowCount(3);
+		
+		JScrollPane scrollpane = new JScrollPane(sourcelist);
+		scrollpane.setPreferredSize(new Dimension(200, 50));
+		sources.add(scrollpane);
+		
+		JButton buttonEdit = new JButton("...");
+		
+		JButton buttonNew = new JButton("+");
+		
+		JButton buttonDelete = new JButton("-");
+		
+		sources.add(makeCompactGrid(Arrays.asList(buttonEdit, buttonNew, buttonDelete), 3, 1, 0, 0, 0, 0));
+		
+		return sources;
 	}
 	
 	@Override
@@ -87,13 +115,24 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 		dirDisplay.setText("");
 		projectdir = null;
 		indicateError(panelDirSelection, false);
+		sourceFoldersModel.removeAllElements();
 	}
 
 	@Override
 	protected void initializePanel(ProjectDTO parameter) {
 		textFieldName.setText(parameter.getName());
-		projectdir = new File(parameter.getBasedir());
+		indicateError(textFieldName, false);
+		try {
+			projectdir = new File(parameter.getBasedir()).getCanonicalFile();
+			dirDisplay.setText(projectdir.getName());
+		} catch (IOException e) {
+			projectdir = null;
+			dirDisplay.setText("");
+		}
 		dirDisplay.setText(projectdir.getName());
+		indicateError(panelDirSelection, false);
+		sourceFoldersModel.removeAllElements();
+		parameter.getSourceFolders().forEach(sourceFoldersModel::addElement);
 	}
 	
 	@Override

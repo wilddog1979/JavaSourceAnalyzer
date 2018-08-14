@@ -1,16 +1,19 @@
 package org.eaSTars.javasourcer.data.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="Project")
+@Table(name="javasourceproject")
 public class JavaSourceProject extends Auditable implements Serializable {
 
 	private static final long serialVersionUID = -298370160335505916L;
@@ -24,6 +27,9 @@ public class JavaSourceProject extends Auditable implements Serializable {
 
 	@Column(nullable=false)
 	private String basedir;
+	
+	@OneToMany(mappedBy="javaSourceProject")
+	private List<SourceFolder> sourceFolders;
 	
 	public Long getId() {
 		return id;
@@ -47,6 +53,17 @@ public class JavaSourceProject extends Auditable implements Serializable {
 
 	public void setBasedir(String basedir) {
 		this.basedir = basedir;
+	}
+
+	public List<SourceFolder> getSourceFolders() {
+		if (sourceFolders == null) {
+			sourceFolders = new ArrayList<>();
+		}
+		return sourceFolders;
+	}
+
+	public void setSourceFolders(List<SourceFolder> sourceFolders) {
+		this.sourceFolders = sourceFolders;
 	}
 	
 }
