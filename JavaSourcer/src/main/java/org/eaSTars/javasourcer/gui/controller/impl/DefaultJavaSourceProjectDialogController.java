@@ -2,10 +2,11 @@ package org.eaSTars.javasourcer.gui.controller.impl;
 
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -15,8 +16,10 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 
+import org.eaSTars.javasourcer.gui.context.ApplicationResources;
 import org.eaSTars.javasourcer.gui.context.ApplicationResources.ResourceBundle;
 import org.eaSTars.javasourcer.gui.dto.ProjectDTO;
 import org.eaSTars.javasourcer.gui.service.ApplicationGuiService;
@@ -27,11 +30,17 @@ import org.springframework.util.StringUtils;
 @Component("projectdailogcontroller")
 public class DefaultJavaSourceProjectDialogController extends AbstractJavaSourcerDataInputDialog<ProjectDTO> {
 
+	private JButton buttonEdit = new JButton(ApplicationResources.THREEDOTS);
+	
+	private JButton buttonAdd = new JButton(ApplicationResources.PLUSSIGN);
+	
+	private JButton buttonDelete = new JButton(ApplicationResources.MINUSSIGN);
+	
 	private JTextField textFieldName = new JTextField(20);
 	
-	JPanel panelDirSelection;
+	private JPanel panelDirSelection;
 	
-	JLabel dirDisplay = new JLabel();
+	private JLabel dirDisplay = new JLabel();
 	
 	private File projectdir;
 	
@@ -92,15 +101,41 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 		scrollpane.setPreferredSize(new Dimension(200, 50));
 		sources.add(scrollpane);
 		
-		JPanel panelButtons = new JPanel(new GridLayout(3, 1));
+		JToolBar panelButtons = new JToolBar(JToolBar.VERTICAL);
+		panelButtons.setFloatable(false);
 		
-		JButton buttonEdit = new JButton("...");
+		buttonEdit.addActionListener(a -> {
+			int index = sourcelist.getSelectedIndex();
+			if (index != -1) {
+				JFileChooser editFolder = new JFileChooser(projectdir != null ?
+						new File(projectdir, sourceFoldersModel.getElementAt(index)).getParentFile() :
+							new File("."));
+				editFolder.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				if (editFolder.showOpenDialog(sources) == JFileChooser.APPROVE_OPTION) {
+					sourceFoldersModel.removeElementAt(index);
+					sourceFoldersModel.insertElementAt(Paths.get(projectdir.toURI())
+							.relativize(Paths.get(editFolder.getSelectedFile().toURI())).toString(), index);
+				}
+			}
+		});
 		panelButtons.add(buttonEdit);
 		
-		JButton buttonNew = new JButton("+");
-		panelButtons.add(buttonNew);
+		buttonAdd.addActionListener(a -> {
+			JFileChooser addFolder = new JFileChooser(projectdir != null ? projectdir : new File("."));
+			addFolder.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			if (addFolder.showOpenDialog(sources) == JFileChooser.APPROVE_OPTION) {
+				sourceFoldersModel.addElement(Paths.get(projectdir.toURI())
+						.relativize(Paths.get(addFolder.getSelectedFile().toURI())).toString());
+			}
+		});
+		panelButtons.add(buttonAdd);
 		
-		JButton buttonDelete = new JButton("-");
+		buttonDelete.addActionListener(a -> {
+			int index = sourcelist.getSelectedIndex();
+			if (index != -1) {
+				sourceFoldersModel.removeElementAt(index);
+			}
+		});
 		panelButtons.add(buttonDelete);
 		
 		sources.add(panelButtons);
@@ -150,6 +185,7 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 		} catch (IOException e) {
 			// this may not be an issue
 		}
+		dto.setSourceFolders(Collections.list(sourceFoldersModel.elements()));
 		return dto;
 	}
 	

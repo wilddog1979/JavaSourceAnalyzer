@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -28,7 +29,7 @@ public class JavaSourceProject extends Auditable implements Serializable {
 	@Column(nullable=false)
 	private String basedir;
 	
-	@OneToMany(mappedBy="javaSourceProject")
+	@OneToMany(mappedBy="javaSourceProject", cascade = CascadeType.ALL, orphanRemoval=true)
 	private List<SourceFolder> sourceFolders;
 	
 	public Long getId() {

@@ -68,6 +68,9 @@ public class DefaultProjectService implements ProjectService {
 				jsp.setBasedir(newValue.getBasedir());
 				dirty = true;
 			}
+			
+			dirty |= dataService.updateSourceFolders(jsp, newValue.getSourceFolders());
+			
 			if (dirty) {
 				dataService.save(jsp);
 			}

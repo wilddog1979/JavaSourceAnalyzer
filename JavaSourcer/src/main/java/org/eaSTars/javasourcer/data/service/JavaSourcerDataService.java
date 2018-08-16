@@ -13,4 +13,6 @@ public interface JavaSourcerDataService {
 	
 	public void save(JavaSourceProject javaSourceProject);
 	
+	public boolean updateSourceFolders(JavaSourceProject javaSourceProject, List<String> sourceFolders);
+	
 }

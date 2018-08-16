@@ -68,5 +68,11 @@ public class ApplicationResources {
 	
 	public static final ImageIcon CLASSICON = new ImageIcon(ApplicationResources.class.getClassLoader().getResource("icons/classicon.png"));
 	
+	public static final ImageIcon THREEDOTS = new ImageIcon(ApplicationResources.class.getClassLoader().getResource("icons/threedots.png"));
+	
+	public static final ImageIcon PLUSSIGN = new ImageIcon(ApplicationResources.class.getClassLoader().getResource("icons/plussign.png"));
+	
+	public static final ImageIcon MINUSSIGN = new ImageIcon(ApplicationResources.class.getClassLoader().getResource("icons/minussign.png"));
+	
 	public static final String APP_NAME = "Java Sourcer";
 }

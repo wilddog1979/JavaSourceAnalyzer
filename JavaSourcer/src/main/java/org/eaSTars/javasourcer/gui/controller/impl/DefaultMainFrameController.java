@@ -53,6 +53,7 @@ import org.eaSTars.javasourcer.gui.exception.JavaSourcerProjectAlreadyExistsExce
 import org.eaSTars.javasourcer.gui.service.ApplicationGuiService;
 import org.eaSTars.javasourcer.gui.service.ProjectService;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
 import org.springframework.core.convert.ConversionFailedException;
 
@@ -88,7 +89,7 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 			ApplicationGuiService applicationGuiService,
 			ProjectService projectService,
 			JavaSourcerDialog aboutDialog,
-			JavaSourcerDataInputDialog<ProjectDTO> projectDialog,
+			@Qualifier("projectdailogcontroller") JavaSourcerDataInputDialog<ProjectDTO> projectDialog,
 			JavaSourcerMessageDialog messageDialog) {
 		super(messageSource, applicationGuiService.getLocale());
 		this.applicationGuiService = applicationGuiService;
