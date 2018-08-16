@@ -38,6 +38,8 @@ public class ApplicationResources {
 		
 		public static final String PROJECTDIALOG_SOURCES = "dialog.directory.sources";
 		
+		public static final String PROJECTDIALOG_LIBRARIES = "dialog.directory.libraries";
+		
 		public static final String ABOUT_TEXT = "text";
 		
 	}
@@ -73,6 +75,10 @@ public class ApplicationResources {
 	public static final ImageIcon PLUSSIGN = new ImageIcon(ApplicationResources.class.getClassLoader().getResource("icons/plussign.png"));
 	
 	public static final ImageIcon MINUSSIGN = new ImageIcon(ApplicationResources.class.getClassLoader().getResource("icons/minussign.png"));
+	
+	public static final ImageIcon ARROWLEFT = new ImageIcon(ApplicationResources.class.getClassLoader().getResource("icons/arrowleft.png"));
+	
+	public static final ImageIcon ARROWRIGHT = new ImageIcon(ApplicationResources.class.getClassLoader().getResource("icons/arrowright.png"));
 	
 	public static final String APP_NAME = "Java Sourcer";
 }

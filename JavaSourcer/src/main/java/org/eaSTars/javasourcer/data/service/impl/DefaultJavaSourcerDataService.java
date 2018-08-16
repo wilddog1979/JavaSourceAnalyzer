@@ -3,9 +3,13 @@ package org.eaSTars.javasourcer.data.service.impl;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
+import org.eaSTars.javasourcer.data.model.JavaLibrary;
 import org.eaSTars.javasourcer.data.model.JavaSourceProject;
 import org.eaSTars.javasourcer.data.model.SourceFolder;
+import org.eaSTars.javasourcer.data.repository.JavaLibraryRepository;
 import org.eaSTars.javasourcer.data.repository.JavaSourceProjectRepository;
 import org.eaSTars.javasourcer.data.service.JavaSourcerDataService;
 import org.springframework.stereotype.Service;
@@ -15,9 +19,13 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 
 	private JavaSourceProjectRepository javaSourceProjectRepo;
 	
+	private JavaLibraryRepository javaLibraryRepository;
+	
 	public DefaultJavaSourcerDataService(
-			JavaSourceProjectRepository javaSourceProjectRepo) {
+			JavaSourceProjectRepository javaSourceProjectRepo,
+			JavaLibraryRepository javaLibraryRepository) {
 		this.javaSourceProjectRepo = javaSourceProjectRepo;
+		this.javaLibraryRepository = javaLibraryRepository;
 	}
 	
 	@Override
@@ -61,6 +69,12 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 		});
 		
 		return result;
+	}
+	
+	@Override
+	public Stream<String> getLibraryNames() {
+		return StreamSupport.stream(javaLibraryRepository.findAll().spliterator(), false)
+				.map(JavaLibrary::getName);
 	}
 	
 }

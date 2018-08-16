@@ -19,6 +19,7 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 
+import org.eaSTars.javasourcer.data.service.JavaSourcerDataService;
 import org.eaSTars.javasourcer.gui.context.ApplicationResources;
 import org.eaSTars.javasourcer.gui.context.ApplicationResources.ResourceBundle;
 import org.eaSTars.javasourcer.gui.dto.ProjectDTO;
@@ -36,6 +37,10 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 	
 	private JButton buttonDelete = new JButton(ApplicationResources.MINUSSIGN);
 	
+	private JButton buttonRemoveLibrary = new JButton(ApplicationResources.ARROWRIGHT);
+	
+	private JButton buttonAddLibrary = new JButton(ApplicationResources.ARROWLEFT);
+	
 	private JTextField textFieldName = new JTextField(20);
 	
 	private JPanel panelDirSelection;
@@ -46,10 +51,18 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 	
 	private DefaultListModel<String> sourceFoldersModel = new DefaultListModel<>();
 	
+	private DefaultListModel<String> selectedLibrariesModel = new DefaultListModel<>();
+	
+	private DefaultListModel<String> availableLibrariesModel = new DefaultListModel<>();
+	
+	private JavaSourcerDataService dataService;
+	
 	public DefaultJavaSourceProjectDialogController(
 			MessageSource messageSource,
-			ApplicationGuiService applicationGuiService) {
+			ApplicationGuiService applicationGuiService,
+			JavaSourcerDataService dataService) {
 		super(messageSource, applicationGuiService.getLocale());
+		this.dataService = dataService;
 	}
 
 	@Override
@@ -61,8 +74,10 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 						new JLabel(getResourceBundle(ResourceBundle.PROJECTDIALOG_DIRECTORY)),
 						createDirSelectionPanel(),
 						new JLabel(getResourceBundle(ResourceBundle.PROJECTDIALOG_SOURCES)),
-						createSourcesPanel()),
-				3, 2, 0, 0, 0, 0);
+						createSourcesPanel(),
+						new JLabel(getResourceBundle(ResourceBundle.PROJECTDIALOG_LIBRARIES)),
+						createLibrariesPanel()),
+				4, 2, 0, 0, 0, 0);
 	}
 	
 	private JPanel createDirSelectionPanel() {
@@ -98,7 +113,7 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 		sourcelist.setVisibleRowCount(3);
 		
 		JScrollPane scrollpane = new JScrollPane(sourcelist);
-		scrollpane.setPreferredSize(new Dimension(200, 50));
+		scrollpane.setPreferredSize(new Dimension(400, 50));
 		sources.add(scrollpane);
 		
 		JToolBar panelButtons = new JToolBar(JToolBar.VERTICAL);
@@ -143,6 +158,45 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 		return sources;
 	}
 	
+	private JPanel createLibrariesPanel() {
+		JPanel libraries = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		
+		JList<String> selectedLibrarieslist = new JList<>(selectedLibrariesModel);
+		JScrollPane scrollpane1 = new JScrollPane(selectedLibrarieslist);
+		scrollpane1.setPreferredSize(new Dimension(200, 50));
+		libraries.add(scrollpane1);
+		
+		JToolBar panelButtons = new JToolBar(JToolBar.VERTICAL);
+		panelButtons.setFloatable(false);
+		
+		panelButtons.add(buttonAddLibrary);
+		
+		panelButtons.add(buttonRemoveLibrary);
+		
+		libraries.add(panelButtons);
+		
+		JList<String> availableLibrarieslist = new JList<>(availableLibrariesModel);
+		JScrollPane scrollpane2 = new JScrollPane(availableLibrarieslist);
+		scrollpane2.setPreferredSize(new Dimension(200, 50));
+		libraries.add(scrollpane2);
+		
+		buttonAddLibrary.addActionListener(a -> {
+			availableLibrarieslist.getSelectedValuesList().forEach(l -> {
+				availableLibrariesModel.removeElement(l);
+				selectedLibrariesModel.addElement(l);
+			});
+		});
+		
+		buttonRemoveLibrary.addActionListener(a -> {
+			selectedLibrarieslist.getSelectedValuesList().forEach(l -> {
+				selectedLibrariesModel.removeElement(l);
+				availableLibrariesModel.addElement(l);
+			});
+		});
+		
+		return libraries;
+	}
+	
 	@Override
 	protected boolean validateInputData() {
 		return !(indicateError(textFieldName, StringUtils.isEmpty(textFieldName.getText())) |
@@ -153,16 +207,22 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 	protected void cleanupPanel() {
 		textFieldName.setText("");
 		indicateError(textFieldName, false);
+		
 		dirDisplay.setText("");
 		projectdir = null;
 		indicateError(panelDirSelection, false);
+		
 		sourceFoldersModel.removeAllElements();
+		
+		selectedLibrariesModel.removeAllElements();
+		dataService.getLibraryNames().forEach(availableLibrariesModel::addElement);
 	}
 
 	@Override
 	protected void initializePanel(ProjectDTO parameter) {
 		textFieldName.setText(parameter.getName());
 		indicateError(textFieldName, false);
+		
 		try {
 			projectdir = new File(parameter.getBasedir()).getCanonicalFile();
 			dirDisplay.setText(projectdir.getName());
@@ -170,22 +230,37 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 			projectdir = null;
 			dirDisplay.setText("");
 		}
+		
 		dirDisplay.setText(projectdir.getName());
 		indicateError(panelDirSelection, false);
+		
 		sourceFoldersModel.removeAllElements();
 		parameter.getSourceFolders().forEach(sourceFoldersModel::addElement);
+		
+		selectedLibrariesModel.removeAllElements();
+		parameter.getLibraries().forEach(selectedLibrariesModel::addElement);
+		
+		availableLibrariesModel.removeAllElements();
+		dataService.getLibraryNames()
+		.filter(l -> !parameter.getLibraries().contains(l))
+		.forEach(availableLibrariesModel::addElement);
 	}
 	
 	@Override
 	protected ProjectDTO getInputData() {
 		ProjectDTO dto = new ProjectDTO();
+		
 		dto.setName(textFieldName.getText().trim());
+		
 		try {
 			dto.setBasedir(projectdir.getCanonicalPath());
 		} catch (IOException e) {
 			// this may not be an issue
 		}
+		
 		dto.setSourceFolders(Collections.list(sourceFoldersModel.elements()));
+		
+		dto.setLibraries(Collections.list(selectedLibrariesModel.elements()));
 		return dto;
 	}
 	

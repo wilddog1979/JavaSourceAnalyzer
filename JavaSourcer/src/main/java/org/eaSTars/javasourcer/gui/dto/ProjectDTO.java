@@ -10,6 +10,8 @@ public class ProjectDTO {
 	private String basedir;
 	
 	private List<String> sourceFolders = new ArrayList<>();
+	
+	private List<String> libraries = new ArrayList<>();
 
 	public String getName() {
 		return name;
@@ -33,6 +35,14 @@ public class ProjectDTO {
 
 	public void setSourceFolders(List<String> sourceFolders) {
 		this.sourceFolders = sourceFolders;
+	}
+
+	public List<String> getLibraries() {
+		return libraries;
+	}
+
+	public void setLibraries(List<String> libraries) {
+		this.libraries = libraries;
 	}
 	
 }

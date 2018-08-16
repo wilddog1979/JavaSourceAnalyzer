@@ -32,6 +32,9 @@ public class JavaSourceProject extends Auditable implements Serializable {
 	@OneToMany(mappedBy="javaSourceProject", cascade = CascadeType.ALL, orphanRemoval=true)
 	private List<SourceFolder> sourceFolders;
 	
+	@OneToMany(mappedBy="javaSourceProject", cascade = CascadeType.ALL, orphanRemoval=true)
+	private List<JavaSourceProject2JavaLibrary> javaLibraries;
+	
 	public Long getId() {
 		return id;
 	}
@@ -65,6 +68,17 @@ public class JavaSourceProject extends Auditable implements Serializable {
 
 	public void setSourceFolders(List<SourceFolder> sourceFolders) {
 		this.sourceFolders = sourceFolders;
+	}
+
+	public List<JavaSourceProject2JavaLibrary> getJavaLibraries() {
+		if (javaLibraries == null) {
+			javaLibraries = new ArrayList<>();
+		}
+		return javaLibraries;
+	}
+
+	public void setJavaLibraries(List<JavaSourceProject2JavaLibrary> javaLibraries) {
+		this.javaLibraries = javaLibraries;
 	}
 	
 }
