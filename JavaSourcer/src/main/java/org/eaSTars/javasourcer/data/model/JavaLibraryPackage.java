@@ -27,5 +27,29 @@ public class JavaLibraryPackage implements Serializable {
 	
 	@Column(unique=true)
 	private String packagename;
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public JavaLibrary getJavaLibrary() {
+		return javaLibrary;
+	}
+
+	public void setJavaLibrary(JavaLibrary javaLibrary) {
+		this.javaLibrary = javaLibrary;
+	}
+
+	public String getPackagename() {
+		return packagename;
+	}
+
+	public void setPackagename(String packagename) {
+		this.packagename = packagename;
+	}
 	
 }

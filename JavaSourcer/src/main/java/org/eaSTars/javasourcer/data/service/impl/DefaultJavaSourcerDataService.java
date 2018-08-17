@@ -51,16 +51,17 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 		
 		boolean result = toRemove.size() != 0;
 		
-		toRemove.stream().forEach(sf -> {
-			javaSourceProject.getSourceFolders().remove(sf);
-		});
+		toRemove.stream().forEach(javaSourceProject.getSourceFolders()::remove);
 		
-		List<SourceFolder> toAdd = sourceFolders.stream().filter(s -> javaSourceProject.getSourceFolders().stream().noneMatch(sf -> sf.getRelativedir().equals(s))).map(s -> {
-			SourceFolder sf = new SourceFolder();
-			sf.setRelativedir(s);
-			return sf;
-		}).collect(Collectors.toList());
-		
+		List<SourceFolder> toAdd = sourceFolders.stream()
+				.filter(s -> javaSourceProject.getSourceFolders().stream()
+						.noneMatch(sf -> sf.getRelativedir().equals(s)))
+				.map(s -> {
+					SourceFolder sf = new SourceFolder();
+					sf.setRelativedir(s);
+					return sf;
+				}).collect(Collectors.toList());
+
 		result |= toAdd.size() != 0;
 		
 		toAdd.forEach(sf -> {
@@ -72,9 +73,38 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 	}
 	
 	@Override
+	public boolean updateJavaLibraries(JavaSourceProject javaSourceProject, List<String> javaLibraries) {
+		List<JavaLibrary> toRemove = javaSourceProject.getJavaLibraries().stream()
+				.filter(jl -> !javaLibraries.contains(jl.getName()))
+				.collect(Collectors.toList());
+		
+		boolean result = toRemove.size() != 0;
+		
+		toRemove.stream().forEach(jl -> {
+			javaSourceProject.getJavaLibraries().remove(jl);
+			jl.getJavaSourceProjects().remove(javaSourceProject);
+		});
+		
+		List<JavaLibrary> toAdd = javaLibraries.stream()
+				.filter(l -> javaSourceProject.getJavaLibraries().stream()
+						.noneMatch(jl -> jl.getName().equals(l)))
+				.map(l -> javaLibraryRepository.findByName(l).get())
+				.collect(Collectors.toList());
+		
+		result |= toAdd.size() != 0;
+		
+		toAdd.forEach(jl -> {
+			javaSourceProject.getJavaLibraries().add(jl);
+			jl.getJavaSourceProjects().add(javaSourceProject);
+		});
+
+		return result;
+	}
+
+	@Override
 	public Stream<String> getLibraryNames() {
 		return StreamSupport.stream(javaLibraryRepository.findAll().spliterator(), false)
 				.map(JavaLibrary::getName);
 	}
-	
+
 }

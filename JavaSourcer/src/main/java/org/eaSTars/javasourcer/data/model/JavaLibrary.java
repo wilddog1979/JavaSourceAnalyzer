@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -29,8 +30,8 @@ public class JavaLibrary implements Serializable {
 	@OneToMany(mappedBy="javaLibrary", cascade = CascadeType.ALL, orphanRemoval=true)
 	private List<JavaLibraryPackage> javaLibraryPackages;
 
-	@OneToMany(mappedBy="javaLibrary", cascade = CascadeType.ALL, orphanRemoval=true)
-	private List<JavaSourceProject2JavaLibrary> javaSourceProjects;
+	@ManyToMany(mappedBy="javaLibraries")
+	private List<JavaSourceProject> javaSourceProjects;
 	
 	public Long getId() {
 		return id;
@@ -59,14 +60,14 @@ public class JavaLibrary implements Serializable {
 		this.javaLibraryPackages = javaLibraryPackages;
 	}
 
-	public List<JavaSourceProject2JavaLibrary> getJavaSourceProjects() {
+	public List<JavaSourceProject> getJavaSourceProjects() {
 		if (javaSourceProjects == null) {
 			javaSourceProjects = new ArrayList<>();
 		}
 		return javaSourceProjects;
 	}
 
-	public void setJavaSourceProjects(List<JavaSourceProject2JavaLibrary> javaSourceProjects) {
+	public void setJavaSourceProjects(List<JavaSourceProject> javaSourceProjects) {
 		this.javaSourceProjects = javaSourceProjects;
 	}
 	

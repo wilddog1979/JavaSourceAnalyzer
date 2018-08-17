@@ -16,6 +16,8 @@ public interface JavaSourcerDataService {
 	
 	public boolean updateSourceFolders(JavaSourceProject javaSourceProject, List<String> sourceFolders);
 
+	public boolean updateJavaLibraries(JavaSourceProject javaSourceProject, List<String> javaLibraries);
+	
 	public Stream<String> getLibraryNames();
 	
 }

@@ -69,7 +69,8 @@ public class DefaultProjectService implements ProjectService {
 				dirty = true;
 			}
 			
-			dirty |= dataService.updateSourceFolders(jsp, newValue.getSourceFolders());
+			dirty |= dataService.updateSourceFolders(jsp, newValue.getSourceFolders()) |
+					dataService.updateJavaLibraries(jsp, newValue.getLibraries());
 			
 			if (dirty) {
 				dataService.save(jsp);
