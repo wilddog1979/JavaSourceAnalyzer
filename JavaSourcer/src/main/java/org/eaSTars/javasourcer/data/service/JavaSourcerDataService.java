@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.eaSTars.javasourcer.data.model.JavaSourceProject;
+import org.eaSTars.javasourcer.gui.dto.LibraryDTO;
 
 public interface JavaSourcerDataService {
 
@@ -21,5 +22,7 @@ public interface JavaSourcerDataService {
 	public Stream<String> getLibraryNames();
 	
 	public Stream<String> getPackageNames(String libraryname);
+	
+	public List<LibraryDTO> getLibraries();
 	
 }

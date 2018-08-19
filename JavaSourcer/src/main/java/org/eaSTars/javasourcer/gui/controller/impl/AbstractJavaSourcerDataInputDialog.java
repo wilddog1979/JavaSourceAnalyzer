@@ -73,8 +73,6 @@ public abstract class AbstractJavaSourcerDataInputDialog<T> extends AbstractInte
 	}
 	
 	private Optional<T> getInputDataInternal(Component parent, JPanel panel) {
-		//resetValidation();
-		
 		while (JOptionPane.showConfirmDialog(null, panel, getTitle(), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
 			if (validateInputData()) {
 				return Optional.of(getInputData());

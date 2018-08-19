@@ -7,11 +7,13 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.eaSTars.javasourcer.data.model.JavaLibrary;
+import org.eaSTars.javasourcer.data.model.JavaLibraryPackage;
 import org.eaSTars.javasourcer.data.model.JavaSourceProject;
 import org.eaSTars.javasourcer.data.model.SourceFolder;
 import org.eaSTars.javasourcer.data.repository.JavaLibraryRepository;
 import org.eaSTars.javasourcer.data.repository.JavaSourceProjectRepository;
 import org.eaSTars.javasourcer.data.service.JavaSourcerDataService;
+import org.eaSTars.javasourcer.gui.dto.LibraryDTO;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -114,6 +116,20 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 				.map(jl -> jl.getJavaLibraryPackages().stream()
 						.map(l -> l.getPackagename()))
 				.orElseGet(() -> Stream.empty());
+	}
+	
+	@Override
+	public List<LibraryDTO> getLibraries() {
+		return StreamSupport.stream(javaLibraryRepository.findAll().spliterator(), false)
+				.map(jl -> {
+					LibraryDTO dto = new LibraryDTO();
+					dto.setOriginalName(jl.getName());
+					dto.setName(jl.getName());
+					dto.setPackages(jl.getJavaLibraryPackages().stream()
+							.map(JavaLibraryPackage::getPackagename)
+							.collect(Collectors.toList()));
+					return dto;
+				}).collect(Collectors.toList());
 	}
 	
 }
