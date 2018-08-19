@@ -31,6 +31,7 @@ public class JavaSourcesContextConfiguration {
 			ApplicationGuiService applicationGuiService,
 			ProjectService projectService,
 			@Qualifier("aboutdailogcontroller") JavaSourcerDialog aboutDialog,
+			@Qualifier("preferencesdailogcontroller") JavaSourcerDialog preferencesDialog,
 			@Qualifier("projectdailogcontroller") JavaSourcerDataInputDialog<ProjectDTO> projectDialog,
 			@Qualifier("messagedialog") JavaSourcerMessageDialog messageDialog) {
 		DefaultMainFrameController controller = new DefaultMainFrameController(
@@ -38,6 +39,7 @@ public class JavaSourcesContextConfiguration {
 				applicationGuiService,
 				projectService,
 				aboutDialog,
+				preferencesDialog,
 				projectDialog,
 				messageDialog);
 

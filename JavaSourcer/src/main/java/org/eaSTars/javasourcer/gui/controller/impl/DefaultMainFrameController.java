@@ -41,8 +41,6 @@ import javax.swing.ToolTipManager;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.eaSTars.javasourcer.gui.context.ApplicationResources;
 import org.eaSTars.javasourcer.gui.controller.JavaSourcerDataInputDialog;
 import org.eaSTars.javasourcer.gui.controller.JavaSourcerDialog;
@@ -59,11 +57,11 @@ import org.springframework.core.convert.ConversionFailedException;
 
 public class DefaultMainFrameController extends AbstractInternationalizableController implements ControllerSupport, MainFrameController, InitializingBean {
 
-	private static final Logger LOGGER = LogManager.getLogger(DefaultMainFrameController.class);
-
 	private ProjectService projectService;
 
 	private JavaSourcerDialog aboutDialog;
+	
+	private JavaSourcerDialog preferencesDialog;
 
 	private JavaSourcerDataInputDialog<ProjectDTO> projectDialog;
 
@@ -88,13 +86,15 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 			MessageSource messageSource,
 			ApplicationGuiService applicationGuiService,
 			ProjectService projectService,
-			JavaSourcerDialog aboutDialog,
+			@Qualifier("aboutdailogcontroller") JavaSourcerDialog aboutDialog,
+			@Qualifier("preferencesdailogcontroller") JavaSourcerDialog preferencesDialog,
 			@Qualifier("projectdailogcontroller") JavaSourcerDataInputDialog<ProjectDTO> projectDialog,
 			JavaSourcerMessageDialog messageDialog) {
 		super(messageSource, applicationGuiService.getLocale());
 		this.applicationGuiService = applicationGuiService;
 		this.projectService = projectService;
 		this.aboutDialog = aboutDialog;
+		this.preferencesDialog = preferencesDialog;
 		this.projectDialog = projectDialog;
 		this.messageDialog = messageDialog;
 	}
@@ -263,7 +263,7 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 
 	@Override
 	public void showPreferences() {
-		LOGGER.debug("showPreferences");
+		preferencesDialog.showDialog(frame);
 	}
 
 	@Override

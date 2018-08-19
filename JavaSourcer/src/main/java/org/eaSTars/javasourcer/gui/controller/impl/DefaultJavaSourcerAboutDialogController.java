@@ -3,6 +3,8 @@ package org.eaSTars.javasourcer.gui.controller.impl;
 import static org.eaSTars.javasourcer.gui.context.ApplicationResources.ResourceBundle.ABOUT_TEXT;
 import static org.eaSTars.javasourcer.gui.context.ApplicationResources.ResourceBundle.TITLE;
 
+import java.awt.Frame;
+
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -23,7 +25,7 @@ public class DefaultJavaSourcerAboutDialogController extends AbstractInternation
 	}
 
 	@Override
-	public boolean showDialog(java.awt.Component parent) {
+	public boolean showDialog(Frame parent) {
 		JLabel label = new JLabel(getResourceBundle(ABOUT_TEXT), new ImageIcon(ApplicationResources.APPICON16), JLabel.LEFT);
 		JOptionPane.showMessageDialog(parent, label, getResourceBundle(TITLE), JOptionPane.PLAIN_MESSAGE);
 		return true;

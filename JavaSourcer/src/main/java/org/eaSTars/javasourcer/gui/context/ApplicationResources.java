@@ -42,6 +42,20 @@ public class ApplicationResources {
 		
 		public static final String ABOUT_TEXT = "text";
 		
+		public static final String BUTTON_OK = "button.ok";
+		
+		public static final String BUTTON_CANCEL = "button.cancel";
+
+		public static final String TOPIC_LIBRARIES = "topic.library";
+		
+		public static final String LABEL_LIBRARIES = "label.libraries";
+		
+		public static final String LABEL_PACKAGES = "label.packages";
+		
+		public static final String BUTTON_ADD = "button.add";
+		
+		public static final String NEW_ENTRY = "new.entry";
+		
 	}
 	
 	public static class Config {

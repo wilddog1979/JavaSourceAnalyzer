@@ -20,4 +20,6 @@ public interface JavaSourcerDataService {
 	
 	public Stream<String> getLibraryNames();
 	
+	public Stream<String> getPackageNames(String libraryname);
+	
 }

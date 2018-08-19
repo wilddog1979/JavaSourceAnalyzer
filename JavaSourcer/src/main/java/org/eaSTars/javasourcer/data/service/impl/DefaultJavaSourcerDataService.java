@@ -107,4 +107,13 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 				.map(JavaLibrary::getName);
 	}
 
+	@Override
+	public Stream<String> getPackageNames(String libraryname) {
+		return javaLibraryRepository
+				.findByName(libraryname)
+				.map(jl -> jl.getJavaLibraryPackages().stream()
+						.map(l -> l.getPackagename()))
+				.orElseGet(() -> Stream.empty());
+	}
+	
 }

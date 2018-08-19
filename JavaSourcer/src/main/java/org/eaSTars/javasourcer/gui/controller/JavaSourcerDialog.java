@@ -1,9 +1,9 @@
 package org.eaSTars.javasourcer.gui.controller;
 
-import java.awt.Component;
+import java.awt.Frame;
 
 public interface JavaSourcerDialog {
 
-	public boolean showDialog(Component parent);
+	public boolean showDialog(Frame parent);
 	
 }
