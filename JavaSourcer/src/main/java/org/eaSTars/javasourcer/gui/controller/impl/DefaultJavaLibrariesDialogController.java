@@ -5,6 +5,7 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -13,6 +14,7 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
 import org.eaSTars.javasourcer.data.service.JavaSourcerDataService;
+import org.eaSTars.javasourcer.gui.context.ApplicationResources;
 import org.eaSTars.javasourcer.gui.context.ApplicationResources.ResourceBundle;
 import org.eaSTars.javasourcer.gui.dto.LibraryDTO;
 import org.eaSTars.javasourcer.gui.service.ApplicationGuiService;
@@ -27,6 +29,8 @@ public class DefaultJavaLibrariesDialogController extends AbstractDialogControll
 	private LibraryTableModel libraryModel;
 	
 	private PackageTableModel packageModel;
+	
+	private List<String> libraryRemove = new ArrayList<>();
 	
 	public DefaultJavaLibrariesDialogController(
 			MessageSource messageSource,
@@ -52,6 +56,12 @@ public class DefaultJavaLibrariesDialogController extends AbstractDialogControll
 			int index = libraryModel.getRowCount();
 			libraries.scrollRectToVisible(libraries.getCellRect(index - 1, 0, true));
 			libraries.editCellAt(index - 1, 0);
+		}, a -> {
+			int index = libraries.getSelectedRow();
+			if (index != -1) {
+				libraryRemove.add(libraryModel.getLibraries().get(index).getOriginalName());
+				libraryModel.removeLibrary(index);
+			}
 		}));
 		
 		packageModel = new PackageTableModel();
@@ -60,10 +70,17 @@ public class DefaultJavaLibrariesDialogController extends AbstractDialogControll
 		JTable packages = new JTable(packageModel);
 		
 		javaLibraryPanel.add(buildTableWithButton(packages, 200, a -> {
-			packageModel.addNewPackage(getResourceBundle(ResourceBundle.NEW_ENTRY));
+			if (libraries.getSelectedRow() != -1) {
+				packageModel.addNewPackage(getResourceBundle(ResourceBundle.NEW_ENTRY));
+				int index = packageModel.getRowCount();
+				packages.scrollRectToVisible(packages.getCellRect(index - 1, 0, true));
+				packages.editCellAt(index - 1, 0);
+			}
+		}, a -> {
 			int index = packageModel.getRowCount();
-			packages.scrollRectToVisible(packages.getCellRect(index - 1, 0, true));
-			packages.editCellAt(index - 1, 0);
+			if (index != -1) {
+				packageModel.removePackage(index);
+			}
 		}));
 		
 		libraries.getSelectionModel().addListSelectionListener(l -> {
@@ -80,16 +97,19 @@ public class DefaultJavaLibrariesDialogController extends AbstractDialogControll
 		return javaLibraryPanel;
 	}
 
-	private JPanel buildTableWithButton(JTable table, int width, ActionListener actionListener) {
+	private JPanel buildTableWithButton(JTable table, int width, ActionListener addAction, ActionListener removeAction) {
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		JScrollPane scrollPaneLibraries = new JScrollPane(table);
 		scrollPaneLibraries.setPreferredSize(new Dimension(width, 150));
 		
-		JButton buttonAddLibrary = new JButton(getResourceBundle(ResourceBundle.BUTTON_ADD));
-		buttonAddLibrary.addActionListener(actionListener);
-		
 		JPanel panelButton = new JPanel();
-		panelButton.add(buttonAddLibrary);
+		JButton buttonAdd = new JButton(ApplicationResources.PLUSSIGN);
+		buttonAdd.addActionListener(addAction);
+		panelButton.add(buttonAdd);
+		
+		JButton buttonRemove = new JButton(ApplicationResources.MINUSSIGN);
+		buttonRemove.addActionListener(removeAction);
+		panelButton.add(buttonRemove);
 		
 		return makeCompactGrid(Arrays.asList(
 				scrollPaneLibraries,
@@ -102,6 +122,17 @@ public class DefaultJavaLibrariesDialogController extends AbstractDialogControll
 		libraryModel.setLibraries(dataService.getLibraries());
 		
 		packageModel.setPackages(new ArrayList<>());
+		
+		libraryRemove.clear();
+	}
+	
+	@Override
+	public boolean saveContent() {
+		libraryRemove.forEach(dataService::deleteLibrary);
+		
+		libraryModel.getLibraries().forEach(dataService::saveLibrary);
+		
+		return false;
 	}
 	
 }

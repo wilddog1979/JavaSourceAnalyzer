@@ -8,4 +8,6 @@ public interface DialogPanelController {
 	
 	public void initializeContent();
 	
+	public boolean saveContent();
+	
 }

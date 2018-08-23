@@ -1,5 +1,6 @@
 package org.eaSTars.javasourcer.gui.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class LibraryDTO {
@@ -27,6 +28,9 @@ public class LibraryDTO {
 	}
 
 	public List<String> getPackages() {
+		if (packages == null) {
+			packages = new ArrayList<>();
+		}
 		return packages;
 	}
 

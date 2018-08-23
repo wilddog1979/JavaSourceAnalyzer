@@ -67,5 +67,10 @@ public class PackageTableModel extends AbstractTableModel {
 		packages.add(packagename);
 		fireTableRowsInserted(index, index);
 	}
+	
+	public void removePackage(int index) {
+		packages.remove(index);
+		fireTableRowsDeleted(index, index);
+	}
 
 }

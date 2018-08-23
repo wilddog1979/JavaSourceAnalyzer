@@ -24,5 +24,9 @@ public interface JavaSourcerDataService {
 	public Stream<String> getPackageNames(String libraryname);
 	
 	public List<LibraryDTO> getLibraries();
+
+	public void deleteLibrary(String libraryname);
+
+	public void saveLibrary(LibraryDTO library);
 	
 }

@@ -64,6 +64,11 @@ public class LibraryTableModel extends AbstractTableModel {
 		libraries.add(dto);
 		fireTableRowsInserted(index, index);
 	}
+	
+	public void removeLibrary(int index) {
+		libraries.remove(index);
+		fireTableRowsDeleted(index, index);
+	}
 
 	public List<String> getColumnNames() {
 		return columnNames;

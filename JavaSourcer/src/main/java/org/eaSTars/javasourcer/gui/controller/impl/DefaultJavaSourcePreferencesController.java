@@ -121,6 +121,9 @@ public class DefaultJavaSourcePreferencesController extends AbstractInternationa
 	}
 	
 	private void dialogAction(boolean result) {
+		if (result) {
+			dialogPanelControllers.values().forEach(DialogPanelController::saveContent);
+		}
 		dialog.dispose();
 		this.result = result;
 	}
