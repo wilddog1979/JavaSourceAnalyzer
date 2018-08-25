@@ -14,6 +14,5 @@ public class JavaSourcer
 		.bannerMode(Mode.OFF)
 		.sources(JavaSourcer.class)
 		.run(args);
-		
 	}
 }

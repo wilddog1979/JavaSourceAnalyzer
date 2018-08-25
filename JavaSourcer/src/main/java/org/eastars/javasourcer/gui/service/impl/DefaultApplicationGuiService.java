@@ -50,7 +50,7 @@ public class DefaultApplicationGuiService implements ApplicationGuiService {
 		Integer height = configurationService.getIntegerValue(GUI_HEIGHT);
 		
 		if (width != null && height != null) {
-			Optional.of(new Dimension(width, height));
+			return Optional.of(new Dimension(width, height));
 		}
 		
 		return Optional.empty();
