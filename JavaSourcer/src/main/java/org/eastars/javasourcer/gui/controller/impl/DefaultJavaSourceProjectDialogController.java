@@ -211,6 +211,8 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 		sourceFoldersModel.removeAllElements();
 		
 		selectedLibrariesModel.removeAllElements();
+		
+		availableLibrariesModel.removeAllElements();
 		dataService.getLibraryNames().forEach(availableLibrariesModel::addElement);
 	}
 

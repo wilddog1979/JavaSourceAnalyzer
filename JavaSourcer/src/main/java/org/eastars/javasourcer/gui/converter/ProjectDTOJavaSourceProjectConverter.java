@@ -31,6 +31,10 @@ public class ProjectDTOJavaSourceProjectConverter implements Converter<ProjectDT
 		target.setName(source.getName());
 		target.setBasedir(source.getBasedir());
 		
+		javaSourcerDataService.updateSourceFolders(target, source.getSourceFolders());
+		
+		javaSourcerDataService.updateJavaLibraries(target, source.getLibraries());
+		
 		javaSourcerDataService.save(target);
 		
 		return target;
