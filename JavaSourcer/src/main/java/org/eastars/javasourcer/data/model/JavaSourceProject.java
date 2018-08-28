@@ -31,7 +31,7 @@ public class JavaSourceProject extends Auditable implements Serializable {
 	private String basedir;
 	
 	@OneToMany(mappedBy="javaSourceProject", cascade = CascadeType.ALL, orphanRemoval=true)
-	private List<SourceFolder> sourceFolders;
+	private List<SourceModule> sourceModules;
 	
 	@ManyToMany
 	private List<JavaLibrary> javaLibraries; 
@@ -60,15 +60,15 @@ public class JavaSourceProject extends Auditable implements Serializable {
 		this.basedir = basedir;
 	}
 
-	public List<SourceFolder> getSourceFolders() {
-		if (sourceFolders == null) {
-			sourceFolders = new ArrayList<>();
+	public List<SourceModule> getSourceModules() {
+		if (sourceModules == null) {
+			sourceModules = new ArrayList<>();
 		}
-		return sourceFolders;
+		return sourceModules;
 	}
 
-	public void setSourceFolders(List<SourceFolder> sourceFolders) {
-		this.sourceFolders = sourceFolders;
+	public void setSourceModules(List<SourceModule> sourceModules) {
+		this.sourceModules = sourceModules;
 	}
 
 	public List<JavaLibrary> getJavaLibraries() {

@@ -14,7 +14,7 @@ import javax.persistence.UniqueConstraint;
 
 @Entity
 @Table(name="sourcefolder", uniqueConstraints= {
-		@UniqueConstraint(columnNames= {"javasourceproject_id", "relativedir"})
+		@UniqueConstraint(columnNames= {"sourcemodule_id", "relativedir"})
 })
 public class SourceFolder implements Serializable {
 
@@ -25,8 +25,8 @@ public class SourceFolder implements Serializable {
 	private Long id;
 	
 	@ManyToOne
-	@JoinColumn(name="javasourceproject_id", nullable = false)
-	private JavaSourceProject javaSourceProject;
+	@JoinColumn(name="sourcemodule_id", nullable = false)
+	private SourceModule sourceModule;
 	
 	@Column(nullable=false)
 	private String relativedir;
@@ -47,12 +47,12 @@ public class SourceFolder implements Serializable {
 		this.relativedir = relativedir;
 	}
 
-	public JavaSourceProject getJavaSourceProject() {
-		return javaSourceProject;
+	public SourceModule getSourceModule() {
+		return sourceModule;
 	}
 
-	public void setJavaSourceProject(JavaSourceProject javaSourceProject) {
-		this.javaSourceProject = javaSourceProject;
+	public void setSourceModule(SourceModule sourceModule) {
+		this.sourceModule = sourceModule;
 	}
 	
 }

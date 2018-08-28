@@ -27,7 +27,7 @@ public class JavaLibrary implements Serializable {
 	@Column(unique=true)
 	private String name;
 	
-	@OneToMany(mappedBy="javaLibrary", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy="javaLibrary", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<JavaLibraryPackage> javaLibraryPackages;
 
 	@ManyToMany(mappedBy="javaLibraries")

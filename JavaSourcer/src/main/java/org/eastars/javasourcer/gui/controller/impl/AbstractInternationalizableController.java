@@ -28,6 +28,10 @@ public class AbstractInternationalizableController {
 		this.locale = locale;
 	}
 	
+	protected String getGlobalResourceBundle(String key) {
+		return messageSource.getMessage(key, null, locale);
+	}
+	
 	protected String getResourceBundle(String key) {
 		return messageSource.getMessage(String.format("%s.%s", this.getClass().getSimpleName().toLowerCase(), key), null, locale);
 	}

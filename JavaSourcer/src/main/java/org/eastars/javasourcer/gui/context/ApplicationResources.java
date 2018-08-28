@@ -14,6 +14,10 @@ public class ApplicationResources {
 		private ResourceBundle() {
 		}
 		
+		public static final String GLOBAL_BUTTON_OK = "button.ok";
+		
+		public static final String GLOBAL_BUTTON_CANCEL = "button.cancel";
+		
 		public static final String MAIN_MENU_SWITCH = "menu.switch";
 		
 		public static final String MAIN_MENU_ADD = "menu.add";
@@ -47,10 +51,6 @@ public class ApplicationResources {
 		public static final String PROJECTDIALOG_LIBRARIES = "dialog.directory.libraries";
 		
 		public static final String ABOUT_TEXT = "text";
-		
-		public static final String BUTTON_OK = "button.ok";
-		
-		public static final String BUTTON_CANCEL = "button.cancel";
 
 		public static final String TOPIC_LIBRARIES = "topic.library";
 		
@@ -58,7 +58,9 @@ public class ApplicationResources {
 		
 		public static final String LABEL_PACKAGES = "label.packages";
 		
-		public static final String BUTTON_ADD = "button.add";
+		public static final String LABEL_MODULES = "label.modules";
+		
+		public static final String LABEL_SOURCEFOLDERS = "label.sourcefolders";
 		
 		public static final String NEW_ENTRY = "new.entry";
 		

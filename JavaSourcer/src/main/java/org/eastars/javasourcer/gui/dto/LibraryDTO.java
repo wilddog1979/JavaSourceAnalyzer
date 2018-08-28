@@ -26,8 +26,9 @@ public class LibraryDTO implements Serializable {
 		return name;
 	}
 
-	public void setName(String name) {
+	public LibraryDTO setName(String name) {
 		this.name = name;
+		return this;
 	}
 
 	public List<String> getPackages() {

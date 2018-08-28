@@ -4,9 +4,10 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -15,13 +16,14 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
-import javax.swing.ListSelectionModel;
 
 import org.eastars.javasourcer.data.service.JavaSourcerDataService;
 import org.eastars.javasourcer.gui.context.ApplicationResources;
 import org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle;
+import org.eastars.javasourcer.gui.dto.ModuleDTO;
 import org.eastars.javasourcer.gui.dto.ProjectDTO;
 import org.eastars.javasourcer.gui.service.ApplicationGuiService;
 import org.springframework.context.MessageSource;
@@ -29,32 +31,36 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 @Component("projectdailogcontroller")
-public class DefaultJavaSourceProjectDialogController extends AbstractJavaSourcerDataInputDialog<ProjectDTO> {
+public class DefaultJavaSourceProjectDialogController extends AbstractDataInputDialogController<ProjectDTO> {
 
-	private JButton buttonEdit = new JButton(ApplicationResources.THREEDOTS);
-	
-	private JButton buttonAdd = new JButton(ApplicationResources.PLUSSIGN);
-	
-	private JButton buttonDelete = new JButton(ApplicationResources.MINUSSIGN);
-	
 	private JButton buttonRemoveLibrary = new JButton(ApplicationResources.ARROWRIGHT);
 	
 	private JButton buttonAddLibrary = new JButton(ApplicationResources.ARROWLEFT);
 	
 	private JTextField textFieldName = new JTextField(20);
 	
-	private JPanel panelDirSelection;
+	private JPanel panelDirSelection = new JPanel(new FlowLayout(FlowLayout.LEFT));
 	
 	private JLabel dirDisplay = new JLabel();
-	
+
 	private File projectdir;
-	
-	private DefaultListModel<String> sourceFoldersModel = new DefaultListModel<>();
-	
+
+	private JavaSourcerTableModel<ModuleDTO> moduleModel = new JavaSourcerTableModel<>(
+			true,
+			(e, c) -> e.getName(),
+			(e, c, v) -> e.setName(v.toString()));
+
+	private JavaSourcerTableModel<String> sourceFolderModel = new JavaSourcerTableModel<>(
+			false,
+			(e, c) -> e,
+			(e, c, v) -> v.toString());
+
+	private List<String> modulesRemove = new ArrayList<>();
+
 	private DefaultListModel<String> selectedLibrariesModel = new DefaultListModel<>();
-	
+
 	private DefaultListModel<String> availableLibrariesModel = new DefaultListModel<>();
-	
+
 	private JavaSourcerDataService dataService;
 	
 	public DefaultJavaSourceProjectDialogController(
@@ -77,11 +83,10 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 						createSourcesPanel(),
 						new JLabel(getResourceBundle(ResourceBundle.PROJECTDIALOG_LIBRARIES)),
 						createLibrariesPanel()),
-				4, 2, 0, 0, 0, 0);
+				4, 2, 4, 4, 4, 4);
 	}
 	
 	private JPanel createDirSelectionPanel() {
-		panelDirSelection = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		JButton buttonDir = new JButton(getResourceBundle(ResourceBundle.PROJECTDIALOG_SELECT));
 		buttonDir.addActionListener(a -> {
 			JFileChooser chooser = new JFileChooser(".");
@@ -104,53 +109,54 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 	private JPanel createSourcesPanel() {
 		JPanel sources = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		
-		JList<String> sourcelist = new JList<>(sourceFoldersModel);
+		moduleModel.setColumnNames(Arrays.asList(
+				getResourceBundle(ResourceBundle.LABEL_MODULES)));
+		JTable modules = new JTable(moduleModel);
 		
-		sourcelist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		sourcelist.setVisibleRowCount(3);
-		
-		JScrollPane scrollpane = new JScrollPane(sourcelist);
-		scrollpane.setPreferredSize(new Dimension(400, 50));
-		sources.add(scrollpane);
-		
-		JToolBar panelButtons = new JToolBar(JToolBar.VERTICAL);
-		panelButtons.setFloatable(false);
-		
-		buttonEdit.addActionListener(a -> {
-			int index = sourcelist.getSelectedIndex();
+		sources.add(buildTableWithButtons(modules, 100, 150, a -> {
+			ModuleDTO dto = new ModuleDTO();
+			dto.setName(getResourceBundle(ResourceBundle.NEW_ENTRY));
+			moduleModel.addNewEntry(dto);
+			int index = moduleModel.getRowCount();
+			modules.scrollRectToVisible(modules.getCellRect(index - 1, 0, true));
+			modules.editCellAt(index - 1, 0);
+		}, a -> {
+			int index = modules.getSelectedRow();
 			if (index != -1) {
-				JFileChooser editFolder = new JFileChooser(projectdir != null ?
-						new File(projectdir, sourceFoldersModel.getElementAt(index)).getParentFile() :
-							new File("."));
-				editFolder.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				if (editFolder.showOpenDialog(sources) == JFileChooser.APPROVE_OPTION) {
-					sourceFoldersModel.removeElementAt(index);
-					sourceFoldersModel.insertElementAt(Paths.get(projectdir.toURI())
-							.relativize(Paths.get(editFolder.getSelectedFile().toURI())).toString(), index);
-				}
+				modulesRemove.add(moduleModel.getEntries().get(index).getOriginalName());
+				moduleModel.removeEntry(index);
 			}
-		});
-		panelButtons.add(buttonEdit);
+		}));
 		
-		buttonAdd.addActionListener(a -> {
-			JFileChooser addFolder = new JFileChooser(projectdir != null ? projectdir : new File("."));
-			addFolder.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			if (addFolder.showOpenDialog(sources) == JFileChooser.APPROVE_OPTION) {
-				sourceFoldersModel.addElement(Paths.get(projectdir.toURI())
-						.relativize(Paths.get(addFolder.getSelectedFile().toURI())).toString());
-			}
-		});
-		panelButtons.add(buttonAdd);
+		sourceFolderModel.setColumnNames(Arrays.asList(
+				getResourceBundle(ResourceBundle.LABEL_SOURCEFOLDERS)));
+		JTable sourceFolders = new JTable(sourceFolderModel);
 		
-		buttonDelete.addActionListener(a -> {
-			int index = sourcelist.getSelectedIndex();
+		sources.add(buildTableWithButtons(sourceFolders, 250, 150, a -> {
+			// this must be implemented properly with folder selection
+			sourceFolderModel.addNewEntry(getResourceBundle(ResourceBundle.NEW_ENTRY));
+			int index = sourceFolderModel.getRowCount();
+			sourceFolders.scrollRectToVisible(sourceFolders.getCellRect(index - 1, 0, true));
+			sourceFolders.editCellAt(index - 1, 0);
+		}, a -> {
+			int index = sourceFolders.getSelectedRow();
 			if (index != -1) {
-				sourceFoldersModel.removeElementAt(index);
+				sourceFolderModel.removeEntry(index);
+			}
+		}, a -> {
+			int index = sourceFolders.getSelectedRow();
+			if (index != -1) {
+				// this must be implemented properly with folder selection
+			}
+		}));
+		
+		modules.getSelectionModel().addListSelectionListener(l -> {
+			sourceFolderModel.setEntries(new ArrayList<>());
+			int index = modules.getSelectedRow();
+			if (index != -1) {
+				sourceFolderModel.setEntries(moduleModel.getEntries().get(index).getSourceFolders());
 			}
 		});
-		panelButtons.add(buttonDelete);
-		
-		sources.add(panelButtons);
 		
 		return sources;
 	}
@@ -208,7 +214,10 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 		projectdir = null;
 		indicateError(panelDirSelection, false);
 		
-		sourceFoldersModel.removeAllElements();
+		moduleModel.setEntries(new ArrayList<>());
+		modulesRemove.clear();
+		
+		sourceFolderModel.setEntries(new ArrayList<>());
 		
 		selectedLibrariesModel.removeAllElements();
 		
@@ -230,8 +239,10 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 		}
 		indicateError(panelDirSelection, false);
 		
-		sourceFoldersModel.removeAllElements();
-		parameter.getSourceFolders().forEach(sourceFoldersModel::addElement);
+		moduleModel.setEntries(parameter.getModules());
+		modulesRemove.clear();
+		
+		sourceFolderModel.setEntries(new ArrayList<>());
 		
 		selectedLibrariesModel.removeAllElements();
 		parameter.getLibraries().forEach(selectedLibrariesModel::addElement);
@@ -254,7 +265,7 @@ public class DefaultJavaSourceProjectDialogController extends AbstractJavaSource
 			// this may not be an issue
 		}
 		
-		dto.setSourceFolders(Collections.list(sourceFoldersModel.elements()));
+		dto.setModules(moduleModel.getEntries());
 		
 		dto.setLibraries(Collections.list(selectedLibrariesModel.elements()));
 		return dto;

@@ -9,7 +9,7 @@ public class ProjectDTO {
 	
 	private String basedir;
 	
-	private List<String> sourceFolders = new ArrayList<>();
+	private List<ModuleDTO> modules = new ArrayList<>();
 	
 	private List<String> libraries = new ArrayList<>();
 
@@ -29,20 +29,20 @@ public class ProjectDTO {
 		this.basedir = basedir;
 	}
 
-	public List<String> getSourceFolders() {
-		return sourceFolders;
-	}
-
-	public void setSourceFolders(List<String> sourceFolders) {
-		this.sourceFolders = sourceFolders;
-	}
-
 	public List<String> getLibraries() {
 		return libraries;
 	}
 
 	public void setLibraries(List<String> libraries) {
 		this.libraries = libraries;
+	}
+
+	public List<ModuleDTO> getModules() {
+		return modules;
+	}
+
+	public void setModules(List<ModuleDTO> modules) {
+		this.modules = modules;
 	}
 	
 }

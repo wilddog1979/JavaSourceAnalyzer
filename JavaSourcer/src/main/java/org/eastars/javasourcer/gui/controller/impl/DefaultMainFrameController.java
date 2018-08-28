@@ -14,19 +14,14 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.function.Consumer;
 
-import javax.swing.AbstractAction;
-import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
-import javax.swing.InputMap;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -36,7 +31,6 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
-import javax.swing.KeyStroke;
 import javax.swing.ToolTipManager;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
@@ -148,7 +142,7 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 		menuSwitch = createMenu(getResourceBundle(MAIN_MENU_SWITCH),
 				new JMenuItemSeparator(),
 				createMenuItem(getResourceBundle(MAIN_MENU_ADD), a -> 
-				actionProjectDialog(null, c -> {
+				actionProjectDialog(Optional.empty(), c -> {
 					JRadioButtonMenuItem menuitem = projectService.createProject(c);
 					addProjectMenuEntry(menuitem);
 					menuitem.setSelected(true);
@@ -159,16 +153,16 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 				createMenuItem(getResourceBundle(MAIN_MENU_PROPERTIES), a -> {
 					ButtonModel selection = projectGroup.getSelection();
 					if (selection != null) {
-						projectService.getProject(selection.getActionCommand())
-						.ifPresent(dto -> actionProjectDialog(dto, updateDTO -> {
-							projectService.updateProject(dto.getName(), updateDTO);
+						String name = selection.getActionCommand();
+						actionProjectDialog(projectService.getProject(name), updateDTO -> {
+							projectService.updateProject(name, updateDTO);
 							Collections.list(projectGroup.getElements()).stream()
-							.filter(b -> dto.getName().equals(b.getActionCommand()))
+							.filter(b -> name.equals(b.getActionCommand()))
 							.findFirst().ifPresent(b -> {
 								b.setActionCommand(updateDTO.getName());
 								b.setText(updateDTO.getName());
 							});
-						}));
+						});
 					}
 				}));
 
@@ -187,7 +181,7 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 		frame.setJMenuBar(menubar);
 	}
 
-	private void actionProjectDialog(ProjectDTO dto, Consumer<ProjectDTO> consumeNewDTO) {
+	private void actionProjectDialog(Optional<ProjectDTO> dto, Consumer<ProjectDTO> consumeNewDTO) {
 		boolean error = false;
 		while(true) {
 			try {
@@ -206,22 +200,6 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 
 	private void buildGui() {
 		JPanel cnt = (JPanel) frame.getContentPane();
-
-		InputMap inputmap = cnt.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-		ActionMap actionmap = cnt.getActionMap();
-
-		String backspace = "backspace";
-		inputmap.put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), backspace);
-		actionmap.put(backspace, new AbstractAction() {
-
-			private static final long serialVersionUID = 2010837049172121748L;
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// this method implementation is not completed yet
-			}
-
-		});
 
 		leftPanel.setViewportView(buildTreeView());
 		Dimension minsize = leftPanel.getMinimumSize();
