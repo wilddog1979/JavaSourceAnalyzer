@@ -26,7 +26,7 @@ public interface ControllerSupport {
 		menuitem.setAccelerator(
 				KeyStroke.getKeyStroke(
 						shortcut,
-						Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()
+						Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()
 						)
 				);
 		

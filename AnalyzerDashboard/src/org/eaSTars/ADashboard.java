@@ -1,5 +1,7 @@
 package org.eaSTars;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 
 import org.eaSTars.adashboard.controller.ADashboardController;
@@ -33,8 +35,11 @@ public class ADashboard {
 	
 	private <T> Optional<T> instantiate(String name, Class<T> type) {
 		try {
-			return Optional.ofNullable(type.cast(Class.forName(name).newInstance()));
-		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+			Class<?>[] constructorParameterTypes = {};
+			Constructor<?> constructor = Class.forName(name).getConstructor(constructorParameterTypes);
+			Object[] constructorParameters = {};
+			return Optional.ofNullable(type.cast(constructor.newInstance(constructorParameters)));
+		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 			return Optional.empty();
 		}
 	}

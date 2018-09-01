@@ -1,5 +1,7 @@
 package org.eastars.javasourcer.gui.context;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -68,8 +70,11 @@ public class JavaSourcesContextConfiguration {
 	
 	private <T> Optional<T> instantiate(String name, Class<T> type) {
 		try {
-			return Optional.ofNullable(type.cast(Class.forName(name).newInstance()));
-		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+			Class<?>[] constructorParameterTypes = {};
+			Constructor<?> constructor = Class.forName(name).getConstructor(constructorParameterTypes);
+			Object[] constructorParameters = {};
+			return Optional.ofNullable(type.cast(constructor.newInstance(constructorParameters)));
+		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 			return Optional.empty();
 		}
 	}

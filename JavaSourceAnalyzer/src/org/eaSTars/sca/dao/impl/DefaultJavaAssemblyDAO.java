@@ -1,5 +1,6 @@
 package org.eaSTars.sca.dao.impl;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,13 +21,13 @@ import org.eaSTars.sca.model.JavaTypeModel;
 
 public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements JavaAssemblyDAO {
 	
-	private final static int JAVAASSEMBLY_CACHE_SIZE = 500;
+	private static final int JAVAASSEMBLY_CACHE_SIZE = 500;
 	
-	private final static int IMPLEMENTS = 0;
+	private static final int IMPLEMENTS = 0;
 	
-	private final static int EXTENDS = 1;
+	private static final int EXTENDS = 1;
 	
-	private Map<String, JavaObjectTypeModel> objectTypeCache = new HashMap<String, JavaObjectTypeModel>();
+	private Map<String, JavaObjectTypeModel> objectTypeCache = new HashMap<>();
 	
 	private EntityCache<String, JavaAssemblyModel> javaAssemblyEntityCache = new EntityCache<>(JavaAssemblyModel.class.getSimpleName(), JAVAASSEMBLY_CACHE_SIZE);
 	
@@ -155,7 +156,7 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 			if (rs.next()) {
 				return extractEntry(JavaTypeModel.class, rs);
 			}
-		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 			throw new DatabaseConnectionException(e);
 		}
 		return null;
@@ -163,13 +164,13 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 	
 	@Override
 	public List<JavaTypeModel> getJavaAssemblyImplements(JavaAssemblyModel javaAssembly) {
-		List<JavaTypeModel> result = new ArrayList<JavaTypeModel>();
+		List<JavaTypeModel> result = new ArrayList<>();
 		try {
 			ResultSet rs = getJavaAssemblyExtendsImplements(javaAssembly, IMPLEMENTS);
 			while (rs.next()) {
 				result.add(extractEntry(JavaTypeModel.class, rs));
 			}
-		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 			throw new DatabaseConnectionException(e);
 		}
 		return result;
@@ -177,13 +178,13 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 	
 	@Override
 	public List<JavaAssemblyModel> getJavaAssemblyImplemented(JavaAssemblyModel javaAssembly) {
-		List<JavaAssemblyModel> result = new ArrayList<JavaAssemblyModel>();
+		List<JavaAssemblyModel> result = new ArrayList<>();
 		try {
 			ResultSet rs = getJavaAssemblyExtendingImplementing(javaAssembly, IMPLEMENTS);
 			while (rs.next()) {
 				result.add(extractEntry(JavaAssemblyModel.class, rs));
 			}
-		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 			throw new DatabaseConnectionException(e);
 		}
 		return result;
@@ -199,13 +200,13 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 	
 	@Override
 	public List<JavaAssemblyModel> getJavaAssemblyImplemented(JavaTypeModel javaType) {
-		List<JavaAssemblyModel> result = new ArrayList<JavaAssemblyModel>();
+		List<JavaAssemblyModel> result = new ArrayList<>();
 		try {
 			ResultSet rs = getJavaAssemblyExtendedImplemented(javaType, IMPLEMENTS);
 			while (rs.next()) {
 				result.add(extractEntry(JavaAssemblyModel.class, rs));
 			}
-		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 			throw new DatabaseConnectionException(e);
 		}
 		return result;
@@ -226,13 +227,13 @@ public class DefaultJavaAssemblyDAO extends DefaultAbstractDBLayerDAO implements
 						"SELECT jt.* FROM JavaType AS jt JOIN JavaTypeArgument AS jta ON jt.PK = jta.JavaTypeID WHERE jta.ParentJavaTypeID = ? ORDER BY jta.OrderNumber;");
 				pstatement.setInt(1, javaType.getPK());
 
-				List<JavaTypeModel> result = new ArrayList<JavaTypeModel>();
+				List<JavaTypeModel> result = new ArrayList<>();
 				ResultSet rs = pstatement.executeQuery();
 				while (rs.next()) {
 					result.add(extractEntry(JavaTypeModel.class, rs));
 				}
 				return result;
-			} catch (SQLException | InstantiationException | IllegalAccessException e) {
+			} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 				throw new DatabaseConnectionException(e);
 			}
 		});

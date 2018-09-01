@@ -1,10 +1,11 @@
 package org.eastars.javasourcer.gui.context;
 
 
+import java.awt.Desktop;
+import java.awt.Taskbar;
+
 import org.eastars.javasourcer.gui.controller.MainFrameController;
 import org.springframework.context.ConfigurableApplicationContext;
-
-import com.apple.eawt.Application;
 
 public class MacApplicationFunctions implements ApplicationFunctions {
 	
@@ -16,12 +17,13 @@ public class MacApplicationFunctions implements ApplicationFunctions {
 				"com.apple.mrj.application.apple.menu.about.name",
 				ApplicationResources.APP_NAME);
 		
-		Application macApplication = Application.getApplication();
-		macApplication.setDockIconImage(ApplicationResources.APPICON.getImage());
-		macApplication.setAboutHandler(paramAboutEvent -> controller.showAbout());
-		macApplication.setPreferencesHandler(paramPreferencesEvent -> controller.showPreferences());
+		Taskbar taskbar = Taskbar.getTaskbar();
+		taskbar.setIconImage(ApplicationResources.APPICON.getImage());
 		
-		macApplication.setQuitHandler((quitevent, quitresponse) -> {
+		Desktop desktop = Desktop.getDesktop();
+		desktop.setAboutHandler(paramAboutEvent -> controller.showAbout());
+		desktop.setPreferencesHandler(paramPreferencesEvent -> controller.showPreferences());
+		desktop.setQuitHandler((quitevent, quitresponse) -> {
 			controller.dispatchClosingEvent();
 			context.close();
 			quitresponse.performQuit();

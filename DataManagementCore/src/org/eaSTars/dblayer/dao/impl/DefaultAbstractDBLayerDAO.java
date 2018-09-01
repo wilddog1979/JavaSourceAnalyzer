@@ -1,5 +1,6 @@
 package org.eaSTars.dblayer.dao.impl;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -11,6 +12,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -135,21 +138,22 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 				.findFirst();
 	}
 	
-	private Map<Class<?>, PreparedStatement> insertCache = new HashMap<Class<?>, PreparedStatement>();
+	private Map<Class<?>, PreparedStatement> insertCache = new HashMap<>();
 	
-	private Map<Class<?>, PreparedStatement> updateCache = new HashMap<Class<?>, PreparedStatement>();
+	private Map<Class<?>, PreparedStatement> updateCache = new HashMap<>();
 	
 	@Override
 	public <T extends GenericModel> void saveModel(T model) {
 		Deployment deployment = getDeploymentTag(model.getClass());
 		if (deployment != null) {
-			ParameterEntry pk[] = {null};
+			ParameterEntry[] pk = {null};
 			List<ParameterEntry> entries = getFields(model.getClass()).stream()
 					.map(field -> Optional.ofNullable(field.getAnnotation(Attribute.class))
 							.map(attribute -> Optional.ofNullable(findMethod(model.getClass(), "get", field.getName())
 									.map(method -> {
 										try {
-											ParameterEntry pe = new ParameterEntry(field, attribute.column(), method.getReturnType(), method.invoke(model, new Object[]{}));
+											Object[] parameters = {};
+											ParameterEntry pe = new ParameterEntry(field, attribute.column(), method.getReturnType(), method.invoke(model, parameters));
 											if (attribute.primarykey()) {
 												pk[0] = pe;
 												return null;
@@ -163,16 +167,15 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 									.orElse(null))
 									.orElse(null))
 							.orElse(null))
-					.filter(pe -> pe != null)
+					.filter(Objects::nonNull)
 					.collect(Collectors.toList());
 
 			try {
 				PreparedStatement pstatement = null;
 				if (model.getPK() == null) {
-					//INSERT INTO <table> (<columnname>) VALUES (?);
 					pstatement = insertCache.get(model.getClass());
 					if (pstatement == null) {
-						List<ParameterEntry> tempentries = new ArrayList<ParameterEntry>();
+						List<ParameterEntry> tempentries = new ArrayList<>();
 
 						String query = String.format("INSERT INTO %s (%s) VALUES (%s);", deployment.table(),
 								entries.stream()
@@ -194,10 +197,9 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 						insertCache.put(model.getClass(), pstatement);
 					}
 				} else {
-					//UPDATE <table> SET <columnname> = ? WHERE PK = ?;
 					pstatement = updateCache.get(model.getClass());
 					if (pstatement == null) {
-						List<ParameterEntry> tempentries = new ArrayList<ParameterEntry>();
+						List<ParameterEntry> tempentries = new ArrayList<>();
 
 						String query = String.format("UPDATE %s SET %s WHERE PK = ?;", deployment.table(),
 								entries.stream()
@@ -245,10 +247,24 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 		}
 		
 		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + getOuterType().hashCode();
+			result = prime * result + (isnull ? 1231 : 1237);
+			result = prime * result + ((name == null) ? 0 : name.hashCode());
+			return result;
+		}
+
+		@Override
 		public boolean equals(Object obj) {
 			return obj instanceof QueryCharacteristic &&
 					((QueryCharacteristic)obj).name.equals(name) &&
 					((QueryCharacteristic)obj).isnull == isnull;
+		}
+
+		private DefaultAbstractDBLayerDAO getOuterType() {
+			return DefaultAbstractDBLayerDAO.this;
 		}
 	}
 	
@@ -267,9 +283,9 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 			if (modellevel != null) {
 				pstatement = modellevel.entrySet().stream()
 				.filter(e -> e.getKey().equals(currentcharacteristic)).findFirst()
-				.map(e -> e.getValue()).orElseGet(() -> null);
+				.map(Entry<List<QueryCharacteristic>, PreparedStatement>::getValue).orElseGet(() -> null);
 			} else {
-				modellevel = new HashMap<List<QueryCharacteristic>, PreparedStatement>();
+				modellevel = new HashMap<>();
 				querycache.put(modelclass, modellevel);
 			}
 
@@ -279,7 +295,7 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 									.map(attribute -> new ParameterEntry(field, attribute.column(), field.getType(), parameter.getValue()))
 									.orElse(null))
 							.orElse(null))
-					.filter(pe -> pe != null)
+					.filter(Objects::nonNull)
 					.collect(Collectors.toList());
 
 			try {
@@ -288,7 +304,7 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 					String projection = getFields(modelclass).stream()
 							.filter(field -> findMethod(modelclass, "set", field.getName()).isPresent())
 							.map(field -> Optional.ofNullable(field.getAnnotation(Attribute.class)))
-							.filter(attribute -> attribute.isPresent())
+							.filter(Optional<Attribute>::isPresent)
 							.map(attribute -> attribute.get().column())
 							.collect(Collectors.joining(", "));
 
@@ -321,24 +337,23 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 		}
 	}
 	
-	protected <T extends GenericModel> T extractEntry(Class<T> modelclass, ResultSet rs) throws InstantiationException, IllegalAccessException {
-		final GenericModel model = modelclass.newInstance();
-
+	protected <T extends GenericModel> T extractEntry(Class<T> modelclass, ResultSet rs) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+		Class<?>[] constructorParameterTypes = {};
+		Constructor<?> constructor = modelclass.getConstructor(constructorParameterTypes);
+		Object[] constructorParameters = {};
+		final GenericModel model = modelclass.cast(constructor.newInstance(constructorParameters));
+		
 		getFields(modelclass).stream()
-		.forEach(field -> {
-			Optional.ofNullable(field.getAnnotation(Attribute.class))
-			.ifPresent(attribute -> {
-				findMethod(modelclass, "set", field.getName())
-				.ifPresent(method -> {
-					try {
-						method.invoke(model, new Object[]{rs.getObject(attribute.column())});
-					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
-							| SQLException e) {
-						
-					}
-				});
-			});
-		});
+		.forEach(field -> Optional.ofNullable(field.getAnnotation(Attribute.class))
+		.ifPresent(attribute -> findMethod(modelclass, "set", field.getName())
+		.ifPresent(method -> {
+			try {
+				method.invoke(model, rs.getObject(attribute.column()));
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+					| SQLException e) {
+				
+			}
+		})));
 		
 		return modelclass.cast(model);
 	}
@@ -350,7 +365,7 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 				return extractEntry(modelclass, rs);
 			}
 			return null;
-		}catch (SQLException | InstantiationException | IllegalAccessException e) {
+		}catch (SQLException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 			throw new DatabaseConnectionException(e);
 		}
 	}
@@ -358,12 +373,12 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 	public <T extends GenericModel> List<T> queryModelList(Class<T> modelclass, FilterEntry... parameters) {
 		ResultSet rs = queryModelCommon(modelclass, parameters);
 		try {
-			List<T> result = new ArrayList<T>();
+			List<T> result = new ArrayList<>();
 			while (rs.next()) {
 				result.add(extractEntry(modelclass, rs));
 			}
 			return result;
-		}catch (SQLException | InstantiationException | IllegalAccessException e) {
+		}catch (SQLException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 			throw new DatabaseConnectionException(e);
 		}
 	}
@@ -380,36 +395,37 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 		return Optional.ofNullable(queryModel(model, filterEntries))
 				.orElseGet(() -> {
 					try {
-						T result = model.newInstance();
+						Class<?>[] constructorParameterTypes = {};
+						Constructor<?> constructor = model.getConstructor(constructorParameterTypes);
+						Object[] constructorParameters = {};
+						T result = model.cast(constructor.newInstance(constructorParameters));
 
 						Arrays.asList(filterEntries)
-						.forEach(filterEntry -> {
-							findMethod(model, "set", filterEntry.getPropertyName())
-							.ifPresent(method -> {
-								try {
-									method.invoke(result, new Object[]{filterEntry.getValue()});
-								} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-									throw new DatabaseConnectionException(e);
-								}
-							});
-						});
+						.forEach(filterEntry -> findMethod(model, "set", filterEntry.getPropertyName())
+						.ifPresent(method -> {
+							try {
+								method.invoke(result, filterEntry.getValue());
+							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+								throw new DatabaseConnectionException(e);
+							}
+						}));
 
 						saveModel(result);
 
 						return result;
-					} catch (InstantiationException | IllegalAccessException e) {
+					} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 						throw new DatabaseConnectionException(e);
 					}
 				});
 	}
 	
 	public <T extends GenericModel> List<T> queryModel(Class<T> modelclass1, Class<? extends GenericModel> modelclass2, FilterEntry[][] filterconditions) {
-		List<T> result = new ArrayList<T>();
+		List<T> result = new ArrayList<>();
 		Deployment deployment1 = getDeploymentTag(modelclass1);
 		Deployment deployment2 = getDeploymentTag(modelclass2);
 		
 		if (deployment1 != null && deployment2 != null) {
-			List<ParameterEntry> entries1 = new ArrayList<ParameterEntry>();
+			List<ParameterEntry> entries1 = new ArrayList<>();
 			for (Field field : getFields(modelclass1)) {
 				Attribute attribute = field.getAnnotation(Attribute.class);
 				if (attribute != null) {
@@ -419,7 +435,7 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 				}
 			}
 			
-			List<ParameterEntry> entries2 = new ArrayList<ParameterEntry>();
+			List<ParameterEntry> entries2 = new ArrayList<>();
 			for (Field field : getFields(modelclass2)) {
 				Attribute attribute = field.getAnnotation(Attribute.class);
 				if (attribute != null) {
@@ -431,12 +447,12 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 				}
 			}
 			
-			List<ParameterEntry> filters = new ArrayList<ParameterEntry>();
+			List<ParameterEntry> filters = new ArrayList<>();
 			
 			String projection = getFields(modelclass1).stream()
 					.filter(field -> findMethod(modelclass1, "set", field.getName()).isPresent())
 					.map(field -> Optional.ofNullable(field.getAnnotation(Attribute.class)))
-					.filter(attribute -> attribute.isPresent())
+					.filter(Optional<Attribute>::isPresent)
 					.map(attribute -> "table1."+attribute.get().column())
 					.collect(Collectors.joining(", "));
 			
@@ -459,11 +475,10 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 							entries1.stream()
 							.filter(entry ->
 							Arrays.asList(filterconditions[0]).stream()
-							.filter(parameter ->
+							.anyMatch(parameter ->
 							parameter.getPropertyName().equals(entry.property.getName())
 							&&
-							findMethod(modelclass1, "get", entry.property.getName()).isPresent())
-							.findFirst().isPresent())
+							findMethod(modelclass1, "get", entry.property.getName()).isPresent()))
 							.map(entry -> {
 								ParameterEntry pentry = new ParameterEntry(
 										entry.property, 
@@ -484,11 +499,10 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 							entries2.stream()
 							.filter(entry ->
 							Arrays.asList(filterconditions[1]).stream()
-							.filter(parameter ->
+							.anyMatch(parameter ->
 							parameter.getPropertyName().equals(entry.property.getName())
 							&&
-							findMethod(modelclass2, "get", entry.property.getName()).isPresent())
-							.findFirst().isPresent())
+							findMethod(modelclass2, "get", entry.property.getName()).isPresent()))
 							.map(entry -> {
 								ParameterEntry pentry = new ParameterEntry(
 										entry.property, 
@@ -518,7 +532,7 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 				while (rs.next()) {
 					result.add(extractEntry(modelclass1, rs));
 				}
-			} catch (SQLException | InstantiationException | IllegalAccessException e) {
+			} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 				throw new DatabaseConnectionException(e);
 			}
 		}
@@ -526,7 +540,7 @@ public abstract class DefaultAbstractDBLayerDAO implements AbstractDBLayerDAO {
 		return result;
 	}
 	
-	private Map<String, PreparedStatement> customStatementCache = new HashMap<String, PreparedStatement>();
+	private Map<String, PreparedStatement> customStatementCache = new HashMap<>();
 
 	protected PreparedStatement customStatementCacheManager(String key, String query) {
 		return Optional.ofNullable(customStatementCache.get(key))

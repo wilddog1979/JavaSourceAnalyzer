@@ -1,5 +1,6 @@
 package org.eaSTars.sca.dao.impl;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,9 +25,9 @@ import org.eaSTars.sca.model.JavaTypeParameterModel;
 
 public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements JavaTypeDAO {
 	
-	private final static int JAVATYPE_CACHE_SIZE = 500;
+	private static final int JAVATYPE_CACHE_SIZE = 500;
 	
-	private EntityCache<String, JavaTypeModel> javaTypeModelCache = new EntityCache<String, JavaTypeModel>(JavaTypeModel.class.getSimpleName(), JAVATYPE_CACHE_SIZE);
+	private EntityCache<String, JavaTypeModel> javaTypeModelCache = new EntityCache<>(JavaTypeModel.class.getSimpleName(), JAVATYPE_CACHE_SIZE);
 	
 	@Override
 	public JavaTypeModel getJavaType(Integer id) {
@@ -51,7 +52,7 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 	@Override
 	public JavaTypeModel createJavaType(JavaAssemblyModel javaAssembly, List<JavaTypeModel> arguments) {
 		return javaTypeModelCache.getItemFromCache(
-				String.format("ja: %d, args: %s\n", javaAssembly.getPK(),
+				String.format("ja: %d, args: %s%n", javaAssembly.getPK(),
 						arguments.stream().map(a -> a.getPK().toString()).collect(Collectors.joining(",", "[" , "]"))), 
 				() -> getJavaType(javaAssembly, arguments)
 				.orElseGet(() -> {
@@ -173,7 +174,7 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 				return extractEntry(JavaTypeParameterModel.class, rs);
 			}
 			return null;
-		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 			throw new DatabaseConnectionException(e);
 		}
 	}
@@ -181,7 +182,7 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 	@Override
 	public List<TypeParameterEntry> getJavaAssemblyTypeParameters(JavaAssemblyModel javaAssembly) {
 		try {
-			List<TypeParameterEntry> result = new ArrayList<TypeParameterEntry>();
+			List<TypeParameterEntry> result = new ArrayList<>();
 			PreparedStatement pstatement = customStatementCacheManager("DefaultJavaTypeDAO.getJavaAssemblyTypeParameters",
 					"SELECT jtp.* FROM JavaTypeParameter AS jtp JOIN JavaAssemblyTypeParameter AS jatp ON jtp.PK = jatp.JavaTypeParameterID WHERE jatp.JavaAssemblyID = ?;");
 			pstatement.setInt(1, javaAssembly.getPK());
@@ -193,7 +194,7 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 				result.add(tpe);
 			}
 			return result;
-		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 			throw new DatabaseConnectionException(e);
 		}
 	}
@@ -201,7 +202,7 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 	@Override
 	public List<TypeParameterEntry> getJavaMethodTypeParameters(JavaMethodModel javaMethod) {
 		try {
-			List<TypeParameterEntry> result = new ArrayList<TypeParameterEntry>();
+			List<TypeParameterEntry> result = new ArrayList<>();
 			PreparedStatement pstatement = customStatementCacheManager("DefaultJavaTypeDAO.getJavaMethodTypeParameters",
 					"SELECT jtp.* FROM JavaTypeParameter AS jtp JOIN JavaMethodTypeParameter AS jmtp ON jtp.PK = jmtp.JavaTypeParameterID WHERE jmtp.JavaMethodID = ?;");
 			pstatement.setInt(1, javaMethod.getPK());
@@ -213,7 +214,7 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 				result.add(tpe);
 			}
 			return result;
-		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 			throw new DatabaseConnectionException(e);
 		}
 	}
@@ -221,7 +222,7 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 	@Override
 	public List<JavaAssemblyModel> getTypeBoundsOfTypeParameter(JavaTypeParameterModel javaTypeParameter) {
 		try {
-			List<JavaAssemblyModel> result = new ArrayList<JavaAssemblyModel>();
+			List<JavaAssemblyModel> result = new ArrayList<>();
 			PreparedStatement pstatement = customStatementCacheManager("DefaultJavaTypeDAO.getTypeBoundsOfTypeParameter",
 					"SELECT ja.* FROM JavaAssembly AS ja JOIN JavaType AS jt ON ja.PK = jt.JavaAssemblyID JOIN JavaTypeBound AS jtb ON jt.PK = jtb.JavaTypeID WHERE jtb.JavaTypeParameterID = ? ORDER BY jtb.OrderNumber ASC;");
 			pstatement.setInt(1, javaTypeParameter.getPK());
@@ -230,7 +231,7 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 				result.add(extractEntry(JavaAssemblyModel.class, rs));
 			}
 			return result;
-		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 			throw new DatabaseConnectionException(e);
 		}
 	}
@@ -238,7 +239,7 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 	@Override
 	public List<JavaTypeModel> getTypeArguments(JavaTypeModel javaType) {
 		try {
-			List<JavaTypeModel> result = new ArrayList<JavaTypeModel>();
+			List<JavaTypeModel> result = new ArrayList<>();
 			PreparedStatement pstatement = customStatementCacheManager("DefaultJavaTypeDAO.getTypeArguments",
 					"SELECT jt.* FROM JavaType AS jt JOIN JavaTypeArgument AS jta ON jt.PK = jta.JavaTypeID WHERE jta.ParentJavaTypeID = ? ORDER BY jta.OrderNumber ASC;");
 			pstatement.setInt(1, javaType.getPK());
@@ -247,7 +248,7 @@ public class DefaultJavaTypeDAO extends DefaultAbstractDBLayerDAO implements Jav
 				result.add(extractEntry(JavaTypeModel.class, rs));
 			}
 			return result;
-		} catch (SQLException | InstantiationException | IllegalAccessException e) {
+		} catch (SQLException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
 			throw new DatabaseConnectionException(e);
 		}
 	}
