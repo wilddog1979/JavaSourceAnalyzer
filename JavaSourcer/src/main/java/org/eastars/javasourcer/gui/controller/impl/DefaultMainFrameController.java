@@ -1,14 +1,5 @@
 package org.eastars.javasourcer.gui.controller.impl;
 
-import static org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle.MAIN_MENU_ABOUT;
-import static org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle.MAIN_MENU_ADD;
-import static org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle.MAIN_MENU_HELP;
-import static org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle.MAIN_MENU_PREFERENCES;
-import static org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle.MAIN_MENU_PROJECT;
-import static org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle.MAIN_MENU_PROPERTIES;
-import static org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle.MAIN_MENU_SETTINGS;
-import static org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle.MAIN_MENU_SWITCH;
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -16,8 +7,6 @@ import java.awt.EventQueue;
 import java.awt.Toolkit;
 import java.awt.event.WindowEvent;
 import java.util.Collections;
-import java.util.Optional;
-import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -36,30 +25,29 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.eastars.javasourcer.gui.context.ApplicationResources;
+import org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle;
 import org.eastars.javasourcer.gui.controller.JavaSourcerDataInputDialog;
 import org.eastars.javasourcer.gui.controller.JavaSourcerDialog;
-import org.eastars.javasourcer.gui.controller.JavaSourcerMessageDialog;
 import org.eastars.javasourcer.gui.controller.MainFrameController;
 import org.eastars.javasourcer.gui.dto.ProjectDTO;
-import org.eastars.javasourcer.gui.exception.JavaSourcerProjectAlreadyExistsException;
 import org.eastars.javasourcer.gui.service.ApplicationGuiService;
+import org.eastars.javasourcer.gui.service.ProjectMapperService;
 import org.eastars.javasourcer.gui.service.ProjectService;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
-import org.springframework.core.convert.ConversionFailedException;
 
 public class DefaultMainFrameController extends AbstractInternationalizableController implements ControllerSupport, MainFrameController, InitializingBean {
 
+	private ProjectMapperService projectMappingService;
+	
 	private ProjectService projectService;
 
 	private JavaSourcerDialog aboutDialog;
 	
 	private JavaSourcerDialog preferencesDialog;
 
-	private JavaSourcerDataInputDialog<ProjectDTO> projectDialog;
-
-	private JavaSourcerMessageDialog messageDialog;
+	private JavaSourcerDataInputDialog<ProjectDTO, String> projectDialog;
 
 	private ApplicationGuiService applicationGuiService;
 
@@ -79,18 +67,18 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 	public DefaultMainFrameController(
 			MessageSource messageSource,
 			ApplicationGuiService applicationGuiService,
+			ProjectMapperService projectMappingService,
 			ProjectService projectService,
 			@Qualifier("aboutdailogcontroller") JavaSourcerDialog aboutDialog,
 			@Qualifier("preferencesdailogcontroller") JavaSourcerDialog preferencesDialog,
-			@Qualifier("projectdailogcontroller") JavaSourcerDataInputDialog<ProjectDTO> projectDialog,
-			JavaSourcerMessageDialog messageDialog) {
+			@Qualifier("projectdailogcontroller") JavaSourcerDataInputDialog<ProjectDTO, String> projectDialog) {
 		super(messageSource, applicationGuiService.getLocale());
 		this.applicationGuiService = applicationGuiService;
+		this.projectMappingService = projectMappingService;
 		this.projectService = projectService;
 		this.aboutDialog = aboutDialog;
 		this.preferencesDialog = preferencesDialog;
 		this.projectDialog = projectDialog;
-		this.messageDialog = messageDialog;
 	}
 
 	private void addProjectMenuEntry(JRadioButtonMenuItem menuitem) {
@@ -135,34 +123,32 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 
 		projectService.getProjects().forEach(this::addProjectMenuEntry);
 	}
-
+	
 	private void buildMenu() {
 		JMenuBar menubar = new JMenuBar();
 
-		menuSwitch = createMenu(getResourceBundle(MAIN_MENU_SWITCH),
+		menuSwitch = createMenu(getResourceBundle(ResourceBundle.MAIN_MENU_SWITCH),
 				new JMenuItemSeparator(),
-				createMenuItem(getResourceBundle(MAIN_MENU_ADD), a -> 
-				actionProjectDialog(Optional.empty(), c -> {
-					JRadioButtonMenuItem menuitem = projectService.createProject(c);
+				createMenuItem(getResourceBundle(ResourceBundle.MAIN_MENU_ADD), a -> 
+				projectDialog.getInputData(frame, null, true).ifPresent(c -> {
+					JRadioButtonMenuItem menuitem = projectMappingService.mapJRadioButtonMenuItem(c);
 					addProjectMenuEntry(menuitem);
 					menuitem.setSelected(true);
 				})));
 
-		JMenu menuProject = createMenu(getResourceBundle(MAIN_MENU_PROJECT),
+		JMenu menuProject = createMenu(getResourceBundle(ResourceBundle.MAIN_MENU_PROJECT),
 				menuSwitch,
-				createMenuItem(getResourceBundle(MAIN_MENU_PROPERTIES), a -> {
+				createMenuItem(getResourceBundle(ResourceBundle.MAIN_MENU_PROPERTIES), a -> {
 					ButtonModel selection = projectGroup.getSelection();
 					if (selection != null) {
 						String name = selection.getActionCommand();
-						actionProjectDialog(projectService.getProject(name), updateDTO -> {
-							projectService.updateProject(name, updateDTO);
-							Collections.list(projectGroup.getElements()).stream()
-							.filter(b -> name.equals(b.getActionCommand()))
-							.findFirst().ifPresent(b -> {
-								b.setActionCommand(updateDTO.getName());
-								b.setText(updateDTO.getName());
-							});
-						});
+						projectDialog.getInputData(frame, name, true)
+						.ifPresent(updateDTO -> Collections.list(projectGroup.getElements()).stream()
+						.filter(b -> name.equals(b.getActionCommand()))
+						.findFirst().ifPresent(b -> {
+							b.setActionCommand(updateDTO.getName());
+							b.setText(updateDTO.getName());
+						}));
 					}
 				}));
 
@@ -170,32 +156,15 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 
 		if (isExtendedMenu()) {
 			menubar.add(
-					createMenu(getResourceBundle(MAIN_MENU_SETTINGS),
-							createMenuItem(getResourceBundle(MAIN_MENU_PREFERENCES), a -> this.showPreferences())));
+					createMenu(getResourceBundle(ResourceBundle.MAIN_MENU_SETTINGS),
+							createMenuItem(getResourceBundle(ResourceBundle.MAIN_MENU_PREFERENCES), a -> this.showPreferences())));
 
 			menubar.add(
-					createMenu(getResourceBundle(MAIN_MENU_HELP),
-							createMenuItem(getResourceBundle(MAIN_MENU_ABOUT), a -> this.showAbout())));
+					createMenu(getResourceBundle(ResourceBundle.MAIN_MENU_HELP),
+							createMenuItem(getResourceBundle(ResourceBundle.MAIN_MENU_ABOUT), a -> this.showAbout())));
 		}
 
 		frame.setJMenuBar(menubar);
-	}
-
-	private void actionProjectDialog(Optional<ProjectDTO> dto, Consumer<ProjectDTO> consumeNewDTO) {
-		boolean error = false;
-		while(true) {
-			try {
-				projectDialog.getInputData(frame, dto, error)
-				.ifPresent(consumeNewDTO::accept);
-				break;
-			}catch (ConversionFailedException e) {
-				messageDialog.showMessage(frame, e.getRootCause().getMessage());
-				error = true;
-			}catch (JavaSourcerProjectAlreadyExistsException e) {
-				messageDialog.showMessage(frame, e.getMessage());
-				error = true;
-			}
-		}
 	}
 
 	private void buildGui() {

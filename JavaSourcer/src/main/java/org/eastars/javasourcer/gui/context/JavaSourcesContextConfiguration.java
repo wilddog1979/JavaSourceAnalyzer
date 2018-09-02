@@ -8,10 +8,10 @@ import java.util.Optional;
 
 import org.eastars.javasourcer.gui.controller.JavaSourcerDataInputDialog;
 import org.eastars.javasourcer.gui.controller.JavaSourcerDialog;
-import org.eastars.javasourcer.gui.controller.JavaSourcerMessageDialog;
 import org.eastars.javasourcer.gui.controller.impl.DefaultMainFrameController;
 import org.eastars.javasourcer.gui.dto.ProjectDTO;
 import org.eastars.javasourcer.gui.service.ApplicationGuiService;
+import org.eastars.javasourcer.gui.service.ProjectMapperService;
 import org.eastars.javasourcer.gui.service.ProjectService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -37,19 +37,19 @@ public class JavaSourcesContextConfiguration {
 	public DefaultMainFrameController getDefaultMainFrameController(
 			MessageSource messageSource,
 			ApplicationGuiService applicationGuiService,
+			ProjectMapperService projectMappingService,
 			ProjectService projectService,
 			@Qualifier("aboutdailogcontroller") JavaSourcerDialog aboutDialog,
 			@Qualifier("preferencesdailogcontroller") JavaSourcerDialog preferencesDialog,
-			@Qualifier("projectdailogcontroller") JavaSourcerDataInputDialog<ProjectDTO> projectDialog,
-			@Qualifier("messagedialog") JavaSourcerMessageDialog messageDialog) {
+			@Qualifier("projectdailogcontroller") JavaSourcerDataInputDialog<ProjectDTO, String> projectDialog) {
 		DefaultMainFrameController controller = new DefaultMainFrameController(
 				messageSource,
 				applicationGuiService,
+				projectMappingService,
 				projectService,
 				aboutDialog,
 				preferencesDialog,
-				projectDialog,
-				messageDialog);
+				projectDialog);
 
 		instantiate(getApplicationFunctionClassName(), ApplicationFunctions.class)
 		.ifPresent(i -> i.initApplication(context, controller));

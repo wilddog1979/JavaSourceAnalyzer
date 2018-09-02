@@ -6,7 +6,6 @@ import java.util.stream.Stream;
 
 import org.eastars.javasourcer.data.model.JavaSourceProject;
 import org.eastars.javasourcer.gui.dto.LibraryDTO;
-import org.eastars.javasourcer.gui.dto.ModuleDTO;
 
 public interface JavaSourcerDataService {
 
@@ -15,8 +14,6 @@ public interface JavaSourcerDataService {
 	public Optional<JavaSourceProject> getJavaSourceProject(String name);
 	
 	public void save(JavaSourceProject javaSourceProject);
-	
-	public boolean updateJavaLibraries(JavaSourceProject javaSourceProject, List<String> javaLibraries);
 	
 	public Stream<String> getLibraryNames();
 	
@@ -27,7 +24,5 @@ public interface JavaSourcerDataService {
 	public void deleteLibrary(String libraryname);
 
 	public void saveLibrary(LibraryDTO library);
-	
-	public boolean updateSourceModules(JavaSourceProject javaSourceProject, List<ModuleDTO> modules);
 	
 }

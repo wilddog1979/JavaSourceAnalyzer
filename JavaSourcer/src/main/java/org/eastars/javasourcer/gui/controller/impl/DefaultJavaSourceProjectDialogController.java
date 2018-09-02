@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -26,12 +27,13 @@ import org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle;
 import org.eastars.javasourcer.gui.dto.ModuleDTO;
 import org.eastars.javasourcer.gui.dto.ProjectDTO;
 import org.eastars.javasourcer.gui.service.ApplicationGuiService;
+import org.eastars.javasourcer.gui.service.ProjectService;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 @Component("projectdailogcontroller")
-public class DefaultJavaSourceProjectDialogController extends AbstractDataInputDialogController<ProjectDTO> {
+public class DefaultJavaSourceProjectDialogController extends AbstractDataInputDialogController<ProjectDTO, String> {
 
 	private JButton buttonRemoveLibrary = new JButton(ApplicationResources.ARROWRIGHT);
 	
@@ -61,13 +63,17 @@ public class DefaultJavaSourceProjectDialogController extends AbstractDataInputD
 
 	private DefaultListModel<String> availableLibrariesModel = new DefaultListModel<>();
 
+	private ProjectService projectService;
+	
 	private JavaSourcerDataService dataService;
 	
 	public DefaultJavaSourceProjectDialogController(
 			MessageSource messageSource,
 			ApplicationGuiService applicationGuiService,
+			ProjectService projectService,
 			JavaSourcerDataService dataService) {
 		super(messageSource, applicationGuiService.getLocale());
+		this.projectService = projectService;
 		this.dataService = dataService;
 	}
 
@@ -133,11 +139,20 @@ public class DefaultJavaSourceProjectDialogController extends AbstractDataInputD
 		JTable sourceFolders = new JTable(sourceFolderModel);
 		
 		sources.add(buildTableWithButtons(sourceFolders, 250, 150, a -> {
-			// this must be implemented properly with folder selection
-			sourceFolderModel.addNewEntry(getResourceBundle(ResourceBundle.NEW_ENTRY));
-			int index = sourceFolderModel.getRowCount();
-			sourceFolders.scrollRectToVisible(sourceFolders.getCellRect(index - 1, 0, true));
-			sourceFolders.editCellAt(index - 1, 0);
+			if (modules.getSelectedRow() != -1) {
+				JFileChooser chooser = new JFileChooser(projectdir != null ? projectdir : new File("."));
+				chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				int result = chooser.showOpenDialog(panelDirSelection);
+				if (result == JFileChooser.APPROVE_OPTION) {
+					sourceFolderModel.addNewEntry(
+							(projectdir != null ? projectdir : new File(".")).toURI()
+							.relativize(chooser.getSelectedFile().toURI())
+							.toString());
+					int index = sourceFolderModel.getRowCount();
+					sourceFolders.scrollRectToVisible(sourceFolders.getCellRect(index - 1, 0, true));
+					sourceFolders.editCellAt(index - 1, 0);
+				}
+			}
 		}, a -> {
 			int index = sourceFolders.getSelectedRow();
 			if (index != -1) {
@@ -146,7 +161,14 @@ public class DefaultJavaSourceProjectDialogController extends AbstractDataInputD
 		}, a -> {
 			int index = sourceFolders.getSelectedRow();
 			if (index != -1) {
-				// this must be implemented properly with folder selection
+				JFileChooser chooser = new JFileChooser(new File(projectdir != null ? projectdir : new File("."), sourceFolderModel.getValueAt(index, 0).toString()));
+				chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				int result = chooser.showOpenDialog(panelDirSelection);
+				if (result == JFileChooser.APPROVE_OPTION) {
+					sourceFolderModel.setValueAt((projectdir != null ? projectdir : new File(".")).toURI()
+						.relativize(chooser.getSelectedFile().toURI())
+						.toString(), index, 0);
+				}
 			}
 		}));
 		
@@ -206,6 +228,11 @@ public class DefaultJavaSourceProjectDialogController extends AbstractDataInputD
 	}
 
 	@Override
+	protected Optional<ProjectDTO> getDTOByKey(String key) {
+		return projectService.getProject(key);
+	}
+	
+	@Override
 	protected void cleanupPanel() {
 		textFieldName.setText("");
 		indicateError(textFieldName, false);
@@ -228,7 +255,6 @@ public class DefaultJavaSourceProjectDialogController extends AbstractDataInputD
 	@Override
 	protected void initializePanel(ProjectDTO parameter) {
 		textFieldName.setText(parameter.getName());
-		indicateError(textFieldName, false);
 		
 		try {
 			projectdir = new File(parameter.getBasedir()).getCanonicalFile();
@@ -237,20 +263,20 @@ public class DefaultJavaSourceProjectDialogController extends AbstractDataInputD
 			projectdir = null;
 			dirDisplay.setText("");
 		}
-		indicateError(panelDirSelection, false);
 		
 		moduleModel.setEntries(parameter.getModules());
-		modulesRemove.clear();
 		
-		sourceFolderModel.setEntries(new ArrayList<>());
-		
-		selectedLibrariesModel.removeAllElements();
 		parameter.getLibraries().forEach(selectedLibrariesModel::addElement);
 		
 		availableLibrariesModel.removeAllElements();
 		dataService.getLibraryNames()
 		.filter(l -> !parameter.getLibraries().contains(l))
 		.forEach(availableLibrariesModel::addElement);
+	}
+	
+	@Override
+	protected void saveData(Optional<ProjectDTO> oldDTO, ProjectDTO newDTO) {
+		projectService.updateProject(oldDTO.map(ProjectDTO::getName).orElseGet(() -> null), newDTO);
 	}
 	
 	@Override

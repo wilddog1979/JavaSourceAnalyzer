@@ -3,8 +3,8 @@ package org.eastars.javasourcer.gui.controller;
 import java.awt.Frame;
 import java.util.Optional;
 
-public interface JavaSourcerDataInputDialog<T> {
+public interface JavaSourcerDataInputDialog<T, K> {
 
-	public Optional<T> getInputData(Frame parent, Optional<T> input, boolean error);
+	public Optional<T> getInputData(Frame parent, K key, boolean save);
 	
 }

@@ -9,13 +9,10 @@ import java.util.stream.StreamSupport;
 import org.eastars.javasourcer.data.model.JavaLibrary;
 import org.eastars.javasourcer.data.model.JavaLibraryPackage;
 import org.eastars.javasourcer.data.model.JavaSourceProject;
-import org.eastars.javasourcer.data.model.SourceFolder;
-import org.eastars.javasourcer.data.model.SourceModule;
 import org.eastars.javasourcer.data.repository.JavaLibraryRepository;
 import org.eastars.javasourcer.data.repository.JavaSourceProjectRepository;
 import org.eastars.javasourcer.data.service.JavaSourcerDataService;
 import org.eastars.javasourcer.gui.dto.LibraryDTO;
-import org.eastars.javasourcer.gui.dto.ModuleDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -46,35 +43,6 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 	@Override
 	public void save(JavaSourceProject javaSourceProject) {
 		javaSourceProjectRepo.save(javaSourceProject);
-	}
-	
-	@Override
-	public boolean updateJavaLibraries(JavaSourceProject javaSourceProject, List<String> javaLibraries) {
-		List<JavaLibrary> toRemove = javaSourceProject.getJavaLibraries().stream()
-				.filter(jl -> !javaLibraries.contains(jl.getName()))
-				.collect(Collectors.toList());
-		
-		boolean result = !toRemove.isEmpty();
-		
-		toRemove.stream().forEach(jl -> {
-			javaSourceProject.getJavaLibraries().remove(jl);
-			jl.getJavaSourceProjects().remove(javaSourceProject);
-		});
-		
-		List<JavaLibrary> toAdd = javaLibraries.stream()
-				.filter(l -> javaSourceProject.getJavaLibraries().stream()
-						.noneMatch(jl -> jl.getName().equals(l)))
-				.map(l -> javaLibraryRepository.findByName(l).get())
-				.collect(Collectors.toList());
-		
-		result |= !toAdd.isEmpty();
-		
-		toAdd.forEach(jl -> {
-			javaSourceProject.getJavaLibraries().add(jl);
-			jl.getJavaSourceProjects().add(javaSourceProject);
-		});
-
-		return result;
 	}
 
 	@Override
@@ -162,38 +130,6 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 		if (dirty) {
 			javaLibraryRepository.save(lib);
 		}
-	}
-	
-	@Override
-	public boolean updateSourceModules(JavaSourceProject javaSourceProject, List<ModuleDTO> modules) {
-		boolean[] result = {false};
-		
-		List<SourceModule> toAdd = modules.stream()
-		.filter(module -> StringUtils.isEmpty(module.getOriginalName()) ||
-				javaSourceProject.getSourceModules().stream().noneMatch(sm -> sm.getName().equals(module.getName())))
-		.map(module -> {
-			SourceModule m = new SourceModule();
-			m.setName(module.getName());
-			m.setSourceFolders(module.getSourceFolders().stream()
-					.map(sf -> {
-						SourceFolder folder = new SourceFolder();
-						folder.setRelativedir(sf);
-						folder.setSourceModule(m);
-						return folder;
-					}).collect(Collectors.toList()));
-			return m;
-		}).collect(Collectors.toList());
-		
-		result[0] |= !toAdd.isEmpty();
-		
-		
-		
-		toAdd.forEach(module -> {
-			javaSourceProject.getSourceModules().add(module);
-			module.setJavaSourceProject(javaSourceProject);
-		});
-		
-		return result[0];
 	}
 	
 }

@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.List;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -31,7 +30,6 @@ public class SourceModule implements Serializable {
 	@JoinColumn(name="javasourceproject_id", nullable = false)
 	private JavaSourceProject javaSourceProject;
 	
-	@Column(unique=true)
 	private String name;
 	
 	@OneToMany(mappedBy="sourceModule", cascade = CascadeType.ALL, orphanRemoval=true)

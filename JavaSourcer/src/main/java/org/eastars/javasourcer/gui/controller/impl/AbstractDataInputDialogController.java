@@ -13,15 +13,19 @@ import org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle;
 import org.eastars.javasourcer.gui.controller.JavaSourcerDataInputDialog;
 import org.springframework.context.MessageSource;
 
-public abstract class AbstractDataInputDialogController<T> extends AbstractDialogController implements JavaSourcerDataInputDialog<T> {
+public abstract class AbstractDataInputDialogController<T, K> extends AbstractDialogController implements JavaSourcerDataInputDialog<T, K> {
 
 	private boolean newobject = false;
 	
 	protected abstract JPanel buildPanel();
 	
+	protected abstract Optional<T> getDTOByKey(K key);
+	
 	protected abstract void cleanupPanel();
 	
 	protected abstract void initializePanel(T parameter);
+	
+	protected abstract void saveData(Optional<T> oldDTO, T newDto);
 	
 	protected abstract T getInputData();
 	
@@ -36,22 +40,22 @@ public abstract class AbstractDataInputDialogController<T> extends AbstractDialo
 	}
 	
 	@Override
-	public Optional<T> getInputData(Frame parent, Optional<T> input, boolean error) {
-		if (!error) {
-			newobject = !input.isPresent();
-			if (newobject) {
-				cleanupPanel();
-			} else {
-				initializePanel(input.get());
-			}
-		}
+	public Optional<T> getInputData(Frame parent, K key, boolean save) {
+		cleanupPanel();
+		Optional<T> oldDTO = getDTOByKey(key); 
+		oldDTO.ifPresent(this::initializePanel);
 		
+		T inputdata = null;
 		while (showDialog(parent)) {
 			if (validateInputData()) {
-				return Optional.of(getInputData());
+				inputdata = getInputData();
+				if (save) {
+					saveData(oldDTO, inputdata);
+				}
+				break;
 			}
 		}
-		return Optional.empty();
+		return Optional.ofNullable(inputdata);
 	}
 	
 	protected boolean indicateError(JComponent component, boolean errorcondition) {
