@@ -112,14 +112,8 @@ public class DefaultJavaSourceProjectDialogController extends AbstractDataInputD
 		return panelDirSelection;
 	}
 	
-	private JPanel createSourcesPanel() {
-		JPanel sources = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		
-		moduleModel.setColumnNames(Arrays.asList(
-				getResourceBundle(ResourceBundle.LABEL_MODULES)));
-		JTable modules = new JTable(moduleModel);
-		
-		sources.add(buildTableWithButtons(modules, 100, 150, a -> {
+	private JPanel createModulesPanel(JTable modules) {
+		return buildTableWithButtons(modules, 100, 150, a -> {
 			ModuleDTO dto = new ModuleDTO();
 			dto.setName(getResourceBundle(ResourceBundle.NEW_ENTRY));
 			moduleModel.addNewEntry(dto);
@@ -132,26 +126,39 @@ public class DefaultJavaSourceProjectDialogController extends AbstractDataInputD
 				modulesRemove.add(moduleModel.getEntries().get(index).getOriginalName());
 				moduleModel.removeEntry(index);
 			}
-		}));
-		
-		sourceFolderModel.setColumnNames(Arrays.asList(
-				getResourceBundle(ResourceBundle.LABEL_SOURCEFOLDERS)));
-		JTable sourceFolders = new JTable(sourceFolderModel);
-		
-		sources.add(buildTableWithButtons(sourceFolders, 250, 150, a -> {
+		});
+	}
+	
+	private void addSourceFolderAction(JTable sourceFolders) {
+		JFileChooser chooser = new JFileChooser(projectdir != null ? projectdir : new File("."));
+		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		int result = chooser.showOpenDialog(panelDirSelection);
+		if (result == JFileChooser.APPROVE_OPTION) {
+			sourceFolderModel.addNewEntry(
+					(projectdir != null ? projectdir : new File(".")).toURI()
+					.relativize(chooser.getSelectedFile().toURI())
+					.toString());
+			int index = sourceFolderModel.getRowCount();
+			sourceFolders.scrollRectToVisible(sourceFolders.getCellRect(index - 1, 0, true));
+			sourceFolders.editCellAt(index - 1, 0);
+		}
+	}
+	
+	private void editSourceFolderAction(int index) {
+		JFileChooser chooser = new JFileChooser(new File(projectdir != null ? projectdir : new File("."), sourceFolderModel.getValueAt(index, 0).toString()));
+		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		int result = chooser.showOpenDialog(panelDirSelection);
+		if (result == JFileChooser.APPROVE_OPTION) {
+			sourceFolderModel.setValueAt((projectdir != null ? projectdir : new File(".")).toURI()
+				.relativize(chooser.getSelectedFile().toURI())
+				.toString(), index, 0);
+		}
+	}
+	
+	private JPanel createSourceFoldersPanel(JTable modules, JTable sourceFolders) {
+		return buildTableWithButtons(sourceFolders, 250, 150, a -> {
 			if (modules.getSelectedRow() != -1) {
-				JFileChooser chooser = new JFileChooser(projectdir != null ? projectdir : new File("."));
-				chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				int result = chooser.showOpenDialog(panelDirSelection);
-				if (result == JFileChooser.APPROVE_OPTION) {
-					sourceFolderModel.addNewEntry(
-							(projectdir != null ? projectdir : new File(".")).toURI()
-							.relativize(chooser.getSelectedFile().toURI())
-							.toString());
-					int index = sourceFolderModel.getRowCount();
-					sourceFolders.scrollRectToVisible(sourceFolders.getCellRect(index - 1, 0, true));
-					sourceFolders.editCellAt(index - 1, 0);
-				}
+				addSourceFolderAction(sourceFolders);
 			}
 		}, a -> {
 			int index = sourceFolders.getSelectedRow();
@@ -161,16 +168,25 @@ public class DefaultJavaSourceProjectDialogController extends AbstractDataInputD
 		}, a -> {
 			int index = sourceFolders.getSelectedRow();
 			if (index != -1) {
-				JFileChooser chooser = new JFileChooser(new File(projectdir != null ? projectdir : new File("."), sourceFolderModel.getValueAt(index, 0).toString()));
-				chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				int result = chooser.showOpenDialog(panelDirSelection);
-				if (result == JFileChooser.APPROVE_OPTION) {
-					sourceFolderModel.setValueAt((projectdir != null ? projectdir : new File(".")).toURI()
-						.relativize(chooser.getSelectedFile().toURI())
-						.toString(), index, 0);
-				}
+				editSourceFolderAction(index);
 			}
-		}));
+		});
+	}
+	
+	private JPanel createSourcesPanel() {
+		JPanel sources = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		
+		moduleModel.setColumnNames(Arrays.asList(
+				getResourceBundle(ResourceBundle.LABEL_MODULES)));
+		JTable modules = new JTable(moduleModel);
+		
+		sources.add(createModulesPanel(modules));
+		
+		sourceFolderModel.setColumnNames(Arrays.asList(
+				getResourceBundle(ResourceBundle.LABEL_SOURCEFOLDERS)));
+		JTable sourceFolders = new JTable(sourceFolderModel);
+		
+		sources.add(createSourceFoldersPanel(modules, sourceFolders));
 		
 		modules.getSelectionModel().addListSelectionListener(l -> {
 			sourceFolderModel.setEntries(new ArrayList<>());
