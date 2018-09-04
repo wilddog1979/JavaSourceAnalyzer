@@ -51,9 +51,14 @@ public class DefaultProjectMapperService implements ProjectMapperService {
 	
 	@Override
 	public void mapSourceModules(JavaSourceProject javaSourceProject, List<ModuleDTO> modules) {
+		List<SourceModule> toRemove = javaSourceProject.getSourceModules().stream()
+		.filter(sm -> modules.stream().noneMatch(m -> sm.getName().equals(m.getOriginalName())))
+		.collect(Collectors.toList());
+		
+		javaSourceProject.getSourceModules().removeAll(toRemove);
+		
 		List<SourceModule> toAdd = modules.stream()
-				.filter(module -> StringUtils.isEmpty(module.getOriginalName()) ||
-						javaSourceProject.getSourceModules().stream().noneMatch(sm -> sm.getName().equals(module.getName())))
+				.filter(module -> StringUtils.isEmpty(module.getOriginalName()))
 				.map(module -> {
 					SourceModule m = new SourceModule();
 					m.setName(module.getName());
@@ -70,6 +75,29 @@ public class DefaultProjectMapperService implements ProjectMapperService {
 		toAdd.forEach(module -> {
 			javaSourceProject.getSourceModules().add(module);
 			module.setJavaSourceProject(javaSourceProject);
+		});
+	}
+	
+	@Override
+	public void mapSourceModuleFolders(SourceModule module, ModuleDTO sm) {
+		module.setName(sm.getName());
+		List<SourceFolder> toRemoveSF = module.getSourceFolders().stream()
+				.filter(sf -> !sm.getSourceFolders().contains(sf.getRelativedir()))
+				.collect(Collectors.toList());
+
+		module.getSourceFolders().removeAll(toRemoveSF);
+
+		List<SourceFolder> toAddSF = sm.getSourceFolders().stream()
+				.filter(f -> module.getSourceFolders().stream().noneMatch(sf -> sf.getRelativedir().equals(f)))
+				.map(f -> {
+					SourceFolder sf = new SourceFolder();
+					sf.setRelativedir(f);
+					return sf;
+				}).collect(Collectors.toList());
+
+		toAddSF.forEach(sf -> {
+			module.getSourceFolders().add(sf);
+			sf.setSourceModule(module);
 		});
 	}
 	

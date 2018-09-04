@@ -60,6 +60,10 @@ public class DefaultProjectService implements ProjectService {
 		projectMapperService.mapJavaSourceProject(javaSourceProject, newValue);
 		
 		projectMapperService.mapSourceModules(javaSourceProject, newValue.getModules());
+		javaSourceProject.getSourceModules().forEach(module -> newValue.getModules().stream()
+				.filter(sm -> module.getName().equals(sm.getOriginalName()))
+				.findFirst()
+				.ifPresent(sm -> projectMapperService.mapSourceModuleFolders(module, sm)));
 		
 		projectMapperService.mapJavaLibraries(javaSourceProject, newValue.getLibraries());
 		
