@@ -26,6 +26,8 @@ public class ApplicationResources {
 		
 		public static final String MAIN_MENU_PROPERTIES = "menu.properties";
 		
+		public static final String MAIN_MENU_ANALYZE = "menu.analyze";
+		
 		public static final String MAIN_MENU_SETTINGS = "menu.settings";
 		
 		public static final String MAIN_MENU_PREFERENCES = "menu.preferences";
