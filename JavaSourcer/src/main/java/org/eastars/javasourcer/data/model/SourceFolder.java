@@ -1,7 +1,9 @@
 package org.eastars.javasourcer.data.model;
 
 import java.io.Serializable;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -9,6 +11,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -31,6 +34,9 @@ public class SourceFolder implements Serializable {
 	@Column(nullable=false)
 	private String relativedir;
 
+	@OneToMany(mappedBy="sourceFolder", cascade = CascadeType.ALL, orphanRemoval=true)
+	private List<SourceFile> sourceFiles;
+	
 	public Long getId() {
 		return id;
 	}
@@ -53,6 +59,20 @@ public class SourceFolder implements Serializable {
 
 	public void setSourceModule(SourceModule sourceModule) {
 		this.sourceModule = sourceModule;
+	}
+
+	/**
+	 * @return the sourceFiles
+	 */
+	public List<SourceFile> getSourceFiles() {
+		return sourceFiles;
+	}
+
+	/**
+	 * @param sourceFiles the sourceFiles to set
+	 */
+	public void setSourceFiles(List<SourceFile> sourceFiles) {
+		this.sourceFiles = sourceFiles;
 	}
 	
 }

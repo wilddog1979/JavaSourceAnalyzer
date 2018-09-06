@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
-import org.eastars.javasourcer.analyzis.service.ProjectAnalyzisService;
+import org.eastars.javasourcer.analyzis.facade.ProjectAnalysisFacade;
 import org.eastars.javasourcer.gui.controller.DialogControllers;
 import org.eastars.javasourcer.gui.controller.impl.DefaultMainFrameController;
 import org.eastars.javasourcer.gui.service.ApplicationGuiService;
@@ -37,14 +37,14 @@ public class JavaSourcesContextConfiguration {
 			ApplicationGuiService applicationGuiService,
 			ProjectMapperService projectMappingService,
 			ProjectService projectService,
-			ProjectAnalyzisService projectAnalyzisService,
+			ProjectAnalysisFacade projectAnalysisFacade,
 			DialogControllers dialogControllers) {
 		DefaultMainFrameController controller = new DefaultMainFrameController(
 				messageSource,
 				applicationGuiService,
 				projectMappingService,
 				projectService,
-				projectAnalyzisService,
+				projectAnalysisFacade,
 				dialogControllers);
 
 		instantiate(getApplicationFunctionClassName(), ApplicationFunctions.class)

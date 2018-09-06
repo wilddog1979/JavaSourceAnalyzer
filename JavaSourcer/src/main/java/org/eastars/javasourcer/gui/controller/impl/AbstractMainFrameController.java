@@ -3,14 +3,21 @@ package org.eastars.javasourcer.gui.controller.impl;
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
+import java.util.Locale;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
-public interface ControllerSupport {
+import org.springframework.context.MessageSource;
 
-	public default JMenuItem createMenuItem(String name, ActionListener actionListener) {
+public abstract class AbstractMainFrameController extends AbstractInternationalizableController {
+
+	public AbstractMainFrameController(MessageSource messageSource, Locale locale) {
+		super(messageSource, locale);
+	}
+
+	public JMenuItem createMenuItem(String name, ActionListener actionListener) {
 		JMenuItem menuitem = new JMenuItem(name);
 		
 		if (actionListener != null) {
@@ -20,7 +27,7 @@ public interface ControllerSupport {
 		return menuitem;
 	}
 	
-	public  default JMenuItem createMenuItem(String name, char shortcut, ActionListener actionListener) {
+	public JMenuItem createMenuItem(String name, char shortcut, ActionListener actionListener) {
 		JMenuItem menuitem = createMenuItem(name, actionListener);
 		
 		menuitem.setAccelerator(
@@ -33,7 +40,7 @@ public interface ControllerSupport {
 		return menuitem;
 	}
 	
-	public default JMenuItem createMenuItem(String name, String shortcut, ActionListener actionListener) {
+	public JMenuItem createMenuItem(String name, String shortcut, ActionListener actionListener) {
 		JMenuItem menuitem = createMenuItem(name, actionListener);
 		
 		menuitem.setAccelerator(KeyStroke.getKeyStroke(shortcut));
@@ -41,7 +48,7 @@ public interface ControllerSupport {
 		return menuitem;
 	}
 	
-	public default JMenu createMenu(String name, JMenuItem...items) {
+	public JMenu createMenu(String name, JMenuItem...items) {
 		JMenu menu = new JMenu(name);
 		
 		Arrays.asList(items).forEach(item ->{

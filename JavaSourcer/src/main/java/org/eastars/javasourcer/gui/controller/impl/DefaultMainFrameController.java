@@ -24,7 +24,7 @@ import javax.swing.ToolTipManager;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
 
-import org.eastars.javasourcer.analyzis.service.ProjectAnalyzisService;
+import org.eastars.javasourcer.analyzis.facade.ProjectAnalysisFacade;
 import org.eastars.javasourcer.gui.context.ApplicationResources;
 import org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle;
 import org.eastars.javasourcer.gui.controller.DialogControllers;
@@ -35,13 +35,13 @@ import org.eastars.javasourcer.gui.service.ProjectService;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.MessageSource;
 
-public class DefaultMainFrameController extends AbstractInternationalizableController implements ControllerSupport, MainFrameController, InitializingBean {
+public class DefaultMainFrameController extends AbstractMainFrameController implements MainFrameController, InitializingBean {
 
 	private ProjectMapperService projectMappingService;
 	
 	private ProjectService projectService;
 	
-	private ProjectAnalyzisService projectAnalyzisService;
+	private ProjectAnalysisFacade projectAnalysisFacade;
 
 	private DialogControllers dialogControllers;
 	
@@ -65,12 +65,12 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 			ApplicationGuiService applicationGuiService,
 			ProjectMapperService projectMappingService,	
 			ProjectService projectService,
-			ProjectAnalyzisService projectAnalyzisService,
+			ProjectAnalysisFacade projectAnalysisFacade,
 			DialogControllers dialogControllers) {
 		super(messageSource, applicationGuiService.getLocale());
 		this.applicationGuiService = applicationGuiService;
 		this.projectMappingService = projectMappingService;
-		this.projectAnalyzisService = projectAnalyzisService;
+		this.projectAnalysisFacade = projectAnalysisFacade;
 		this.projectService = projectService;
 		this.dialogControllers = dialogControllers;
 	}
@@ -164,7 +164,7 @@ public class DefaultMainFrameController extends AbstractInternationalizableContr
 		ButtonModel selection = projectGroup.getSelection();
 		if (selection != null) {
 			String projectName = selection.getActionCommand();
-			projectAnalyzisService.analyze(projectName);
+			projectAnalysisFacade.analyzeProject(projectName);
 		}
 	}
 	
