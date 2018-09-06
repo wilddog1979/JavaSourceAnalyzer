@@ -101,9 +101,6 @@ public class DefaultJavaSourceProjectDialogController extends AbstractDataInputD
 			if (result == JFileChooser.APPROVE_OPTION) {
 				projectdir = chooser.getSelectedFile();
 				dirDisplay.setText(projectdir.getName());
-			} else {
-				projectdir = null;
-				dirDisplay.setText("");
 			}
 		});
 		panelDirSelection.add(buttonDir);
