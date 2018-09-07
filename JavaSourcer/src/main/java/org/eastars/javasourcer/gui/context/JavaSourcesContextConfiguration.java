@@ -6,10 +6,13 @@ import java.awt.Desktop.Action;
 import java.awt.Taskbar.Feature;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
 import org.eastars.javasourcer.analyzis.facade.ProjectAnalysisFacade;
 import org.eastars.javasourcer.gui.controller.ApplicationController;
+import org.eastars.javasourcer.gui.controller.ApplicationProgressIndicatorService;
 import org.eastars.javasourcer.gui.controller.DialogControllers;
+import org.eastars.javasourcer.gui.controller.impl.DefaultApplicationProgressIndicatorService;
 import org.eastars.javasourcer.gui.controller.impl.DefaultMainFrameController;
 import org.eastars.javasourcer.gui.service.ApplicationGuiService;
 import org.eastars.javasourcer.gui.service.ProjectMapperService;
@@ -31,6 +34,12 @@ public class JavaSourcesContextConfiguration {
 	public JavaSourcesContextConfiguration(
 			ConfigurableApplicationContext context) {
 		this.context = context;
+	}
+	
+	@Bean
+	public ApplicationProgressIndicatorService getApplicationProgressIndicator() {
+		Optional<Taskbar> taskbar = Optional.ofNullable(Taskbar.isTaskbarSupported() ? Taskbar.getTaskbar() : null);
+		return new DefaultApplicationProgressIndicatorService(taskbar);
 	}
 	
 	@Bean

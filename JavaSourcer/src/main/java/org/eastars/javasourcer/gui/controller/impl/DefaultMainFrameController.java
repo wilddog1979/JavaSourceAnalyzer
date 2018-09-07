@@ -46,7 +46,7 @@ public class DefaultMainFrameController extends AbstractMainFrameController impl
 	private DialogControllers dialogControllers;
 	
 	private ApplicationGuiService applicationGuiService;
-
+	
 	private JFrame frame = new JFrame();
 
 	private boolean extendedMenu = false;
