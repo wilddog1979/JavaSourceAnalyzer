@@ -1,9 +1,11 @@
 package org.eastars.javasourcer.data.model;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -12,10 +14,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 @Entity
 @Table(name="sourcefile", uniqueConstraints= {
-		@UniqueConstraint(columnNames= {"sourcefolder_id", "filename"})
+		@UniqueConstraint(columnNames= {"sourcefolder_id", "filename", "creation_date"})
 })
+@EntityListeners(AuditingEntityListener.class)
 public class SourceFile implements Serializable {
 
 	private static final long serialVersionUID = -7455519202035847909L;
@@ -27,6 +33,10 @@ public class SourceFile implements Serializable {
 	@ManyToOne
 	@JoinColumn(name="sourcefolder_id", nullable = false)
 	private SourceFolder sourceFolder;
+	
+	@CreationTimestamp
+	@Column(name="creation_date")
+    protected LocalDateTime creationDate;
 	
 	@Column(nullable=false)
 	private String filename;

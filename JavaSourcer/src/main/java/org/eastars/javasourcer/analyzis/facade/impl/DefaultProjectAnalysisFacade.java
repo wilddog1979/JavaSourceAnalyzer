@@ -26,6 +26,8 @@ public class DefaultProjectAnalysisFacade implements ProjectAnalysisFacade {
 		JavaSourceProject javaSourceProject = dataService.getJavaSourceProject(name)
 				.orElseThrow(() -> new JavaSourceProjectNotFoundException(name));
 		
+		moduleContentService.cleanupModulesContent(javaSourceProject);
+		
 		moduleContentService.getModulesContent(javaSourceProject);
 		
 	}

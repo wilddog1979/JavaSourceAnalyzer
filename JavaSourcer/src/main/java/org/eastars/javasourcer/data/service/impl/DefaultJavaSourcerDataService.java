@@ -9,11 +9,9 @@ import java.util.stream.StreamSupport;
 import org.eastars.javasourcer.data.model.JavaLibrary;
 import org.eastars.javasourcer.data.model.JavaLibraryPackage;
 import org.eastars.javasourcer.data.model.JavaSourceProject;
-import org.eastars.javasourcer.data.model.SourceFile;
 import org.eastars.javasourcer.data.model.SourceFolder;
 import org.eastars.javasourcer.data.repository.JavaLibraryRepository;
 import org.eastars.javasourcer.data.repository.JavaSourceProjectRepository;
-import org.eastars.javasourcer.data.repository.SourceFileRepository;
 import org.eastars.javasourcer.data.repository.SourceFolderRepository;
 import org.eastars.javasourcer.data.service.JavaSourcerDataService;
 import org.eastars.javasourcer.gui.dto.LibraryDTO;
@@ -29,17 +27,13 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 	
 	private SourceFolderRepository sourceFolderRepository;
 	
-	private SourceFileRepository sourceFileRepository;
-	
 	public DefaultJavaSourcerDataService(
 			JavaSourceProjectRepository javaSourceProjectRepo,
 			JavaLibraryRepository javaLibraryRepository,
-			SourceFolderRepository sourceFolderRepository,
-			SourceFileRepository sourceFileRepository) {
+			SourceFolderRepository sourceFolderRepository) {
 		this.javaSourceProjectRepo = javaSourceProjectRepo;
 		this.javaLibraryRepository = javaLibraryRepository;
 		this.sourceFolderRepository = sourceFolderRepository;
-		this.sourceFileRepository = sourceFileRepository;
 	}
 	
 	@Override
@@ -147,11 +141,6 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 	@Override
 	public void save(SourceFolder sf) {
 		sourceFolderRepository.save(sf);
-	}
-	
-	@Override
-	public void delete(SourceFile file) {
-		sourceFileRepository.delete(file);
 	}
 	
 }

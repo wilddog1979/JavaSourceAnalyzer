@@ -46,4 +46,9 @@ public class DefaultModuleContentService implements ModuleContentService {
 		}));
 	}
 
+	@Override
+	public void cleanupModulesContent(JavaSourceProject javaSourceProject) {
+		javaSourceProject.getSourceModules().forEach(m -> m.getSourceFolders().forEach(f -> f.getSourceFiles().clear()));
+	}
+	
 }
