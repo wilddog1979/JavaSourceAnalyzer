@@ -6,4 +6,8 @@ public interface ApplicationController {
 	
 	public void showPreferences();
 	
+	public void setExtendedMenu(boolean extendedMenu);
+	
+	public void dispatchClosingEvent();
+	
 }

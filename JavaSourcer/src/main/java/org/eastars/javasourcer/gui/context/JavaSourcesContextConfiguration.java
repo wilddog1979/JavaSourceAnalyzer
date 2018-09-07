@@ -1,12 +1,14 @@
 package org.eastars.javasourcer.gui.context;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import java.awt.Desktop;
+import java.awt.Taskbar;
+import java.awt.Desktop.Action;
+import java.awt.Taskbar.Feature;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 
 import org.eastars.javasourcer.analyzis.facade.ProjectAnalysisFacade;
+import org.eastars.javasourcer.gui.controller.ApplicationController;
 import org.eastars.javasourcer.gui.controller.DialogControllers;
 import org.eastars.javasourcer.gui.controller.impl.DefaultMainFrameController;
 import org.eastars.javasourcer.gui.service.ApplicationGuiService;
@@ -32,14 +34,14 @@ public class JavaSourcesContextConfiguration {
 	}
 	
 	@Bean
-	public DefaultMainFrameController getDefaultMainFrameController(
+	public ApplicationController getDefaultMainFrameController(
 			MessageSource messageSource,
 			ApplicationGuiService applicationGuiService,
 			ProjectMapperService projectMappingService,
 			ProjectService projectService,
 			ProjectAnalysisFacade projectAnalysisFacade,
 			DialogControllers dialogControllers) {
-		DefaultMainFrameController controller = new DefaultMainFrameController(
+		ApplicationController controller = new DefaultMainFrameController(
 				messageSource,
 				applicationGuiService,
 				projectMappingService,
@@ -47,31 +49,45 @@ public class JavaSourcesContextConfiguration {
 				projectAnalysisFacade,
 				dialogControllers);
 
-		instantiate(getApplicationFunctionClassName(), ApplicationFunctions.class)
-		.ifPresent(i -> i.initApplication(context, controller));
-
+		initializeApplication(controller);
+		
 		return controller;
 	}
 	
-	private String getApplicationFunctionClassName() {
-		String name = "org.eastars.javasourcer.gui.context.WindowsApplicationFunctions";
-		
+	private void initializeApplication(ApplicationController controller) {
 		String os = System.getProperty("os.name").toLowerCase();
 		if (os.indexOf("mac") != -1) {
-			name = "org.eastars.javasourcer.gui.context.MacApplicationFunctions";
+			System.setProperty("apple.awt.graphics.EnableQ2DX", "true");
+			System.setProperty("apple.laf.useScreenMenuBar", "true");
+			System.setProperty(
+					"com.apple.mrj.application.apple.menu.about.name",
+					ApplicationResources.APP_NAME);
+		} else {
+			controller.setExtendedMenu(true);
 		}
 		
-		return name;
-	}
-	
-	private <T> Optional<T> instantiate(String name, Class<T> type) {
-		try {
-			Class<?>[] constructorParameterTypes = {};
-			Constructor<?> constructor = Class.forName(name).getConstructor(constructorParameterTypes);
-			Object[] constructorParameters = {};
-			return Optional.ofNullable(type.cast(constructor.newInstance(constructorParameters)));
-		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {
-			return Optional.empty();
+		if (Taskbar.isTaskbarSupported()) {
+			Taskbar taskbar = Taskbar.getTaskbar();
+			if (taskbar.isSupported(Feature.ICON_IMAGE)) {
+				taskbar.setIconImage(ApplicationResources.APPICON.getImage());
+			}
+		}
+		
+		if (Desktop.isDesktopSupported()) {
+			Desktop desktop = Desktop.getDesktop();
+			if (desktop.isSupported(Action.APP_ABOUT)) {
+				desktop.setAboutHandler(paramAboutEvent -> controller.showAbout());
+			}
+			if (desktop.isSupported(Action.APP_PREFERENCES)) {
+				desktop.setPreferencesHandler(paramPreferencesEvent -> controller.showPreferences());
+			}
+			if (desktop.isSupported(Action.APP_QUIT_HANDLER)) {
+				desktop.setQuitHandler((quitevent, quitresponse) -> {
+					controller.dispatchClosingEvent();
+					context.close();
+					quitresponse.performQuit();
+				});
+			}
 		}
 	}
 	

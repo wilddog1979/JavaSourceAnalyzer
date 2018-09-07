@@ -27,15 +27,15 @@ import javax.swing.tree.TreeSelectionModel;
 import org.eastars.javasourcer.analyzis.facade.ProjectAnalysisFacade;
 import org.eastars.javasourcer.gui.context.ApplicationResources;
 import org.eastars.javasourcer.gui.context.ApplicationResources.ResourceBundle;
+import org.eastars.javasourcer.gui.controller.ApplicationController;
 import org.eastars.javasourcer.gui.controller.DialogControllers;
-import org.eastars.javasourcer.gui.controller.MainFrameController;
 import org.eastars.javasourcer.gui.service.ApplicationGuiService;
 import org.eastars.javasourcer.gui.service.ProjectMapperService;
 import org.eastars.javasourcer.gui.service.ProjectService;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.MessageSource;
 
-public class DefaultMainFrameController extends AbstractMainFrameController implements MainFrameController, InitializingBean {
+public class DefaultMainFrameController extends AbstractMainFrameController implements ApplicationController, InitializingBean {
 
 	private ProjectMapperService projectMappingService;
 	
