@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.eastars.javasourcer.data.model.JavaSourceProject;
+import org.eastars.javasourcer.data.model.SourceFile;
 import org.eastars.javasourcer.data.model.SourceFolder;
 import org.eastars.javasourcer.gui.dto.LibraryDTO;
 
@@ -26,6 +27,8 @@ public interface JavaSourcerDataService {
 
 	public void saveLibrary(LibraryDTO library);
 
-	public void save(SourceFolder sf);
+	public SourceFolder save(SourceFolder sf);
+
+	public SourceFile save(SourceFile sourcefile);
 	
 }

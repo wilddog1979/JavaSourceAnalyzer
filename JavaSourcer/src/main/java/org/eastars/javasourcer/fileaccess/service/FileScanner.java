@@ -5,6 +5,6 @@ import java.util.List;
 
 public interface FileScanner {
 
-	public List<String> getModuleContent(File folder, String pattern);
+	public List<File> getModuleContent(File folder, String pattern);
 	
 }

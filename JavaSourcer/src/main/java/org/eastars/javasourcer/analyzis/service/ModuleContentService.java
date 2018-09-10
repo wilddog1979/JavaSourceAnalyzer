@@ -4,7 +4,7 @@ import org.eastars.javasourcer.data.model.JavaSourceProject;
 
 public interface ModuleContentService {
 
-	public void getModulesContent(JavaSourceProject javaSourceProject);
+	public int getModulesContent(JavaSourceProject javaSourceProject);
 
 	public void cleanupModulesContent(JavaSourceProject javaSourceProject);
 	

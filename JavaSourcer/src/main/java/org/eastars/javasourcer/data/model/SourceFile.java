@@ -2,7 +2,10 @@ package org.eastars.javasourcer.data.model;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
@@ -11,6 +14,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -40,6 +44,9 @@ public class SourceFile implements Serializable {
 	
 	@Column(nullable=false)
 	private String filename;
+	
+	@OneToMany(mappedBy="sourceFile", cascade = CascadeType.ALL, orphanRemoval=true)
+	private List<JavaTypeDeclaration> javaTypeDeclarations = new ArrayList<>();
 
 	/**
 	 * @return the id
@@ -81,6 +88,34 @@ public class SourceFile implements Serializable {
 	 */
 	public void setFilename(String filename) {
 		this.filename = filename;
+	}
+
+	/**
+	 * @return the creationDate
+	 */
+	public LocalDateTime getCreationDate() {
+		return creationDate;
+	}
+
+	/**
+	 * @param creationDate the creationDate to set
+	 */
+	public void setCreationDate(LocalDateTime creationDate) {
+		this.creationDate = creationDate;
+	}
+
+	/**
+	 * @return the javaTypeDeclarations
+	 */
+	public List<JavaTypeDeclaration> getJavaTypeDeclarations() {
+		return javaTypeDeclarations;
+	}
+
+	/**
+	 * @param javaTypeDeclarations the javaTypeDeclarations to set
+	 */
+	public void setJavaTypeDeclarations(List<JavaTypeDeclaration> javaTypeDeclarations) {
+		this.javaTypeDeclarations = javaTypeDeclarations;
 	}
 	
 }
