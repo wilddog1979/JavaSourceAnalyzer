@@ -52,6 +52,10 @@ public class DefaultModuleContentService implements ModuleContentService {
 		javaSourceProject.getSourceModules()
 		.forEach(m -> m.getSourceFolders()
 				.forEach(f -> {
+					f.getSourceFiles().forEach(sf -> {
+						sf.getJavaAssemblies().clear();
+						dataService.save(sf);
+					});
 					f.getSourceFiles().clear();
 					dataService.save(f);
 				}));

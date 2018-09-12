@@ -13,10 +13,10 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 @Entity
-@Table(name="java_type_declaration", uniqueConstraints= {
+@Table(name="java_assembly", uniqueConstraints= {
 		@UniqueConstraint(columnNames= {"sourcefile_id", "name"})
 })
-public class JavaTypeDeclaration implements Serializable {
+public class JavaAssembly implements Serializable {
 
 	private static final long serialVersionUID = -8943672130970729396L;
 	
@@ -29,11 +29,18 @@ public class JavaTypeDeclaration implements Serializable {
 	private SourceFile sourceFile;
 	
 	@ManyToOne
+	@JoinColumn(name="javasourceproject_id", nullable = false)
+	private JavaSourceProject javaSourceProject;
+	
+	@ManyToOne
 	@JoinColumn(name="javatype_id", nullable = false)
 	private JavaType javaType;
 	
 	@Column(nullable=false)
 	private String name;
+	
+	@Column(name="aggregatedname", nullable=false)
+	private String aggregatedName;
 
 	/**
 	 * @return the id
@@ -89,6 +96,34 @@ public class JavaTypeDeclaration implements Serializable {
 	 */
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	/**
+	 * @return the javaSourceProject
+	 */
+	public JavaSourceProject getJavaSourceProject() {
+		return javaSourceProject;
+	}
+
+	/**
+	 * @param javaSourceProject the javaSourceProject to set
+	 */
+	public void setJavaSourceProject(JavaSourceProject javaSourceProject) {
+		this.javaSourceProject = javaSourceProject;
+	}
+
+	/**
+	 * @return the aggregatedName
+	 */
+	public String getAggregatedName() {
+		return aggregatedName;
+	}
+
+	/**
+	 * @param aggregatedName the aggregatedName to set
+	 */
+	public void setAggregatedName(String aggregatedName) {
+		this.aggregatedName = aggregatedName;
 	}
 	
 }

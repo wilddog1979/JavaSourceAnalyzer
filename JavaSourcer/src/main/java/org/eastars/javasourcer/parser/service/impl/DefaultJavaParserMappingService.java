@@ -2,7 +2,7 @@ package org.eastars.javasourcer.parser.service.impl;
 
 import org.eastars.javasourcer.data.enumerations.JavaTypes;
 import org.eastars.javasourcer.data.model.JavaType;
-import org.eastars.javasourcer.data.model.JavaTypeDeclaration;
+import org.eastars.javasourcer.data.model.JavaAssembly;
 import org.eastars.javasourcer.data.model.SourceFile;
 import org.eastars.javasourcer.data.repository.JavaTypeDeclarationRepository;
 import org.eastars.javasourcer.data.repository.JavaTypeRepository;
@@ -27,13 +27,15 @@ public class DefaultJavaParserMappingService implements JavaParserMappingService
 	}
 	
 	@Override
-	public JavaTypeDeclaration mapJavaTypeDeclaration(SourceFile sourcefile, TypeDeclaration<?> td, JavaTypes javatype) {
-		JavaTypeDeclaration javaTypeDeclaration = new JavaTypeDeclaration();
+	public JavaAssembly mapJavaTypeDeclaration(SourceFile sourcefile, TypeDeclaration<?> td, JavaTypes javatype) {
+		JavaAssembly javaTypeDeclaration = new JavaAssembly();
 		javaTypeDeclaration.setJavaType(javaTypeRepository.findByName(javatype.name())
 				.orElseThrow(() -> new JavaSourceLookupException(JavaType.class.getName(), javatype.name())));
+		javaTypeDeclaration.setJavaSourceProject(sourcefile.getSourceFolder().getSourceModule().getJavaSourceProject());
 		javaTypeDeclaration.setSourceFile(sourcefile);
 		javaTypeDeclaration.setName(td.getName().asString());
-		sourcefile.getJavaTypeDeclarations().add(javaTypeDeclarationRepository.save(javaTypeDeclaration));
+		javaTypeDeclaration.setAggregatedName(td.getName().asString());
+		sourcefile.getJavaAssemblies().add(javaTypeDeclarationRepository.save(javaTypeDeclaration));
 		return javaTypeDeclaration;
 	}
 	

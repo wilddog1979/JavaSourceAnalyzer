@@ -7,7 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eastars.javasourcer.data.enumerations.JavaTypes;
 import org.eastars.javasourcer.data.model.JavaSourceProject;
-import org.eastars.javasourcer.data.model.JavaTypeDeclaration;
+import org.eastars.javasourcer.data.model.JavaAssembly;
 import org.eastars.javasourcer.data.model.SourceFile;
 import org.eastars.javasourcer.parser.dto.JavaParserContextDTO;
 import org.eastars.javasourcer.parser.service.JavaParserMappingService;
@@ -55,7 +55,7 @@ public class DefaultJavaParserService implements JavaParserService {
 			compilationUnit.getTypes().stream().forEach(td -> {
 				LOGGER.debug(String.format("%s - %s", td.getName(), td.getClass().getName()));
 				
-				JavaTypeDeclaration javaTypeDeclaration = td.toAnnotationDeclaration()
+				JavaAssembly javaTypeDeclaration = td.toAnnotationDeclaration()
 						.map(a -> javaParserMappingService.mapJavaTypeDeclaration(sourcefile, a, JavaTypes.ANNOTATION))
 						.orElseGet(() -> td.toClassOrInterfaceDeclaration().map(ci -> javaParserMappingService.mapJavaTypeDeclaration(sourcefile, ci, ci.isInterface() ? JavaTypes.INTERFACE : JavaTypes.CLASS))
 								.orElseGet(() -> td.toClassOrInterfaceDeclaration().map(e -> javaParserMappingService.mapJavaTypeDeclaration(sourcefile, e, JavaTypes.ENUMERATION))

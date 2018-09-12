@@ -46,7 +46,7 @@ public class SourceFile implements Serializable {
 	private String filename;
 	
 	@OneToMany(mappedBy="sourceFile", cascade = CascadeType.ALL, orphanRemoval=true)
-	private List<JavaTypeDeclaration> javaTypeDeclarations = new ArrayList<>();
+	private List<JavaAssembly> javaAssemblies = new ArrayList<>();
 
 	/**
 	 * @return the id
@@ -107,15 +107,15 @@ public class SourceFile implements Serializable {
 	/**
 	 * @return the javaTypeDeclarations
 	 */
-	public List<JavaTypeDeclaration> getJavaTypeDeclarations() {
-		return javaTypeDeclarations;
+	public List<JavaAssembly> getJavaAssemblies() {
+		return javaAssemblies;
 	}
 
 	/**
-	 * @param javaTypeDeclarations the javaTypeDeclarations to set
+	 * @param javaAssemblies the javaTypeDeclarations to set
 	 */
-	public void setJavaTypeDeclarations(List<JavaTypeDeclaration> javaTypeDeclarations) {
-		this.javaTypeDeclarations = javaTypeDeclarations;
+	public void setJavaAssemblies(List<JavaAssembly> javaAssemblies) {
+		this.javaAssemblies = javaAssemblies;
 	}
 	
 }
