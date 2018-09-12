@@ -2,6 +2,7 @@ package org.eastars.javasourcer.parser.service.impl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,10 +56,13 @@ public class DefaultJavaParserService implements JavaParserService {
 			compilationUnit.getTypes().stream().forEach(td -> {
 				LOGGER.debug(String.format("%s - %s", td.getName(), td.getClass().getName()));
 				
+				Optional<JavaAssembly> packageAssembly = compilationUnit.getPackageDeclaration()
+						.flatMap(pd -> javaParserMappingService.mapPackages(sourcefile.getSourceFolder().getSourceModule().getJavaSourceProject(), pd.getChildNodes()));
+				
 				JavaAssembly javaTypeDeclaration = td.toAnnotationDeclaration()
-						.map(a -> javaParserMappingService.mapJavaTypeDeclaration(sourcefile, a, JavaTypes.ANNOTATION))
-						.orElseGet(() -> td.toClassOrInterfaceDeclaration().map(ci -> javaParserMappingService.mapJavaTypeDeclaration(sourcefile, ci, ci.isInterface() ? JavaTypes.INTERFACE : JavaTypes.CLASS))
-								.orElseGet(() -> td.toClassOrInterfaceDeclaration().map(e -> javaParserMappingService.mapJavaTypeDeclaration(sourcefile, e, JavaTypes.ENUMERATION))
+						.map(a -> javaParserMappingService.mapJavaTypeDeclaration(sourcefile, packageAssembly, a, JavaTypes.ANNOTATION))
+						.orElseGet(() -> td.toClassOrInterfaceDeclaration().map(ci -> javaParserMappingService.mapJavaTypeDeclaration(sourcefile, packageAssembly, ci, ci.isInterface() ? JavaTypes.INTERFACE : JavaTypes.CLASS))
+								.orElseGet(() -> td.toClassOrInterfaceDeclaration().map(e -> javaParserMappingService.mapJavaTypeDeclaration(sourcefile, packageAssembly, e, JavaTypes.ENUMERATION))
 										.orElseGet(() -> null)));
 			});
 		} catch (FileNotFoundException e) {

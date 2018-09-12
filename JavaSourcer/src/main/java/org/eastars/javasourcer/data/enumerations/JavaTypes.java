@@ -5,5 +5,6 @@ public enum JavaTypes {
 	ANNOTATION,
 	CLASS,
 	INTERFACE,
-	ENUMERATION
+	ENUMERATION,
+	PACKAGE
 }

@@ -1,7 +1,10 @@
 package org.eastars.javasourcer.data.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -9,12 +12,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 @Entity
 @Table(name="java_assembly", uniqueConstraints= {
-		@UniqueConstraint(columnNames= {"sourcefile_id", "name"})
+		@UniqueConstraint(columnNames= {"javasourceproject_id", "parentassembly_id", "name"})
 })
 public class JavaAssembly implements Serializable {
 
@@ -25,7 +29,14 @@ public class JavaAssembly implements Serializable {
 	private Long id;
 	
 	@ManyToOne
-	@JoinColumn(name="sourcefile_id", nullable = false)
+	@JoinColumn(name="parentassembly_id", nullable = true)
+	private JavaAssembly parent;
+	
+	@OneToMany(mappedBy="parent", cascade = CascadeType.ALL, orphanRemoval=true)
+	private List<JavaAssembly> children = new ArrayList<>();
+	
+	@ManyToOne
+	@JoinColumn(name="sourcefile_id", nullable = true)
 	private SourceFile sourceFile;
 	
 	@ManyToOne
@@ -41,6 +52,9 @@ public class JavaAssembly implements Serializable {
 	
 	@Column(name="aggregatedname", nullable=false)
 	private String aggregatedName;
+	
+	@Column(nullable=false)
+	private boolean confirmed = false;
 
 	/**
 	 * @return the id
@@ -124,6 +138,51 @@ public class JavaAssembly implements Serializable {
 	 */
 	public void setAggregatedName(String aggregatedName) {
 		this.aggregatedName = aggregatedName;
+	}
+
+	/**
+	 * @return the parent
+	 */
+	public JavaAssembly getParent() {
+		return parent;
+	}
+
+	/**
+	 * @param parent the parent to set
+	 */
+	public void setParent(JavaAssembly parent) {
+		this.parent = parent;
+	}
+
+	/**
+	 * @return the children
+	 */
+	public List<JavaAssembly> getChildren() {
+		if (children == null) {
+			children = new ArrayList<>();
+		}
+		return children;
+	}
+
+	/**
+	 * @param children the children to set
+	 */
+	public void setChildren(List<JavaAssembly> children) {
+		this.children = children;
+	}
+
+	/**
+	 * @return the confirmed
+	 */
+	public boolean isConfirmed() {
+		return confirmed;
+	}
+
+	/**
+	 * @param confirmed the confirmed to set
+	 */
+	public void setConfirmed(boolean confirmed) {
+		this.confirmed = confirmed;
 	}
 	
 }
