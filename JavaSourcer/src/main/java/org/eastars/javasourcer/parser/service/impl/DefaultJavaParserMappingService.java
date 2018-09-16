@@ -34,23 +34,31 @@ public class DefaultJavaParserMappingService implements JavaParserMappingService
 	
 	@Override
 	public JavaAssembly mapJavaTypeDeclaration(SourceFile sourcefile, Optional<JavaAssembly> packageAssembly, TypeDeclaration<?> td, JavaTypes javatype) {
+		return mapJavaAssembly(javatype, sourcefile.getSourceFolder().getSourceModule().getJavaSourceProject(), sourcefile, packageAssembly, td.getName().asString());
+	}
+	
+	private JavaAssembly mapJavaAssembly(JavaTypes javatype, JavaSourceProject javaSourceProject, SourceFile sourcefile, Optional<JavaAssembly> parentAssembly,
+			String name) {
 		JavaAssembly javaAssembly = new JavaAssembly();
 		javaAssembly.setJavaType(resolveJavaType(javatype));
-		javaAssembly.setJavaSourceProject(sourcefile.getSourceFolder().getSourceModule().getJavaSourceProject());
+		javaAssembly.setJavaSourceProject(javaSourceProject);
 		javaAssembly.setSourceFile(sourcefile);
-		javaAssembly.setName(td.getName().asString());
-		javaAssembly.setAggregatedName(javaAssembly.getAggregatedName());
+		javaAssembly.setName(name);
+		javaAssembly.setAggregatedName(name);
 		
-		if (packageAssembly.isPresent()) {
-			javaAssembly.setParent(packageAssembly.get());
-			javaAssembly.setAggregatedName(String.format("%s.%s", packageAssembly.get().getAggregatedName(), javaAssembly.getName()));
+		if (parentAssembly.isPresent()) {
+			javaAssembly.setParent(parentAssembly.get());
+			javaAssembly.setAggregatedName(String.format("%s.%s", parentAssembly.get().getAggregatedName(), javaAssembly.getName()));
 		}
 		
 		javaAssembly = javaAssemblyRepository.save(javaAssembly);
-		sourcefile.getJavaAssemblies().add(javaAssembly);
+		if (sourcefile != null) {
+			sourcefile.getJavaAssemblies().add(javaAssembly);
+		}
+		javaSourceProject.getJavaAssemblies().add(javaAssembly);
 		return javaAssembly;
 	}
-	
+
 	private JavaType resolveJavaType(JavaTypes javatype) {
 		return javaTypeRepository.findByName(javatype.name())
 				.orElseThrow(() -> new JavaSourceLookupException(JavaType.class.getName(), javatype.name()));
@@ -60,32 +68,14 @@ public class DefaultJavaParserMappingService implements JavaParserMappingService
 	public Optional<JavaAssembly> mapPackages(JavaSourceProject javaSourceProject, List<Node> nodes) {
 		return nodes.stream().findFirst().map(n -> {
 			Optional<JavaAssembly> parentassembly = mapPackages(javaSourceProject, n.getChildNodes());
-			
+
 			return javaSourceProject.getJavaAssemblies().stream()
-			.filter(j -> j.getName().equals(((Name)n).getIdentifier()) && parentassembly.map(p -> j.getParent() != null && p.getId() == j.getParent().getId()).orElseGet(() -> j.getParent() == null))
-			.findFirst()
-			.orElseGet(() -> {
-				JavaAssembly ja = new JavaAssembly();
-				
-				ja.setJavaSourceProject(javaSourceProject);
-				ja.setJavaType(resolveJavaType(JavaTypes.PACKAGE));
-				ja.setName(((Name)n).getIdentifier());
-				
-				ja.setAggregatedName(ja.getName());
-				if (parentassembly.isPresent()) {
-					ja.setParent(parentassembly.get());
-					ja.setAggregatedName(String.format("%s.%s", parentassembly.get().getAggregatedName(), ja.getName()));
-				}
-				
-				ja = javaAssemblyRepository.save(ja);
-				javaSourceProject.getJavaAssemblies().add(ja);
-				
-				if (parentassembly.isPresent()) {
-					parentassembly.get().getChildren().add(ja);
-				}
-				return ja;
-			});
+					.filter(j -> j.getName().equals(((Name)n).getIdentifier()) &&
+							parentassembly.map(p -> j.getParent() != null && p.getId() == j.getParent().getId())
+							.orElseGet(() -> j.getParent() == null))
+					.findFirst()
+					.orElseGet(() -> mapJavaAssembly(JavaTypes.PACKAGE, javaSourceProject, null, parentassembly, ((Name)n).getIdentifier()));
 		});
 	}
-	
+
 }
