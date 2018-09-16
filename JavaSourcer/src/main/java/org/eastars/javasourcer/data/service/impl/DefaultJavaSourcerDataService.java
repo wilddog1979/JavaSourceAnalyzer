@@ -93,57 +93,31 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 	
 	@Override
 	public void saveLibrary(LibraryDTO library) {
-		boolean dirty = false;
-		
 		JavaLibrary lib;
 		if (StringUtils.isEmpty(library.getOriginalName())) {
 			lib = new JavaLibrary();
 			lib.setName(library.getName());
-			lib.setJavaLibraryPackages(library.getPackages().stream().map(p -> {
-				JavaLibraryPackage pack = new JavaLibraryPackage();
-				pack.setPackagename(p);
-				pack.setJavaLibrary(lib);
-				return pack;
-			}).collect(Collectors.toList()));
-			dirty = true;
 		} else {
-			
 			lib = javaLibraryRepository.findByName(library.getOriginalName()).orElseGet(() -> null);
-			if (!library.getOriginalName().equals(library.getName())) {
-				lib.setName(library.getName());
-				dirty = true;
-			}
-			
-			List<JavaLibraryPackage> toAdd = library.getPackages().stream()
-			.filter(p -> lib.getJavaLibraryPackages().stream().noneMatch(lp -> p.equals(lp.getPackagename())))
-			.map(p -> {
-				JavaLibraryPackage lp = new JavaLibraryPackage();
-				lp.setPackagename(p);
-				return lp;
-			})
-			.collect(Collectors.toList());
-			
-			dirty |= !toAdd.isEmpty();
-			
-			toAdd.forEach(lp -> {
-				lib.getJavaLibraryPackages().add(lp);
-				lp.setJavaLibrary(lib);
-			});
-			
-			List<JavaLibraryPackage> toRemove = lib.getJavaLibraryPackages().stream()
-			.filter(lp -> !library.getPackages().contains(lp.getPackagename()))
-			.collect(Collectors.toList());
-			
-			dirty |= !toRemove.isEmpty();
-			
-			toRemove.forEach(lib.getJavaLibraryPackages()::remove);
+			lib.setName(library.getName());
 		}
 		
-		if (dirty) {
-			javaLibraryRepository.save(lib);
-		}
+		library.getPackages().stream()
+		.filter(p -> lib.getJavaLibraryPackages().stream().noneMatch(lp -> p.equals(lp.getPackagename())))
+		.forEach(p -> {
+			JavaLibraryPackage pack = new JavaLibraryPackage();
+			pack.setPackagename(p);
+			pack.setJavaLibrary(lib);
+			lib.getJavaLibraryPackages().add(pack);
+		});
+
+		lib.getJavaLibraryPackages().removeAll(lib.getJavaLibraryPackages().stream()
+				.filter(lp -> !library.getPackages().contains(lp.getPackagename()))
+				.collect(Collectors.toList()));
+		
+		javaLibraryRepository.save(lib);
 	}
-	
+
 	@Override
 	public SourceFolder save(SourceFolder sf) {
 		return sourceFolderRepository.save(sf);
