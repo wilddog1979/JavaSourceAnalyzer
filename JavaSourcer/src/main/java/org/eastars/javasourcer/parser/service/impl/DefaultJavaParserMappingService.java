@@ -66,16 +66,17 @@ public class DefaultJavaParserMappingService implements JavaParserMappingService
 	
 	@Override
 	public Optional<JavaAssembly> mapPackages(JavaSourceProject javaSourceProject, List<Node> nodes) {
-		return nodes.stream().findFirst().map(n -> {
-			Optional<JavaAssembly> parentassembly = mapPackages(javaSourceProject, n.getChildNodes());
-
-			return javaSourceProject.getJavaAssemblies().stream()
-					.filter(j -> j.getName().equals(((Name)n).getIdentifier()) &&
-							parentassembly.map(p -> j.getParent() != null && p.getId() == j.getParent().getId())
-							.orElseGet(() -> j.getParent() == null))
-					.findFirst()
-					.orElseGet(() -> mapJavaAssembly(JavaTypes.PACKAGE, javaSourceProject, null, parentassembly, ((Name)n).getIdentifier()));
-		});
+		return nodes.stream().findFirst().map(n -> javaSourceProject.getJavaAssemblies().stream()
+				.filter(ja -> ((ja.getParent() == null && n.getChildNodes().isEmpty()) ||
+						(ja.getParent() != null && !n.getChildNodes().isEmpty() && ja.getParent().getAggregatedName().equals(n.getChildNodes().get(0).toString()))) &&
+						ja.getName().equals(((Name)n).getIdentifier()))
+				.findFirst()
+				.orElseGet(() -> mapJavaAssembly(
+						JavaTypes.PACKAGE,
+						javaSourceProject,
+						null,
+						n.getChildNodes().isEmpty() ? Optional.empty() : mapPackages(javaSourceProject, n.getChildNodes()),
+								((Name)n).getIdentifier())));
 	}
 
 }
