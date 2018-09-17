@@ -1,11 +1,13 @@
 package org.eastars.javasourcer.analyzis.service.impl;
 
 import java.io.File;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eastars.javasourcer.analyzis.service.ModuleContentService;
+import org.eastars.javasourcer.data.model.JavaAssembly;
 import org.eastars.javasourcer.data.model.JavaSourceProject;
 import org.eastars.javasourcer.data.model.SourceFile;
 import org.eastars.javasourcer.data.service.JavaSourcerDataService;
@@ -53,12 +55,22 @@ public class DefaultModuleContentService implements ModuleContentService {
 		.forEach(m -> m.getSourceFolders()
 				.forEach(f -> {
 					f.getSourceFiles().forEach(sf -> {
+						List<JavaAssembly> assemblies = javaSourceProject.getJavaAssemblies().stream()
+								.filter(ja -> sf.getJavaAssemblies().stream().anyMatch(ja2 -> ja2.getId().equals(ja.getId())))
+								.collect(Collectors.toList());
+						javaSourceProject.getJavaAssemblies().removeAll(assemblies);
 						sf.getJavaAssemblies().clear();
 						dataService.save(sf);
 					});
 					f.getSourceFiles().clear();
 					dataService.save(f);
 				}));
+		
+		dataService.getJavaSourceProject(javaSourceProject.getName())
+		.ifPresent(jsp -> {
+			jsp.getJavaAssemblies().clear();
+			dataService.save(jsp);
+		});
 	}
 	
 }
