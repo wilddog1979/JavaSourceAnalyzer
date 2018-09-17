@@ -1,6 +1,7 @@
 package org.eastars.javasourcer.data.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -60,6 +61,9 @@ public class SourceModule implements Serializable {
 	}
 
 	public List<SourceFolder> getSourceFolders() {
+		if (sourceFolders == null) {
+			sourceFolders = new ArrayList<>();
+		}
 		return sourceFolders;
 	}
 

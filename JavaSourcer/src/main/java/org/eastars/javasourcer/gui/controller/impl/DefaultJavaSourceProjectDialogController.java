@@ -113,10 +113,11 @@ public class DefaultJavaSourceProjectDialogController extends AbstractDataInputD
 		return buildTableWithButtons(modules, 100, 150, a -> {
 			ModuleDTO dto = new ModuleDTO();
 			dto.setName(getResourceBundle(ResourceBundle.NEW_ENTRY));
-			moduleModel.addNewEntry(dto);
 			int index = moduleModel.getRowCount();
-			modules.scrollRectToVisible(modules.getCellRect(index - 1, 0, true));
-			modules.editCellAt(index - 1, 0);
+			moduleModel.addNewEntry(dto);
+			modules.scrollRectToVisible(modules.getCellRect(index, 0, true));
+			modules.setRowSelectionInterval(index, index);
+			modules.editCellAt(index, 0);
 		}, a -> {
 			int index = modules.getSelectedRow();
 			if (index != -1) {
@@ -131,13 +132,14 @@ public class DefaultJavaSourceProjectDialogController extends AbstractDataInputD
 		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		int result = chooser.showOpenDialog(panelDirSelection);
 		if (result == JFileChooser.APPROVE_OPTION) {
+			int index = sourceFolderModel.getRowCount();
 			sourceFolderModel.addNewEntry(
 					(projectdir != null ? projectdir : new File(".")).toURI()
 					.relativize(chooser.getSelectedFile().toURI())
 					.toString());
-			int index = sourceFolderModel.getRowCount();
-			sourceFolders.scrollRectToVisible(sourceFolders.getCellRect(index - 1, 0, true));
-			sourceFolders.editCellAt(index - 1, 0);
+			sourceFolders.scrollRectToVisible(sourceFolders.getCellRect(index, 0, true));
+			sourceFolders.setRowSelectionInterval(index, index);
+			sourceFolders.editCellAt(index, 0);
 		}
 	}
 	

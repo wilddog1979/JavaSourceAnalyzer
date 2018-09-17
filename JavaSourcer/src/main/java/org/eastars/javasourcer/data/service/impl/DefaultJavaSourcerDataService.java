@@ -101,7 +101,7 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 			lib = javaLibraryRepository.findByName(library.getOriginalName()).orElseGet(() -> null);
 			lib.setName(library.getName());
 		}
-		
+
 		library.getPackages().stream()
 		.filter(p -> lib.getJavaLibraryPackages().stream().noneMatch(lp -> p.equals(lp.getPackagename())))
 		.forEach(p -> {
@@ -111,10 +111,10 @@ public class DefaultJavaSourcerDataService implements JavaSourcerDataService {
 			lib.getJavaLibraryPackages().add(pack);
 		});
 
-		lib.getJavaLibraryPackages().removeAll(lib.getJavaLibraryPackages().stream()
-				.filter(lp -> !library.getPackages().contains(lp.getPackagename()))
-				.collect(Collectors.toList()));
-		
+		lib.getJavaLibraryPackages().stream()
+		.filter(lp -> !library.getPackages().contains(lp.getPackagename()))
+		.forEach(lib.getJavaLibraryPackages()::remove);
+
 		javaLibraryRepository.save(lib);
 	}
 

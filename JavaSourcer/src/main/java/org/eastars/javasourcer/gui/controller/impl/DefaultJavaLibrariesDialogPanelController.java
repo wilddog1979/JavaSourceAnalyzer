@@ -52,10 +52,11 @@ public class DefaultJavaLibrariesDialogPanelController extends AbstractDialogPan
 		javaLibraryPanel.add(buildTableWithButtons(libraries, 100, 150, a -> {
 			LibraryDTO dto = new LibraryDTO();
 			dto.setName(getResourceBundle(ResourceBundle.NEW_ENTRY));
-			libraryModel.addNewEntry(dto);
 			int index = libraryModel.getRowCount();
-			libraries.scrollRectToVisible(libraries.getCellRect(index - 1, 0, true));
-			libraries.editCellAt(index - 1, 0);
+			libraryModel.addNewEntry(dto);
+			libraries.scrollRectToVisible(libraries.getCellRect(index, 0, true));
+			libraries.setRowSelectionInterval(index, index);
+			libraries.editCellAt(index, 0);
 		}, a -> {
 			int index = libraries.getSelectedRow();
 			if (index != -1) {
@@ -70,10 +71,11 @@ public class DefaultJavaLibrariesDialogPanelController extends AbstractDialogPan
 		
 		javaLibraryPanel.add(buildTableWithButtons(packages, 200, 150, a -> {
 			if (libraries.getSelectedRow() != -1) {
-				packageModel.addNewEntry(getResourceBundle(ResourceBundle.NEW_ENTRY));
 				int index = packageModel.getRowCount();
-				packages.scrollRectToVisible(packages.getCellRect(index - 1, 0, true));
-				packages.editCellAt(index - 1, 0);
+				packageModel.addNewEntry(getResourceBundle(ResourceBundle.NEW_ENTRY));
+				packages.scrollRectToVisible(packages.getCellRect(index, 0, true));
+				packages.setRowSelectionInterval(index, index);
+				packages.editCellAt(index, 0);
 			}
 		}, a -> {
 			int index = packages.getSelectedRow();

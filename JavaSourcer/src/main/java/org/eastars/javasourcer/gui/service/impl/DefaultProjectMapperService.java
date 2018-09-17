@@ -51,75 +51,65 @@ public class DefaultProjectMapperService implements ProjectMapperService {
 	
 	@Override
 	public void mapSourceModules(JavaSourceProject javaSourceProject, List<ModuleDTO> modules) {
-		List<SourceModule> toRemove = javaSourceProject.getSourceModules().stream()
-		.filter(sm -> modules.stream().noneMatch(m -> sm.getName().equals(m.getOriginalName())))
-		.collect(Collectors.toList());
-		
-		javaSourceProject.getSourceModules().removeAll(toRemove);
-		
-		List<SourceModule> toAdd = modules.stream()
-				.filter(module -> StringUtils.isEmpty(module.getOriginalName()))
-				.map(module -> {
-					SourceModule m = new SourceModule();
-					m.setName(module.getName());
-					m.setSourceFolders(module.getSourceFolders().stream()
-							.map(sf -> {
-								SourceFolder folder = new SourceFolder();
-								folder.setRelativedir(sf);
-								folder.setSourceModule(m);
-								return folder;
-							}).collect(Collectors.toList()));
-					return m;
-				}).collect(Collectors.toList());
-		
-		toAdd.forEach(module -> {
-			javaSourceProject.getSourceModules().add(module);
-			module.setJavaSourceProject(javaSourceProject);
+		List<SourceModule> sourceModules = javaSourceProject.getSourceModules();
+
+		sourceModules.stream()
+		.filter(sm -> modules.stream()
+				.noneMatch(m -> sm.getName().equals(m.getOriginalName())))
+		.forEach(sourceModules::remove);
+
+		modules.stream()
+		.filter(module -> StringUtils.isEmpty(module.getOriginalName()))
+		.forEach(module -> {
+			SourceModule m = new SourceModule();
+			m.setName(module.getName());
+			module.getSourceFolders().stream()
+			.forEach(sf -> {
+				SourceFolder folder = new SourceFolder();
+				folder.setRelativedir(sf);
+				folder.setSourceModule(m);
+				m.getSourceFolders().add(folder);
+			});
+			sourceModules.add(m);
+			m.setJavaSourceProject(javaSourceProject);
 		});
 	}
 	
 	@Override
 	public void mapSourceModuleFolders(SourceModule module, ModuleDTO sm) {
 		module.setName(sm.getName());
-		List<SourceFolder> toRemoveSF = module.getSourceFolders().stream()
-				.filter(sf -> !sm.getSourceFolders().contains(sf.getRelativedir()))
-				.collect(Collectors.toList());
+		List<SourceFolder> sourceFolders = module.getSourceFolders();
 
-		module.getSourceFolders().removeAll(toRemoveSF);
+		sourceFolders.stream()
+		.filter(sf -> !sm.getSourceFolders().contains(sf.getRelativedir()))
+		.forEach(sourceFolders::remove);
 
-		List<SourceFolder> toAddSF = sm.getSourceFolders().stream()
-				.filter(f -> module.getSourceFolders().stream().noneMatch(sf -> sf.getRelativedir().equals(f)))
-				.map(f -> {
-					SourceFolder sf = new SourceFolder();
-					sf.setRelativedir(f);
-					return sf;
-				}).collect(Collectors.toList());
-
-		toAddSF.forEach(sf -> {
-			module.getSourceFolders().add(sf);
+		sm.getSourceFolders().stream()
+		.filter(f -> sourceFolders.stream()
+				.noneMatch(sf -> sf.getRelativedir().equals(f)))
+		.forEach(f -> {
+			SourceFolder sf = new SourceFolder();
+			sf.setRelativedir(f);
+			sourceFolders.add(sf);
 			sf.setSourceModule(module);
 		});
 	}
 	
 	@Override
 	public void mapJavaLibraries(JavaSourceProject javaSourceProject, List<String> libraries) {
-		List<JavaLibrary> toRemove = javaSourceProject.getJavaLibraries().stream()
-				.filter(jl -> !libraries.contains(jl.getName()))
-				.collect(Collectors.toList());
-		
-		toRemove.stream().forEach(jl -> {
-			javaSourceProject.getJavaLibraries().remove(jl);
-			jl.getJavaSourceProjects().remove(javaSourceProject);
-		});
-		
-		List<JavaLibrary> toAdd = libraries.stream()
-				.filter(l -> javaSourceProject.getJavaLibraries().stream()
-						.noneMatch(jl -> jl.getName().equals(l)))
-				.map(l -> javaLibraryRepository.findByName(l).get())
-				.collect(Collectors.toList());
-		
-		toAdd.forEach(jl -> {
-			javaSourceProject.getJavaLibraries().add(jl);
+		List<JavaLibrary> libs = javaSourceProject.getJavaLibraries();
+
+		libs.removeAll(libs.stream()
+		.filter(jl -> !libraries.contains(jl.getName()))
+		.peek(jl -> jl.getJavaSourceProjects().remove(javaSourceProject))
+		.collect(Collectors.toList()));
+
+		libraries.stream()
+		.filter(l -> javaSourceProject.getJavaLibraries().stream()
+				.noneMatch(jl -> jl.getName().equals(l)))
+		.forEach(l -> {
+			JavaLibrary jl = javaLibraryRepository.findByName(l).get();
+			libs.add(jl);
 			jl.getJavaSourceProjects().add(javaSourceProject);
 		});
 	}
