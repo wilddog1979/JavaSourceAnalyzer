@@ -71,8 +71,8 @@ public class DefaultADashboadController implements ADashboardController {
 		if (preferencesDialog.showDialog()) {
 			boolean neworderedsequence = preferencesDialog.getOrderedSequence();
 			boolean newreturnlabel = preferencesDialog.getIncludeReturnLabels();
-			configService.setProperty(SEQ_ORDERED_SEQUENCE, Boolean.toString(neworderedsequence));
-			configService.setProperty(SEQ_INCLUDE_RETURN_LABEL, Boolean.toString(newreturnlabel));
+			configService.setProperty(SEQ_ORDERED_SEQUENCE, boolean.toString(neworderedsequence));
+			configService.setProperty(SEQ_INCLUDE_RETURN_LABEL, boolean.toString(newreturnlabel));
 			if (oldreturnlabel != newreturnlabel) {
 				mainframe.redrawSequence();
 			} else if (oldorderedsequence != neworderedsequence) {
